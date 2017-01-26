@@ -1,0 +1,105 @@
+BODY {
+	BACKGROUND-COLOR: #fdf5e6; COLOR: black; FONT-FAMILY: Times New Roman
+}
+CAPTION {
+	COLOR: #000080; TEXT-ALIGN: left
+}
+H1 {
+	COLOR: #000080; FONT: bold 150% Arial, sans-serif; TEXT-INDENT: 0px
+}
+H2 {
+	COLOR: #000080; FONT: bold 120% Arial, sans-serif; MARGIN-TOP: 24pt; TEXT-INDENT: 0px
+}
+H3 {
+	COLOR: #000080; FONT: 100% Arial, sans-serif; MARGIN-TOP: 12pt; TEXT-INDENT: 0px
+}
+P {
+	FONT: 12pt/150% "Times New Roman", serif; TEXT-ALIGN: justify; TEXT-INDENT: 35.45pt
+}
+LI {
+	FONT: 12pt/150% "Times New Roman", serif; TEXT-ALIGN: justify; TEXT-INDENT: 35.45pt
+}
+DIV {
+	FONT: 12pt/150% "Times New Roman", serif; TEXT-ALIGN: justify; TEXT-INDENT: 35.45pt
+}
+TABLE {
+	BACKGROUND-COLOR: #f0f0ff
+}
+A {
+	COLOR: #000080
+}
+A:hover {
+	COLOR: #ff0000; TEXT-DECORATION: none
+}
+A:visited {
+	COLOR: #000080
+}
+A:hover {
+	COLOR: #ff0000; TEXT-DECORATION: none
+}
+.200 {
+	LINE-HEIGHT: 200%
+}
+.break {
+	BORDER-BOTTOM: #000080 1px solid; LINE-HEIGHT: 10%; PAGE-BREAK-AFTER: always
+}
+DIV.hr {
+	BORDER-BOTTOM: #000080 1px solid
+}
+.footer {
+	FONT: italic 75%/120% "Times New Roman", serif; POSITION: relative; TEXT-INDENT: 0px; TOP: -17px
+}
+H1.aa {
+	BORDER-TOP: #000080 1px solid; MARGIN-TOP: 20px; PADDING-TOP: 20px; PAGE-BREAK-BEFORE: always; TEXT-ALIGN: center
+}
+H2.aa {
+	TEXT-ALIGN: center
+}
+H3.aa {
+	TEXT-ALIGN: center
+}
+H1.subtitle {
+	TEXT-ALIGN: center
+}
+H2.title {
+	MARGIN-TOP: 0px; TEXT-ALIGN: center
+}
+P.author {
+	COLOR: #000080; FONT: bold 100% Arial, sans-serif; TEXT-ALIGN: right
+}
+SPAN.highl {
+	FONT-WEIGHT: bold
+}
+TABLE.transp {
+	BACKGROUND-COLOR: #fdf5e6
+}
+TD.bordbot {
+	BORDER-BOTTOM: black 1px solid
+}
+TD.bordtop {
+	BORDER-TOP: black 1px solid
+}
+TD.head {
+	FONT-FAMILY: Arial, sans-serif; LINE-HEIGHT: 300%
+}
+TD.indent {
+	PADDING-LEFT: 35px
+}
+TD.norb {
+	BORDER-RIGHT-STYLE: none; TEXT-ALIGN: right
+}
+TD.nolb {
+	BORDER-LEFT-STYLE: none
+}
+TD.tulud {
+	FONT-WEIGHT: bold; TEXT-ALIGN: left; line-hight: 300%
+}
+TR.head {
+	FONT-WEIGHT: bold; TEXT-ALIGN: center
+}
+TD#1 {
+	PADDING-RIGHT: 30px; TEXT-ALIGN: right
+}
+TD#2 {
+	PADDING-RIGHT: 15px; TEXT-ALIGN: right
+}

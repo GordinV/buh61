@@ -1,0 +1,4 @@
+lnAnswer = MESSAGEBOX('kas salvesta',4+16','Import')
+Error in line 71: Function name is missing ).
+End Funct
+Error in line 400: Command contains unrecognized phrase/keyword.

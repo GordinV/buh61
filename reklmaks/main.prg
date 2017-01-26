@@ -1,0 +1,170 @@
+Parameter tcKey
+_Screen.windowstate = 2
+public gnHandle,gnHandleAsync, gcWindow, gRekv,gUserId, oPrintform2, oFinder, gReturn, oAsutused, oUserid,;
+	oDokLausend, oNomenklatuur,  oKontod, oAllikad, oArtikkel, ;
+	oAsutused, oUserid, oRekv, oDok, tdKehtivus,;
+	cKasutaja, oDb, oPeriod,gnKuu, gnAasta, gdKpv, gVersia, gcDatabase, glError, oRI, oConnect, ;
+	oMenu, gcKey, gcAmetnik, gcPrognimi, oReklmaksud, oReklVolgnik, oReklSaadetud, gMailParool
+	
+gMailParool = ''	
+glError = .f.
+gVersia = 'MSSQL'
+gdKpv = date()
+cKasutaja = ''
+gnHandle = 0
+tdKehtivus = DATE() - 365
+
+*!*	grekv = 1
+*!*	gUserid = 1
+ccAption = 'Raamatupidamine 6.0 Reklamimaks'
+gcPrognimi = 'reklmaks.exe'
+Local lError
+Close data all
+Set UDFPARMS TO VALUE
+On SHUTDOWN quit
+Set resource off
+Set HOURS TO 24
+Set compatible off
+Set null off
+SET AUTOSAVE ON 
+set point to '.'
+Set help on
+Set lock on
+Set exclusive off
+Set multilock on
+Set century on
+Set talk off
+Set console off
+Set notify off
+Set safety off
+Set delete on
+Set date to german
+set memowidth to 8000
+&&SET HELP TO lepingud.CHM
+
+Use config in 0
+select config
+=cursorsetprop('buffering',3)
+*!*	if file ('key.fxp')
+*!*		&& новая оdaанизация
+*!*		do key with f_key()
+*!*		erase key.fxp
+*!*	endif
+*!*	if !empty (tcKey) and vartype(tckey) = 'C' and tcKey = '/K'
+*!*		do form genkey
+*!*	endif
+
+cFile = 'reklmaks\curPrinter.DBF'
+If file (cFile)
+	Use (cFile) in 0 alias curPrinter
+Else
+	Use curPrinter in 0
+Endif
+
+IF !USED('v_roles')
+CREATE CURSOR v_roles (	nimetus c(120) DEFAULT 'Raamatupidaja', asutusid int, nomid int, nomidkassa int,nomidpank int, kbmnomidkassa int,;
+		kassaid int, aaid int, alus c(120),kassanr c(20),arvnr c(20), ;
+		dokpropidarvvalju int, dokpropidsorder int, dokpropidpank int, tunnusid int)
+ENDIF
+
+
+If File('KEY.DBF')
+	Use Key In 0
+Else
+	Messagebox('Key fail ei leidnud', 'Kontrol')
+	Cancel
+Endif
+Create Cursor comkey (Id Int, omAnik C (120))
+Select Id, Left(deCrypt(f_Key(),Mline(omAnik, 1)), 120) As omAnik From  ;
+	key Into Cursor qryComkey
+Select comkey
+Append From Dbf('qryComkey')
+Use In qryComkey
+Select comkey
+= seCure('OFF')
+lqUit = .F.
+If  File('updater1.exe')
+	lrEsult = chEckuuendused('www.avpsoft.ee/downloads/reklmaks')
+	If Used('ajalugu')
+		Use In ajAlugu
+	Endif
+	If Used('uuendus')
+		Use In uuEndus
+	Endif
+	If lrEsult=.T.
+		lnResult = Messagebox(Iif(config.keel=2,  ;
+			'Kas uuenda programm?', 'Iбновить пdиложение?'),  ;
+			0033, 'Uuendamine')
+		If lnResult=1
+			Run /N updater1.Exe
+			lqUit = .T.
+		Endif
+	Endif
+Endif
+If lqUit=.F.
+	Set Sysmenu To
+	Set Sysmenu Automatic
+	Set Classlib To Classlib
+	Set Procedure To classes\login
+	olOgin = Createobject('login', tcKey)
+	olOgin.Show()
+*!*		Do case
+*!*			Case config.debug = 0
+*!*				On error do err with program(), lineno(1)
+*!*			Case config.debug = 1
+*			On error
+*!*			Case config.debug = 2
+*!*				On error do ferr
+*!*		Endcase
+	If  .Not. Empty(config.baCkground)
+		_Screen.Picture = Trim(config.baCkground)
+	Endif
+	Set classlib to toolsrekl additive
+	oTools = createobject('Toolsrekl')
+	otOols.trAnslate()
+	Read Events
+Endif
+Set Notify On
+tnId = grEkv
+If File('buh50viga.log') .And. Used('qryRekv') .And.  .Not.  ;
+		EMPTY(qrYrekv.emAil) .And.  .Not. Empty(Mline(qrYrekv.muUd, 1)) .And.   ;
+		.Not. Isnull(qrYrekv.muUd) .And.  .Not. Empty(config.reServed3)
+	Create Cursor Mail (smTpto C (254), ccList C (254), bcClist C (254),  ;
+		suBject C (50), atTachment C (254), Message M)
+	caTtach = Sys(5)+Sys(2003)+'\buh50viga.log'
+	Insert Into Mail (smTpto, suBject, atTachment) Values  ;
+		(Ltrim(Rtrim(config.reServed3)), 'Raamatupidamine 5.0 Viga',  ;
+		caTtach)
+	Set Classlib To emAil
+	oeMail = Createobject('email')
+	With oeMail
+		.smTpfrom = Ltrim(Rtrim(qrYrekv.emAil))
+		.smTpreply = Ltrim(Rtrim(qrYrekv.emAil))
+		.smTpserver = Ltrim(Rtrim(Mline(qrYrekv.muUd, 1)))
+		leRror = .Send()
+		If leRror=.T.
+			Erase (caTtach)
+		Endif
+	Endwith
+	Use In Mail
+	Release oeMail
+Endif
+Set Procedure To
+Release otOols
+=fQuit(.F.)
+Endproc
+
+Function fQuit
+	Parameters tlQuit
+	If gnHandle>0 .And. gvErsia<>'VFP'
+		= SQLDISCONNECT(gnHandle)
+		gnHandle = 0
+	Endif
+	Set Sysmenu To Default
+	_Screen.Caption = ccAption
+	_Screen.Picture = ''
+	On Key
+	If tlQuit = .T.
+		Quit
+	Endif
+	Return

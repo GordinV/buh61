@@ -1,0 +1,1037 @@
+**
+** main.fxp
+**
+ PARAMETER tcKey
+ IF EMPTY(tcKey)
+      tcKey = ''
+ ENDIF
+ _SCREEN.wiNdowstate = 2
+ PUBLIC gnHandle, gnHandleasync, gcWindow, grEkv, guSerid, opRintform2,  ;
+        ofInder, grEturn, oaSutused, ouSerid, oaRved, odOklausend,  ;
+        onOmenklatuur, odOk, otAsud, oaSutused, ouSerid, orEkv, ckAsutaja,  ;
+        odB, opEriod, gnKuu, gnAasta, gdKpv, gvErsia, gcDatabase, glError,  ;
+        orI, ocOnnect, omEnu, gcKey, gcAmetnik, gcPrognimi, oeEltaotlus,  ;
+        oeElvariandid, oeElarve, otUludeallikad, otUlutaitm, okUlutaitm
+ gcPrognimi = 'EELPROJ.EXE'
+ tcTunnus = '%'
+ tcAllikas = '%'
+ tcArtikkel = '%'
+я------------------- ... rest ignored ...
+*
+PROCEDURE fQuit
+ PARAMETER tlQuit
+ IF gnHandle>0 .AND. gvErsia<>'VFP'
+      = SQLDISCONNECT(gnHandle)
+      gnHandle = 0
+ ENDIF
+ SET SYSMENU TO DEFAULT
+я------------------- ... rest ignored ...
+*
+**
+** analise_formula.fxp
+**
+ PARAMETER tsTring, tdKpv, tcCursor
+ LOCAL lcString, lsD, lsK, lkD, lkK, lbR_left, lbR_right, lcMath,  ;
+       lcBitcurrent, lcBitprev, lcBit, lcParam, lcFunc, lnSaldo, lcAlias,  ;
+       lnRecno
+ lcAlias = ALIAS()
+ lnRecno = RECNO()
+ IF EMPTY(tdKpv)
+      tdKpv = DATE()
+ ENDIF
+ tcString = tsTring
+ lnSaldo = 0
+ lcParam = ''
+я------------------- ... rest ignored ...
+*
+PROCEDURE Remove_macro
+ noCur = OCCURS('?', tcString)
+ FOR i = 1 TO noCur
+      lnStart = ATC('?', tcString)
+      lnWidth = wiDth_of_macro(lnStart)
+я------------------- ... rest ignored ...
+*
+FUNCTION get_macro_value
+ PARAMETER tcExpr
+ LOCAL cmAcroresult, lcCursor, lnStart, nkOmma, lcField
+ lcField = ''
+ cmAcroresult = '0'
+ DO CASE
+      CASE '='$tcExpr
+           IF LEFT(tcExpr, 1)='?'
+                tcExpr = STUFF(tcExpr, 1, 1, '')
+           ENDIF
+           lnStart = AT('=', tcExpr)
+я------------------- ... rest ignored ...
+*
+FUNCTION get_macro_stringvalue
+ PARAMETER lcValue, ctYpe
+ DO CASE
+      CASE ctYpe='I'
+           IF ISNULL(lcValue)
+                lcValue = 0
+           ENDIF
+           lcValue = LTRIM(STR(lcValue))
+      CASE ctYpe='N' .OR. ctYpe='Y'
+           IF ISNULL(lcValue)
+                lcValue = 0
+я------------------- ... rest ignored ...
+*
+FUNCTION width_of_macro
+ PARAMETER tnStart
+ LOCAL leNdofmacro, lcBit, lcMacro, lnWidth, lcKontrolstring
+ lnWidth = 0
+ lcBit = ''
+ lcKontrolstring = '+-*/)'
+ DO WHILE  .NOT. leNdofmacro
+      lcBit = SUBSTR(tcString, tnStart, 1)
+      IF lcBit$lcKontrolstring
+я------------------- ... rest ignored ...
+*
+FUNCTION getSaldo
+ PARAMETER tcKonto, tdKpv, tcCursor
+ LOCAL lsAldo, loPt
+ lsAldo = 0
+ lcKonto = tcKonto
+ IF EMPTY(tcCursor) .OR.  .NOT. USED(tcCursor)
+      tcCursor = 'qrySaldo'
+      tcKonto = LTRIM(RTRIM(tcKonto))+'%'
+      tnAsutusid1 = 0
+      tnAsutusid2 = 99999999
+      tdKpv1 = DATE(1999, 1, 1)
+я------------------- ... rest ignored ...
+*
+FUNCTION getkaibed
+ PARAMETER tcKonto, tcOpt, tnAsutusid
+ lnKaibed = 0
+ tnAsutusid = IIF(VARTYPE(tnAsutusid)='C', VAL(ALLTRIM(tnAsutusid)),  ;
+              tnAsutusid)
+ tdKpv1 = flTraruanne.kpV1
+ tdKpv2 = flTraruanne.kpV2
+ IF EMPTY(tnAsutusid)
+      tnAsutusid1 = 0
+      tnAsutusid2 = 999999999
+ ELSE
+      tnAsutusid1 = tnAsutusid
+я------------------- ... rest ignored ...
+*
+FUNCTION TSD
+ PARAMETER tcKontogrupp, tnTunnusid, tdKpv, tcCursor
+ LOCAL lnSaldo
+ lnSaldo = 0
+ IF VARTYPE(tnTunnusid)='C'
+      tnTunnusid = VAL(ALLTRIM(tnTunnusid))
+ ENDIF
+ IF EMPTY(tcCursor) .OR.  .NOT. USED(tcCursor)
+      leRror = odB.exEc("TSD ","'"+tcKontogrupp+"',"+STR(tnTunnusid)+","+ ;
+               STR(grEkv)+', DATE('+STR(YEAR(tdKpv), 4)+','+ ;
+               STR(MONTH(tdKpv), 2)+','+STR(DAY(tdKpv), 2)+')','qrySd')
+я------------------- ... rest ignored ...
+*
+FUNCTION TSK
+ LPARAMETER tcKontogrupp, tnTunnusid, tdKpv, tcCursor
+ LOCAL lnSaldo
+ lnSaldo = 0
+ lnSaldo = tsD(tcKontogrupp,tnTunnusid,tdKpv,tcCursor)*-1
+я------------------- ... rest ignored ...
+*
+FUNCTION DJ
+ PARAMETER tcNumber
+ LOCAL lnSaldo, luSed
+ lnSaldo = 0
+ tcCursor = SYS(2015)
+ lnStart = AT(',', tcKontogrupp)
+ IF lnStart=0
+      RETURN 0
+ ENDIF
+ odB.usE('VALIDATEARVE')
+ IF RECCOUNT('VALIDATEARVE')<1 .OR. EMPTY(vaLidatearve.id)
+я------------------- ... rest ignored ...
+*
+FUNCTION L
+ PARAMETER tcKonto1, tcKonto2, tdKpv, tcCursor
+ LOCAL lnSaldo, luSed
+ lnSaldo = 0
+ tcCursor = SYS(2015)
+ cdEebet = tcKonto1+'%'
+ ckReedit = tcKonto2+'%'
+ dkPv1 = flTraruanne.kpV1
+ dkPv2 = flTraruanne.kpV2
+ nsUmma1 = -999999999
+ nsUmma2 = 999999999
+я------------------- ... rest ignored ...
+*
+FUNCTION DK
+ PARAMETER tcKontogrupp, tdKpv, tcCursor
+ LOCAL lnSaldo
+ lnSaldo = 0
+ IF  .NOT. EMPTY(tcKontogrupp)
+я------------------- ... rest ignored ...
+*
+FUNCTION KK
+ PARAMETER tcKontogrupp, tdKpv, tcCursor
+ LOCAL lnSaldo
+ lnSaldo = 0
+ IF  .NOT. EMPTY(tcKontogrupp)
+я------------------- ... rest ignored ...
+*
+FUNCTION ADK
+ PARAMETER tcKontogrupp, tnAsutusid, tdKpv, tcCursor
+ LOCAL lnKaibed
+ lnKaibed = 0
+ IF VARTYPE(tnAsutusid)='C'
+      tnAsutusid = VAL(ALLTRIM(tnAsutusid))
+я------------------- ... rest ignored ...
+*
+FUNCTION AKK
+ PARAMETER tcKontogrupp, tnAsutusid, tdKpv, tcCursor
+ LOCAL lnKaibed
+ lnKaibed = 0
+ IF VARTYPE(tnAsutusid)='C'
+      tnAsutusid = VAL(ALLTRIM(tnAsutusid))
+я------------------- ... rest ignored ...
+*
+FUNCTION ASD
+ PARAMETER tcKontogrupp, tnAsutusid, tdKpv, tcCursor
+ LOCAL lnSaldo
+ lnSaldo = 0
+ IF VARTYPE(tnAsutusid)='C'
+      tnAsutusid = VAL(ALLTRIM(tnAsutusid))
+ ENDIF
+ IF EMPTY(tcCursor) .OR.  .NOT. USED(tcCursor) .OR. VARTYPE(tcCursor)<>'C'
+      leRror = odB.exEc("ASD ","'"+tcKontogrupp+"',"+STR(tnAsutusid)+","+ ;
+               STR(grEkv)+', DATE('+STR(YEAR(tdKpv), 4)+','+ ;
+               STR(MONTH(tdKpv), 2)+','+STR(DAY(tdKpv), 2)+')','qrySd')
+я------------------- ... rest ignored ...
+*
+FUNCTION ASK
+ LPARAMETER tcKontogrupp, tnAsutusid, tdKpv, tcCursor
+ LOCAL lnSaldo
+ lnSaldo = 0
+ lnSaldo = asD(tcKontogrupp,tnAsutusid,tdKpv,tcCursor)*-1
+я------------------- ... rest ignored ...
+*
+FUNCTION SD
+ PARAMETER tcKontogrupp, tdKpv, tcCursor
+ LOCAL lnSaldo, lnAlg, lnDb, lnKr
+ lnSaldo = 0
+ IF EMPTY(tcCursor) .OR.  .NOT. USED(tcCursor)
+      IF gvErsia<>'VFP'
+           leRror = odB.exEc("SD ","'"+tcKontogrupp+"',"+STR(grEkv)+ ;
+                    ', DATE('+STR(YEAR(tdKpv), 4)+','+STR(MONTH(tdKpv),  ;
+                    2)+','+STR(DAY(tdKpv), 2)+')','qrySd')
+      ELSE
+           SELECT SUM(alGsaldo) AS suMma FROM Library l INNER JOIN  ;
+                  kontoinf k ON l.id=k.paRentid WHERE k.reKvid=grEkv AND  ;
+                  l.koOd LIKE LTRIM(RTRIM(tcKontogrupp))+'%'  INTO CURSOR  ;
+                  qryAlgS
+           SELECT SUM(suMma) AS suMma FROM journal1 WHERE deEbet LIKE  ;
+                  LTRIM(RTRIM(tcKontogrupp))+'%'  AND paRentid IN(SELECT  ;
+                  id FROM journal WHERE reKvid=grEkv AND kpV<=tdKpv) INTO  ;
+                  CURSOR qryDbK
+я------------------- ... rest ignored ...
+*
+FUNCTION SK
+ LPARAMETER tcKontogrupp, tdKpv, tcCursor
+ LOCAL lnSaldo
+ lnSaldo = 0
+ lnSaldo = sd(tcKontogrupp,tdKpv,tcCursor)*-1
+я------------------- ... rest ignored ...
+*
+**
+** login.fxp
+**
+*
+DEFINE CLASS login AS dokument
+ naMe = "login"
+ asUtusid = 0
+ usErid = 0
+ wiDth = 440
+ caPtion = 'Login'
+ heIght = 100
+ auTocenter = .T.
+ shOwwindow = 2
+ wiNdowtype = 1
+я------------------- ... rest ignored ...
+*
+ keY = ''
+*
+     PROCEDURE btNok.click
+      SET CLASSLIB TO logo
+      olOgo = CREATEOBJECT('logo')
+      olOgo.shOw()
+      WITH thIsform
+           ocOnnect = NEWOBJECT('connect', 'connect')
+           SELECT coMkey
+           leRror = ocOnnect.odB(SYS(2007, ALLTRIM(coMkey.omAnik)), ;
+                    ALLTRIM(.txTkasutaja.vaLue), ;
+                    RTRIM(LTRIM(.txTparool.vaLue)),thIsform.keY,.T.)
+           IF leRror=.T.
+                IF UPPER(.keY)='-K'
+                     DO FORM key WITH 'EDIT', cuRkey.id
+я------------------- ... rest ignored ...
+*
+     PROCEDURE btNcancel.click
+      CLEAR EVENTS
+      RELEASE thIsform
+я------------------- ... rest ignored ...
+*
+     PROCEDURE coMrekv.init
+      thIs.vaLue = coMkey.id
+я------------------- ... rest ignored ...
+*
+     PROCEDURE init
+      PARAMETER tkEy
+      IF EMPTY(tkEy)
+           tkEy = ''
+      ENDIF
+      thIs.keY = tkEy
+      DO CASE
+           CASE UPPER(tkEy)='-D'
+                ON ERROR
+я------------------- ... rest ignored ...
+*
+     PROCEDURE unload
+      WITH thIs
+           IF EMPTY(grEkv)
+я------------------- ... rest ignored ...
+*
+     FUNCTION encryptpass
+      LPARAMETER tcPass
+      lcCryptpath = enCrypt(f_Key(),tcPass)
+      REPLACE v_Pass.paRool WITH lcCryptpath IN v_Pass
+я------------------- ... rest ignored ...
+*
+     FUNCTION decryptpass
+      LPARAMETER tcPass
+      lcDecryptpath = deCrypt(f_Key(),tcPass)
+я------------------- ... rest ignored ...
+*
+     PROCEDURE AvadaAruanned
+я------------------- ... rest ignored ...
+*
+     PROCEDURE viGa
+      LOCAL lcString
+      thIs.meSsage = "Login ebaonestus"
+      lcString = "messagebox('"+thIs.meSsage+"','Viga')"
+      &lcString
+я------------------- ... rest ignored ...
+*
+ENDDEFINE
+*
+**
+** setobjrf.fxp
+**
+ LPARAMETER toObject, tcName, tvClass, tvClasslibrary
+ LOCAL lcName, lcClass, lcClasslibrary, ooBject, lnCount
+ LOCAL lnObjectrefindex, lnObjectrefcount, oeXistingobject
+ IF TYPE("toObject")<>"O" .OR. ISNULL(toObject)
+      RETURN .NULL.
+ ENDIF
+ lcName = IIF(TYPE("tcName")=="C", ALLTRIM(tcName), LOWER(SYS(2015)))
+ oeXistingobject = .NULL.
+ ooBject = .NULL.
+ lcClasslibrary = ""
+я------------------- ... rest ignored ...
+*
+**
+** f_key.fxp
+**
+ LOCAL csTring
+ csTring = CHR(107)+CHR(97)+CHR(116)+CHR(97)+CHR(109)+CHR(97)+CHR(114)+ ;
+           CHR(97)+CHR(110)+CHR(32)+CHR(116)+CHR(105)+CHR(107)+CHR(105)+ ;
+           CHR(50)+CHR(54)
+я------------------- ... rest ignored ...
+*
+**
+** decrypt.fxp
+**
+ PARAMETER tcKey, tcPass
+ IF  .NOT. USED('config')
+      USE config IN 0
+ ENDIF
+ IF coNfig.enCr=0
+      RETURN tcPass
+ ENDIF
+ LOCAL lhKeyhandle, lhExchangekeyhandle
+ LOCAL lcSavetext
+ LOCAL lpRoviderhandle, lcProvidername, lcContainername
+я------------------- ... rest ignored ...
+*
+**
+** secure.fxp
+**
+ LPARAMETER lcEncr
+ maXno = 100
+ lcEncr = UPPER(ALLTRIM(lcEncr))
+ IF lcEncr<>'ON' .AND. lcEncr<>'OFF'
+      RETURN MESSAGEBOX("Pass ON or OFF for encryption/decryption!")
+ ENDIF
+ lnFields = FCOUNT()
+я------------------- ... rest ignored ...
+*
+FUNCTION CONVRT
+ LPARAMETER lcEncrypt, lcString
+ IF PARAMETERS()<2
+      MESSAGEBOX('Pass two arguments, [On Off] and string')
+      RETURN
+ ENDIF
+ lcEncrypt = UPPER(ALLTRIM(lcEncrypt))
+ IF lcEncrypt='ON'
+      lnLen = LEN(ALLTRIM(lcString))
+      lcNewstring = ''
+      FOR i = 1 TO lnLen
+я------------------- ... rest ignored ...
+*
+**
+** checkuuendused.fxp
+**
+ PARAMETER urLname
+ IF coNfig.uuEnda=0
+      RETURN .F.
+ ENDIF
+ IF FILE('ajalugu.dbf')
+      USE ajalugu IN 0
+      GOTO BOTTOM
+      IF ajAlugu.kpV=DATE()
+           RETURN .F.
+      ENDIF
+я------------------- ... rest ignored ...
+*
+PROCEDURE uuenda_updater
+ lcFileuus = SYS(5)+SYS(2003)+'\tmp\updater.exe'
+ lcFilevana = SYS(5)+SYS(2003)+'\updater.exe'
+я------------------- ... rest ignored ...
+*
+**
+** ferr.fxp
+**
+ RETURN .T.
+я------------------- ... rest ignored ...
+*
+**
+** createshortcut.fxp
+**
+ PARAMETER tcPopup, tlEesti, tnRecno
+ ocOnnect.crEatemenu(tcPopup,2,.T.)
+я------------------- ... rest ignored ...
+*
+**
+** onkey.fxp
+**
+ PARAMETER tcKey
+ DO CASE
+      CASE tcKey='CTRL+A'
+           IF otOols.btNadd.enAbled=.T. .AND. VARTYPE(gcWindow)='O' .AND.   ;
+              .NOT. ISNULL(gcWindow) .AND. otOols.btNadd.viSible=.T.
+                gcWindow.adD()
+           ENDIF
+      CASE tcKey='CTRL+S'
+           IF otOols.btNsave.enAbled=.T. .AND. VARTYPE(gcWindow)='O'  ;
+              .AND.  .NOT. ISNULL(gcWindow) .AND. otOols.btNsave.viSible=.T.
+я------------------- ... rest ignored ...
+*
+**
+** encrypt.fxp
+**
+ PARAMETER tcKey, tcPass
+ IF  .NOT. USED('config')
+      USE config IN 0
+ ENDIF
+ IF coNfig.enCr=0
+      RETURN tcPass
+ ENDIF
+ LOCAL lhKeyhandle, lhExchangekeyhandle
+ LOCAL lcSavetext
+ LOCAL lpRoviderhandle, lcProvidername, lcContainername
+я------------------- ... rest ignored ...
+*
+**
+** remove_chr13_from_string.fxp
+**
+ PARAMETER tcString
+ IF VARTYPE(tcString)='C' .AND. CHR(13)$tcString
+      DO WHILE ATC(CHR(13), tcString)>0
+я------------------- ... rest ignored ...
+*
+**
+** remove_view_from_memory.fxp
+**
+ IF gvErsia='VFP'
+      SET DATABASE TO buhdata5
+      lnViews = ADBOBJECTS(laView, 'VIEW')
+      FOR i = 1 TO lnViews
+я------------------- ... rest ignored ...
+*
+**
+** registreerimine.fxp
+**
+ PARAMETER tcOper, tcDok, tnId
+ IF EMPTY(coNfig.reGister)
+      RETURN .T.
+ ENDIF
+ tcOper = IIF(EMPTY(tcOper), SPACE(1), tcOper)
+ tcDok = IIF(EMPTY(tcDok), SPACE(1), tcDok)
+ tnId = IIF(EMPTY(tnId), 0, tnId)
+ WITH odB
+      .usE('v_raamat','v_raamat',gnHandle,.T.)
+      INSERT INTO v_raamat (reKvid, usErid, opEratsioon, doKument, doKid)  ;
+             VALUES (grEkv, guSerid, tcOper, tcDok, tnId)
+я------------------- ... rest ignored ...
+*
+**
+** frxexp_proc.fxp
+**
+*
+FUNCTION CreTabl1
+ LPARAMETER tcPath, asTrct, tnBlocksiz, tcAlias, tcClause, tcOtherformat
+ IF EMPTY(M.tnBlocksiz)
+      tnBlocksiz = seTblock()
+ ENDIF
+ IF  .NOT. isChar(M.tcClause)
+      tcClause = IIF(EMPTY(M.tcPath), '', 'FREE')
+ ENDIF
+ LOCAL lcStructinfo, lnOldblock, lnError, lcOldonerr
+ IF TYPE("aStrct[1]")="U"
+      lcStructinfo = "("+M.asTrct+")"
+я------------------- ... rest ignored ...
+*
+FUNCTION FoxVersion
+ PRIVATE lcVerstr, lnVersion, ln1, ln2, i
+ lnVersion = 0
+ lcVerstr = VERSION(1)
+ FOR i = 1 TO 3
+      ln1 = AT(SPACE(1), M.lcVerstr, M.i)+1
+      ln2 = AT(SPACE(1), M.lcVerstr, M.i+1)
+я------------------- ... rest ignored ...
+*
+FUNCTION RecNo1
+ LPARAMETER tcAlias
+ IF EMPTY(M.tcAlias)
+      tcAlias = ALIAS()
+ ENDIF
+ IF EMPTY(M.tcAlias)
+      RETURN -3
+ ENDIF
+ IF EOF(M.tcAlias)
+я------------------- ... rest ignored ...
+*
+FUNCTION Go1
+ LPARAMETER tnRectogo, tcAlias
+ IF EMPTY(M.tcAlias)
+      tcAlias = ALIAS()
+ ENDIF
+ DO CASE
+      CASE M.tnRectogo>RECCOUNT(M.tcAlias)
+           GOTO BOTTOM IN (M.tcAlias)
+           RETURN .F.
+я------------------- ... rest ignored ...
+*
+FUNCTION Close1
+ LPARAMETER tcAlias, tlUsed
+ IF VARTYPE(M.tcAlias)="L"
+      IF USED()
+           USE
+      ENDIF
+      RETURN  .NOT. USED()
+ ENDIF
+ IF EMPTY(M.tcAlias)
+      RETURN .T.
+я------------------- ... rest ignored ...
+*
+FUNCTION OnError
+ RETURN ON('ERROR')
+я------------------- ... rest ignored ...
+*
+FUNCTION SetBlock
+ RETURN SET('BLOCKSIZE')
+я------------------- ... rest ignored ...
+*
+FUNCTION NullInit
+ LPARAMETER tvAlue
+ LOCAL lcType
+ lcType = VARTYPE(M.tvAlue)
+ DO CASE
+      CASE INLIST(M.lcType, 'N', 'F', 'Y')
+           RETURN 0
+      CASE INLIST(M.lcType, 'D')
+           RETURN daTe00()
+я------------------- ... rest ignored ...
+*
+FUNCTION Date00
+ RETURN CTOD('')
+я------------------- ... rest ignored ...
+*
+FUNCTION AS
+ LPARAMETER tnNumber
+ RETURN ALLTRIM(STR(M.tnNumber))
+я------------------- ... rest ignored ...
+*
+FUNCTION IsChar
+ LPARAMETER teTotest
+ RETURN VARTYPE(M.teTotest)="C"
+я------------------- ... rest ignored ...
+*
+FUNCTION CurAlias
+ LPARAMETER tcAlias
+ IF USED() .AND.  .NOT. EMPTY(M.tcAlias) .AND. ALLTRIM(UPPER(M.tcAlias))== ;
+    ALIAS()
+я------------------- ... rest ignored ...
+*
+FUNCTION Force_DBF
+ LPARAMETER M.fiLname, M.olNlyifnot
+ IF PCOUNT()<2
+      M.olNlyifnot = .F.
+я------------------- ... rest ignored ...
+*
+FUNCTION Force_EXT
+ LPARAMETER tcFilename, tcNewext, tlOnlyifnot
+ PRIVATE lcDot
+ lcDot = "."
+ IF M.tlOnlyifnot .AND. M.lcDot$JUSTFNAME(M.tcFilename)
+      RETURN M.tcFilename
+ ENDIF
+ tcFilename = stRipext(M.tcFilename)
+ tcNewext = ALLTRIM(M.tcNewext)
+я------------------- ... rest ignored ...
+*
+FUNCTION StripExt
+ LPARAMETER tcFilename
+ tcFilename = TRIM(M.tcFilename)
+ PRIVATE lnDotpos, lnTerminator
+ lnDotpos = RAT(".", M.tcFilename)
+ lnTerminator = MAX(RAT("\", M.tcFilename), RAT(":", M.tcFilename))
+я------------------- ... rest ignored ...
+*
+FUNCTION FontStyleN
+ LPARAMETER tnFontstyle
+ DO CASE
+      CASE M.tnFontstyle=1
+я------------------- ... rest ignored ...
+*
+FUNCTION RenFile
+ PARAMETER tcFile1, tcFile2, M.usEtts_n
+ PRIVATE llUsewinapi
+ llUsewinapi = .T.
+ IF FILE(M.tcFile1)
+      IF FILE(M.tcFile2) .AND.  .NOT. deLfile(M.tcFile2,M.usEtts_n)
+           RETURN .F.
+      ENDIF
+      PRIVATE lnError
+      lnError = 0
+      IF UPPER(JUSTDRIVE(M.tcFile1))<>UPPER(JUSTDRIVE(M.tcFile2))
+я------------------- ... rest ignored ...
+*
+FUNCTION DelFile
+ PARAMETER tcFile, usEttsin, tnError, tlMesnotdeleted, tcBadmessage
+ tnError = 0
+ PRIVATE llUsewinapi
+ llUsewinapi = .T.
+ IF FILE(M.tcFile)
+      IF M.llUsewinapi
+           IF deLetefile(M.tcFile)=0
+                tnError = -108
+           ENDIF
+      ELSE
+я------------------- ... rest ignored ...
+*
+FUNCTION MoveFile
+ PARAMETER tcExistingfilename, tcNewfilename
+ DECLARE INTEGER MoveFile IN Win32api AS MoveFile0 STRING @, STRING @
+я------------------- ... rest ignored ...
+*
+FUNCTION DeleteFile
+ PARAMETER tcFilename
+ DECLARE INTEGER DeleteFile IN Win32api AS DeleteFile0 STRING @
+я------------------- ... rest ignored ...
+*
+FUNCTION CopyFile
+ PARAMETER tcFile1, tcFile2, usEttsin, tlMesprogrss, tlMesnotcopied,  ;
+           tcBadmessage
+ PRIVATE llOk, llUsewinapi
+ llOk = .F.
+ llUsewinapi = .T.
+ IF FILE(M.tcFile1)
+      IF  .NOT. deLfile(M.tcFile2,M.usEttsin,0,M.tlMesnotcopied, ;
+          @M.tcBadmessage)
+           RETURN .F.
+      ENDIF
+      IF M.tlMesprogrss
+           WAIT CLEAR
+я------------------- ... rest ignored ...
+*
+FUNCTION CopyFileApi
+ PARAMETER lcSource, lcTarget, nfLag
+ DECLARE INTEGER CopyFile IN WIN32API AS CopyFile0 STRING @, STRING @, INTEGER
+я------------------- ... rest ignored ...
+*
+FUNCTION Worn_mesg
+ LPARAMETER tcMessage, tcTitle, ndIalogboxtype
+ IF PCOUNT()<2 .OR. EMPTY(M.tcTitle)
+      tcTitle = UPPER("Warning")
+я------------------- ... rest ignored ...
+*
+FUNCTION IsObject
+ LPARAMETER teTotest
+ RETURN VARTYPE(M.teTotest)="O" .AND.  .NOT. ISNULL(M.teTotest)
+я------------------- ... rest ignored ...
+*
+FUNCTION AnyToC
+ LPARAMETER inVar, tnTyperet
+ IF PCOUNT()<2
+      tnTyperet = 0
+ ENDIF
+ LOCAL lcType
+ lcType = TYPE("m.inVar")
+ DO CASE
+      CASE INLIST(M.lcType, 'C', 'M')
+           RETURN M.inVar
+      CASE INLIST(M.lcType, 'N', 'I', 'Y')
+я------------------- ... rest ignored ...
+*
+FUNCTION ASspec
+ LPARAMETER tnNumber, tnRound
+ IF PCOUNT()<2
+      tnRound = 15
+ ENDIF
+ IF isWhole(M.tnNumber)
+я------------------- ... rest ignored ...
+*
+FUNCTION IsWhole
+ PARAMETER M.tnNumber
+ RETURN M.tnNumber=INT(M.tnNumber)
+я------------------- ... rest ignored ...
+*
+FUNCTION Trim1
+ LPARAMETER tcStr, tcSimb
+ IF PCOUNT()<2
+      tcSimb = ","
+ ENDIF
+ LOCAL lnLen
+ tcSimb = M.tcSimb+SPACE(1)
+ tcStr = TRIM(M.tcStr)
+ lnLen = LEN(M.tcStr)
+ DO WHILE .T.
+      IF M.lnLen<=0
+я------------------- ... rest ignored ...
+*
+FUNCTION Info_mesg
+ LPARAMETER tcMessage, tcTitle, ndIalogboxtype
+ IF EMPTY(M.tcMessage)
+      tcMessage = ""
+ ENDIF
+ IF EMPTY(M.tcTitle)
+      tcTitle = UPPER("information")
+я------------------- ... rest ignored ...
+*
+FUNCTION ShellExe
+ LPARAMETER tcFilename, tcParameters, tcWorkdir, tcOperation,  ;
+            tnShowwindow, tnAction, tnHandlestarted
+ IF EMPTY(M.tnAction)
+      tnAction = 0
+ ENDIF
+ IF EMPTY(M.tcParameters)
+      tcParameters = ""
+ ENDIF
+ IF EMPTY(M.tcWorkdir)
+      tcWorkdir = ""
+ ENDIF
+я------------------- ... rest ignored ...
+*
+FUNCTION IsLog
+ LPARAMETER teTotest
+ RETURN VARTYPE(M.teTotest)="L"
+я------------------- ... rest ignored ...
+*
+FUNCTION PutQuotes
+ LPARAMETER M.tcString, tlCheck, tlOnlyifspaces
+ IF M.tlOnlyifspaces .AND.  .NOT. SPACE(1)$M.tcString
+      RETURN M.tcString
+ ENDIF
+ LOCAL lcQuote
+ lcQuote = '"'
+ IF M.tlCheck .AND. M.lcQuote$M.tcString
+я------------------- ... rest ignored ...
+*
+FUNCTION aWindows
+ PARAMETER paWindows
+ PRIVATE lhCurrwin, lnWincount
+ lhCurrwin = geTwindow(maInhwnd(),0)
+ lnWincount = 0
+ DO WHILE lhCurrwin>0
+      IF  .NOT. EMPTY(geTwindowtext(M.lhCurrwin)) .AND.  ;
+          isWindowvisible(M.lhCurrwin)<>0
+           lnWincount = lnWincount+1
+я------------------- ... rest ignored ...
+*
+FUNCTION GetNewWindow
+ LPARAMETER taWins0, taWinsafter
+ EXTERNAL ARRAY taWins0, taWinsafter
+ LOCAL lnHandle, i, j, llFound
+ lnHandle = 0
+ FOR i = 1 TO ALEN(taWinsafter, 1)
+      IF  .NOT. EMPTY(taWinsafter(M.i,2))
+           llFound = .F.
+           FOR j = 1 TO ALEN(taWins0, 1)
+                IF  .NOT. EMPTY(taWins0(M.j,2))
+я------------------- ... rest ignored ...
+*
+FUNCTION EscapeProc
+ LPARAMETER tcMessage, tcChrlist
+ IF PCOUNT()<2
+      tcChrlist = CHR(27)
+ ENDIF
+ IF CHRSAW()
+      LOCAL lnKeynumber
+      lnKeynumber = INKEY()
+      CLEAR TYPEAHEAD
+      IF M.lnKeynumber<1 .OR. CHR(M.lnKeynumber)$M.tcChrlist
+           IF INLIST(MESSAGEBOX("Procedure "+IIF(EMPTY(M.tcMessage), "та",  ;
+              M.tcMessage)+CHR(13)+"will be canceled"+CHR(13)+ ;
+              "Do you confirm?", 0292), 1, 6)
+я------------------- ... rest ignored ...
+*
+FUNCTION YesNo
+ LPARAMETER tcMessage, tcTitlebox, ndEfaultbutton, ndIalogboxtype, niCon
+ IF EMPTY(M.tcTitlebox)
+      tcTitlebox = _SCREEN.caPtion
+ ENDIF
+ IF PCOUNT()<3
+      ndEfaultbutton = 0
+ ENDIF
+ IF PCOUNT()<4
+      ndIalogboxtype = 3
+я------------------- ... rest ignored ...
+*
+FUNCTION GetWindowText
+ LPARAMETER tnHandle
+ DECLARE INTEGER GetWindowText IN WIN32API AS GetWindowText0 INTEGER,  ;
+         STRING @, INTEGER
+ LOCAL lpTitle, lnResult, lnLen
+ lnLen = 512
+ lpTitle = REPLICATE(CHR(0), M.lnLen)
+я------------------- ... rest ignored ...
+*
+FUNCTION IsWindow
+ LPARAMETER tnHandle
+ DECLARE INTEGER IsWindow IN user32.dll AS IsWindow0 INTEGER
+я------------------- ... rest ignored ...
+*
+FUNCTION IsWindowVisible
+ LPARAMETER tnHandle
+ DECLARE INTEGER IsWindowVisible IN user32.dll AS IsWindowVisible0 INTEGER
+я------------------- ... rest ignored ...
+*
+FUNCTION GetWindow
+ LPARAMETER tnHandleoriginal, tnRelationship
+ DECLARE INTEGER GetWindow IN user32.dll AS GetWindow0 INTEGER, INTEGER
+я------------------- ... rest ignored ...
+*
+FUNCTION Sleep
+ PARAMETER tnMilliseconds
+ DECLARE Sleep IN WIN32API AS Sleep0 INTEGER
+я------------------- ... rest ignored ...
+*
+**
+** repexpfl.fxp
+**
+*
+FUNCTION RepExpFl
+ PARAMETER tcRepfile, tcClauses, tcTofile, tcTofiletype, tlSummary,  ;
+           tnGroupsummary, tlForcedospart, tlEnhcolumn, tlEnhheader,  ;
+           tlEnhtitle, tlEnhsummary, tlNomessages, tcProgressfuncs,  ;
+           tcProgrtitle, tnProgrincrement
+ IF EMPTY(M.tnGroupsummary)
+      tnGroupsummary = 0
+ ENDIF
+ PRIVATE lnOldrecmain, lnMainalias, lnRepalias
+ lnMainalias = SELECT()
+ lnOldrecmain = reCno1()
+ lnRepalias = SYS(2015)
+ SELECT 0
+ USE NOUPDATE (M.tcRepfile) AGAIN ALIAS (M.lnRepalias)
+я------------------- ... rest ignored ...
+*
+FUNCTION GetVdiapason
+ PARAMETER tnRepalias, tnBand, tnVposmin, tnVposmax, tnGroup
+ PRIVATE lnOldselect, llOk
+ llOk = .T.
+ lnOldselect = SELECT()
+ SELECT (M.tnRepalias)
+ PRIVATE lnDesignheight
+ IF M.pcPlatform='DOS'
+      lnDesignheight = 0
+ ELSE
+      lnDesignheight = 2083.333
+я------------------- ... rest ignored ...
+*
+FUNCTION GetBandObjects
+ PARAMETER tnRepalias, tnVposmin, tnVposmax, ar_detail
+ PRIVATE lnOldselect
+ lnOldselect = SELECT()
+ SELECT (M.tnRepalias)
+ PRIVATE lnDetobjects, leValue, lcExpr
+ lnDetobjects = 0
+ SCAN FOR INLIST(obJtype, M.pnDettype1, M.pnDettype2) .AND. BETWEEN(vpOs,  ;
+      M.tnVposmin, M.tnVposmax)
+      lcExpr = ALLTRIM(exPr)
+      IF M.pcPlatform="DOS" .AND. obJtype=5 .AND. LEN(M.lcExpr)=3 .AND.  ;
+         EVALUATE(M.lcExpr)$M.dw_dosgrph+"+-_|"
+           LOOP
+я------------------- ... rest ignored ...
+*
+FUNCTION RpProcessOjects
+ PARAMETER tnObjects, ar_band, tnTypecalc
+ EXTERNAL ARRAY ar_band
+ PRIVATE llOk, lcTemp, k1, lnTotaltype, lnResettotal, lnGroupreset,  ;
+         leValue, lnAverage
+ llOk = .T.
+ FOR M.k1 = 1 TO M.tnObjects
+      lcTemp = ar_band(M.k1,1)
+      lnTotaltype = ar_band(M.k1,7)
+      DO CASE
+           CASE M.tnTypecalc=1 .AND. M.lnTotaltype=0
+                LOOP
+я------------------- ... rest ignored ...
+*
+FUNCTION CreStructArray
+ PARAMETER tnObjects, ar_band, ar_struct, tcNameprefix
+ EXTERNAL ARRAY ar_band
+ IF M.tnObjects<=0
+      RETURN .F.
+ ENDIF
+ PRIVATE lnOldselect
+ lnOldselect = SELECT()
+ PRIVATE lcAliascurs, a_Cursstruct, i
+ DIMENSION a_Cursstruct[2, 4]
+ a_Cursstruct[1, 1] = 'Vpos'
+я------------------- ... rest ignored ...
+*
+FUNCTION App_OneRecord
+ PRIVATE lnOldselect, lnError
+ lnError = 0
+ lnOldselect = SELECT()
+ SELECT (M.pcCursname)
+ APPEND BLANK
+ IF M.plReplacevalues
+      PRIVATE lnColumns, i, lcColvarname
+      lnColumns = ALEN( &pcArrActStr, 1 )
+      FOR i = 1 TO M.lnColumns
+           lcColVarName = &pcArrActStr[m.i,1]
+           REPLACE &lcColVarName WITH m.&lcColVarName
+я------------------- ... rest ignored ...
+*
+**
+** returnedvalue.fxp
+**
+ LPARAMETER tcValue, tnOrder
+ LOCAL lrEturn, lnPosition
+ lnPosition = 0
+ lrEturn = ''
+ IF  .NOT. EMPTY(tcValue) .AND. TYPE('tcValue')='C'
+      DO CASE
+           CASE LEFT(tcValue, 1)='N'
+                lnPosition = AT(';', tcValue)
+                IF lnPosition>0
+                     lrEturn = VAL(IIF(tnOrder=1, SUBSTR(tcValue, 2,  ;
+                               lnPosition-2), RIGHT(tcValue, LEN(tcValue)- ;
+                               lnPosition)))
+я------------------- ... rest ignored ...
+*
+**
+** validatelibrary.fxp
+**
+ PARAMETER tcAlias, tcKood
+ IF  .NOT. USED('v_eel_config')
+      odB.usE('v_eel_config')
+ ENDIF
+ IF v_Eel_config.vaLklassif=0
+      RETURN .T.
+ ENDIF
+ IF EMPTY(tcAlias) .OR.  .NOT. USED(tcAlias) .OR. EMPTY(tcKood)
+      RETURN .T.
+я------------------- ... rest ignored ...
+*
+**
+** open_lib.fxp
+**
+ PARAMETER tnOpt
+ IF EMPTY(tnOpt)
+      tnOpt = 0
+ ENDIF
+ CREATE CURSOR startreport (reP M)
+ APPEND BLANK
+ IF gvErsia='VFP'
+      SET DATABASE TO buhdata5
+      lnViews = ADBOBJECTS(laView, 'VIEW')
+      FOR i = 1 TO lnViews
+я------------------- ... rest ignored ...
+*
+PROCEDURE OpenView
+ LPARAMETER tcView, tlOpt, tcCursor
+ IF VARTYPE(olOgo)='O'
+      WITH olOgo.lbLlib
+           .caPtion = IIF(coNfig.keEl=2, 'Laadimine:', 'Загрузка:')+tcView
+           .viSible = .T.
+           .reFresh
+      ENDWITH
+ ENDIF
+ IF EMPTY(tcCursor)
+      tcCursor = tcView
+я------------------- ... rest ignored ...
+*
+**
+** execmenu.fxp
+**
+ PARAMETER tnId
+ LOCAL leRror
+ SELECT cuRmenuremote
+ IF ORDER()<>'ID'
+      SET ORDER TO id
+ ENDIF
+ LOCATE FOR id=tnId
+я------------------- ... rest ignored ...
+*
+**
+** nobjekt.fxp
+**
+ PARAMETER ckLass, cvAr, cpArameter, ccLasslib, ldAta
+ IF EMPTY(cvAr)
+      &cKlass
+      RETURN
+ ENDIF
+ ccLasslib = IIF(EMPTY(ccLasslib), ckLass, ccLasslib)
+ LOCAL ooBject
+ IF  .NOT. EMPTY(ckLass)
+      IF  .NOT. EMPTY(cvAr)
+           crEsult = EVALUATE('vartype('+cvAr+')')
+я------------------- ... rest ignored ...
+*
+**
+** valirekv.fxp
+**
+ LOCAL lnRekvid
+ lnRekvid = 0
+ DO FORM valirekv TO lnRekvid
+ IF  .NOT. EMPTY(lnRekvid)
+      SELECT coMrekvremote
+      LOCATE FOR id=lnRekvid
+      WAIT WINDOW NOWAIT ' Oodake, kдivitan '+ ;
+           LEFT(ALLTRIM(coMrekvremote.niMetus), 40)
+я------------------- ... rest ignored ...
+*
+**
+** err.fxp
+**
+ PARAMETER tcProc, tnLineno, lcError, lcMessage, lcCode
+ LOCAL lcAlias, lnRecno, lcFile, lnFiles, lcVersia, lnError
+ lcError = IIF(EMPTY(lcError), STR(ERROR()), lcError)
+ lcMessage = IIF(EMPTY(lcMessage) .OR. ISNULL(lcMessage), MESSAGE(), lcMessage)
+ lcCode = IIF(EMPTY(lcCode), MESSAGE(1), lcMessage)
+ tnLineno = IIF(EMPTY(tnLineno), 0, tnLineno)
+ lnError = 0
+ IF EMPTY(tcProc)
+      tcProc = ''
+ ENDIF
+я------------------- ... rest ignored ...
+*

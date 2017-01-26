@@ -1,0 +1,74 @@
+gnHandle = SQLCONNECT('pg60')
+IF gnhandle < 0
+	MESSAGEBOX('Connection','Kontrol')
+	SET STEP ON 
+	return
+ENDIF
+CREATE CURSOR qrySkript (skr m)
+APPEND BLANK
+
+&&lcString = "select relname from pg_statio_user_tables where schemaname = 'public'"
+lcString = "select viewname as relname from pg_views where schemaname = 'public'"
+
+=SQLEXEC(gnhandle,lcString,'qryTbl')
+SELECT qryTbl
+SCAN
+*!*			replace qrySkript.skr WITH " lcString = 'GRANT INSERT,SELECT,UPDATE,DELETE ON TABLE "+;
+*!*				LTRIM(rtrim(qryTbl.relname)) +" TO GROUP dbpeakasutaja '"+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "If execute_sql(lcString) < 0 "+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "return .f. "+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "endif "+CHR(13) ADDITIVE IN qrySkript
+
+*!*			replace qrySkript.skr WITH " lcString = 'GRANT INSERT,SELECT,UPDATE,DELETE ON TABLE "+;
+*!*				LTRIM(rtrim(qryTbl.relname)) +" TO GROUP dbkasutaja '"+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "If execute_sql(lcString) < 0 "+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "return .f. "+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "endif "+CHR(13) ADDITIVE IN qrySkript
+
+*!*			replace qrySkript.skr WITH " lcString = 'GRANT INSERT,SELECT,UPDATE,DELETE ON TABLE "+;
+*!*				LTRIM(rtrim(qryTbl.relname)) +" TO GROUP dbadmin '"+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "If execute_sql(lcString) < 0 "+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "return .f. "+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "endif "+CHR(13) ADDITIVE IN qrySkript
+*!*		
+*!*			replace qrySkript.skr WITH " lcString = 'GRANT SELECT ON TABLE "+;
+*!*				LTRIM(rtrim(qryTbl.relname)) +" TO GROUP dbvaatleja '"+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "If execute_sql(lcString) < 0 "+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "return .f. "+CHR(13) ADDITIVE IN qrySkript
+*!*			replace qrySkript.skr WITH "endif "+CHR(13) ADDITIVE IN qrySkript
+
+		replace qrySkript.skr WITH " lcString = 'GRANT SELECT ON TABLE "+;
+			LTRIM(rtrim(qryTbl.relname)) +" TO GROUP dbpeakasutaja '"+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "If execute_sql(lcString) < 0 "+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "return .f. "+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "endif "+CHR(13) ADDITIVE IN qrySkript
+
+		replace qrySkript.skr WITH " lcString = 'GRANT SELECT ON TABLE "+;
+			LTRIM(rtrim(qryTbl.relname)) +" TO GROUP dbkasutaja '"+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "If execute_sql(lcString) < 0 "+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "return .f. "+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "endif "+CHR(13) ADDITIVE IN qrySkript
+
+		replace qrySkript.skr WITH " lcString = 'GRANT SELECT ON TABLE "+;
+			LTRIM(rtrim(qryTbl.relname)) +" TO GROUP dbadmin '"+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "If execute_sql(lcString) < 0 "+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "return .f. "+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "endif "+CHR(13) ADDITIVE IN qrySkript
+	
+		replace qrySkript.skr WITH " lcString = 'GRANT SELECT ON TABLE "+;
+			LTRIM(rtrim(qryTbl.relname)) +" TO GROUP dbvaatleja '"+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "If execute_sql(lcString) < 0 "+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "return .f. "+CHR(13) ADDITIVE IN qrySkript
+		replace qrySkript.skr WITH "endif "+CHR(13) ADDITIVE IN qrySkript
+
+
+ENDSCAN
+=SQLDISCONNECT(gnHandle)
+
+
+*!*			Case Upper(tcObjType) = 'GROUP'
+*!*				cString = "select groName from pg_group where UPPER(groName) = '"+;
+*!*					UPPER(tcObjekt)+"'"
+*!*			Case Upper(tcObjType) = 'VIEW'
+*!*				cString = "select viewname from pg_view where UPPER(viewname) = '"+;
+*!*					UPPER(tcObjekt)+"'"

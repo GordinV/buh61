@@ -1,0 +1,177 @@
+Parameters tcUserId, tcparool, tcDb, tcAadress, tcFail
+tcFail0 = ''
+tcFail1 = ''
+gnHandle = 0
+If Empty(tcUserId)
+	tcUserId = 'vlad'
+Endif
+If Empty(tcparool)
+	tcparool = '490710'
+ENDIF
+
+If !Used ('config')
+	Use config In 0
+Endif
+
+Create Cursor curKey (versia m)
+Append Blank
+Replace versia With 'EELARVE' In curKey
+Create Cursor v_account (admin Int Default 1)
+Append Blank
+
+
+*!*	tcFail = 'c:\avpsoft\files\buh60\tmp\20050731.sql'
+*!*	tcFail0 = 'c:\avpsoft\files\buh60\tmp\sql_muuda_journal1.sql'
+*!*	tcFail1 = 'c:\avpsoft\files\buh60\tmp\sp_salvetsa_journal1.sql'
+tcFail = 'c:\avpsoft\files\buh60\SCRIPT\20050731.fxp'
+
+lnReturn = 1
+
+*!*	*!*	*!*	gnhandle = SQLConnect ('buhdata5zur','zinaida','159')
+*!*	*gnhandle = sqlconnect ('NarvaLvPg','vlad','490710')
+*!*	*!*	*!*	*!*	*!*	*!*	&&,'zinaida','159')
+
+grekv = 1
+gnHandle = 1
+gversia = 'PG'
+
+
+
+
+*!*	lnReturn =  execUuenda('avpsoft2005') 
+*!*	IF lnReturn > 0
+*!*		lnReturn	= execUuenda('ekavid')
+*!*	ENDIF
+
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('gordin')
+*!*	ENDIF
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('hooldekodu')
+*!*	ENDIF
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('hooldekodu2004')
+*!*	ENDIF
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('kaevandus')
+*!*	ENDIF
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('Sped')
+*!*	ENDIF
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('datelviru')
+*!*	ENDIF
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('todis')
+*!*	ENDIF
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('rugodiv')
+*!*	ENDIF
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('njlv2004')
+*!*	ENDIF
+*!*	IF lnReturn > 0
+*!*		lnReturn= execUuenda('njlvpg')
+*!*	endif
+IF lnReturn > 0
+	lnReturn= execUuenda('NarvaLvPg')
+ENDIF
+*!*	IF lnReturn > 0
+*!*			lnReturn= execUuenda('NarvaPg2004')
+*!*	ENDIF
+
+
+Function execUuenda
+	Lparameters tcOdbc, tcFXP
+	Wait Window 'Uuendan '+tcOdbc+ ' alg' Nowait
+
+	gnHandle = SQLConnect(tcOdbc,tcUserId,tcparool)
+	Wait Window 'Uuendan '+tcOdbc+ ' ühendatud' Nowait
+
+	If gnHandle > 0
+	
+		IF FILE(tcfail)
+			TRY
+			DO (tcfail)
+               && CATCH handles this error.
+      		CATCH TO oErr
+      		SET STEP ON 
+         	? "Catch:",oErr.ErrorNo
+      FINALLY
+      ENDTRY
+ 
+		endif
+*!*			If !Empty(tcFail0)
+*!*				If uuenda(tcFail0) < 1
+*!*					lnErr = AERROR(laErr)
+*!*					lcErr = ''
+*!*					IF lnErr > 0
+*!*						lcErr = IIF(ISNULL(laErr(1,3)),'',laErr(1,3))
+*!*					ENDIF
+*!*					lnAnsw = MESSAGEBOX('Viga '+lcErr+CHR(13)+'Kas katkesta?',1,'Kontrol')
+*!*					IF lnAnsw = 1
+*!*						RETURN 0
+*!*					ENDIF
+*!*									
+*!*				Else
+*!*					Wait Window 'Uuenda '+tcOdbc+tcFail0+ ' õnnestus' Timeout 1
+*!*				Endif
+
+*!*			Endif
+*!*			If !Empty(tcFail1)
+*!*				If uuenda(tcFail1) < 1
+*!*					lnErr = AERROR(laErr)
+*!*					lcErr = ''
+*!*					IF lnErr > 0
+*!*						lcErr = IIF(ISNULL(laErr(1,3)),'',laErr(1,3))
+*!*					ENDIF
+*!*					lnAnsw = MESSAGEBOX('Viga '+lcErr+CHR(13)+'Kas katkesta?',1,'Kontrol')
+*!*					IF lnAnsw = 1
+*!*						RETURN 0
+*!*					ENDIF
+*!*				Else
+*!*					Wait Window 'Uuenda '+tcOdbc+ tcfail1+' õnnestus' Timeout 1
+*!*				Endif
+
+*!*			Endif
+
+		
+
+*!*			If uuenda(tcFail) < 1
+*!*					lnErr = AERROR(laErr)
+*!*					lcErr = ''
+*!*					IF lnErr > 0
+*!*						lcErr = IIF(ISNULL(laErr(1,3)),'',laErr(1,3))
+*!*					ENDIF
+*!*					lnAnsw = MESSAGEBOX('Viga '+lcErr+CHR(13)+'Kas katkesta?',1,'Kontrol')
+*!*					IF lnAnsw = 1
+*!*						RETURN 0
+*!*					ENDIF
+*!*			Else
+*!*				Wait Window 'Uuenda '+tcOdbc+ tcFail+' õnnestus' Timeout 1
+*!*			Endif
+
+	Endif
+	RETURN 1
+Endfunc
+
+
+
+Function uuenda
+	Lparameters lcUuenda
+	LOCAL lcString
+	If Empty(lcUuenda) Or !File(lcUuenda) Or Empty(gnHandle)
+		Return 0
+	Endif
+	CREATE CURSOR v_sql (sql m)
+	APPEND BLANK
+	APPEND memo sql FROM (lcUuenda)
+	lcString = v_sql.sql
+	IF EMPTY(lcString)
+		RETURN 0
+	ELSE
+		Return SQLEXEC(gnHandle,lcString)
+	ENDIF
+	
+Endfunc
+

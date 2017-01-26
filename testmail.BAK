@@ -1,0 +1,36 @@
+IF !USED('mail')
+	Create Cursor Mail (smTpto C (254), ccList C (254), bcClist C (254),  ;
+		suBject C (50), atTachment C (254), Message M)
+	caTtach = Sys(5)+Sys(2003)+'\buh50viga.log'
+ELSE
+	SELECT mail
+	zap
+ENDIF
+	
+*!*	SELECT comAsutusRemote
+*!*	LOCATE FOR id = tnAsutusid
+*!*	IF !FOUND OR 	EMPTY(comAsutusRemote.email)
+*!*		RETURN 'Emaili aadress ei leidnun'
+*!*	ENDIF
+
+	
+Insert Into Mail (smTpto, suBject, atTachment) Values  ;
+		(Ltrim(Rtrim('vladislav.gordin@gmail.com')), 'test',  'C:\temp\todis.tiff')
+
+*!*	Insert Into Mail (smTpto, suBject, atTachment) Values  ;
+*!*			(Ltrim(Rtrim(comAsutusRemote.email)), tcSubject,  tcAttachment)
+SET STEP ON 
+set Classlib To classes\emAil
+oeMail = Createobject('email')
+With oeMail
+		.smTpfrom = 'vladislav.gordin@gmail.com'
+		.smTpreply = 'vladislav.gordin@gmail.com'
+		.smTpserver = 'Outgoing.verizon.net'
+		leRror = .Send()
+		If leRror=.T.
+			Erase (caTtach)
+		ELSE
+			SET STEP ON 
+		Endif
+Endwith
+Release oeMail

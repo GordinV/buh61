@@ -1,0 +1,771 @@
+*sET STEP ON 
+
+*dKpv = fnc_skpv('37303023721')
+
+
+
+gnHandle = SQLCONNECT('njlv2007','vlad','490710')
+
+IF gnhandle < 0 
+	MESSAGEBOX('Viga, uhenduses')
+	return
+ENDIF
+
+	lError = 1
+*!*	lError = fnc_asutus()
+*!*	IF lError > 0
+*!*		=fnc_eksport('tmpAsutus')
+*!*	ENDIF
+
+
+*!*	lError = fnc_tootajad()
+*!*	IF lError > 0
+*!*		=fnc_eksport('tmpTootaja')
+*!*		lError = fnc_Palga_pusiandmed()
+*!*	ENDIF
+*!*	*SET STEP ON 
+*!*	IF lError > 0
+*!*		=fnc_eksport('tmpPalgaKaart')
+*!*		lError = fnc_palgatootasud()
+*!*	ENDIF
+
+*!*	IF lError > 0
+*!*		=fnc_eksport('tmpPalgaKaart')
+*!*		lError = fnc_palk_maksud()
+*!*	ENDIF
+
+*!*	IF lError > 0
+*!*		=fnc_eksport('tmpPalgaMaksud')
+*!*		lError = fnc_klientid()
+*!*		=fnc_eksport('tmpKlient')
+*!*	ENDIF
+
+IF lError > 0
+	lError = fnc_pv()
+	=fnc_eksport('tmpPv')
+ENDIF
+
+IF lError < 0
+	MESSAGEBOX('Fnc asutus ei ole edukalt')
+	return 
+ENDIF
+ 
+
+=SQLDISCONNECT(gnHandle)
+
+
+FUNCTION fnc_eksport
+LPARAMETERS tcCursor
+IF USED(tcCursor)
+SELECT (tcCursor)
+lcFile = "COPY TO "+tcCursor + " type csv" 
+&lcFile
+IF FILE(tcCursor+'.csv')
+	RETURN .t. 
+ENDIF
+
+ENDIF
+	RETURN .f.
+
+ENDFUNC
+
+FUNCTION fnc_pv
+CREATE CURSOR tmpPv (allyksus c(50), vastisik c(50),akonto c(7), memorder c(3), aobjnimi c(100),invnr c(10),;
+	pvnimi c(100), kpv d, kkpv d, riiginr c(10), doknr c(20), info c(250), kogus n(15,3),algmaks n(15,2),;
+	kulumprot n(10,3),ulekulum n(15,2), kulumalgkpv d, kulukr c(7), kuludb c(7),kuluobj c(16),;
+	tegev c(16), kululiik c(16), tululiik c(16), proj c(16), osakond c(16), subjekt c(16), tegsuund c(16),;
+	allikas c(60),rahavoog c(16), kkonto c(7), ukulumdb c(7), sasukood c(50), sasunimi c(50),;
+	kobj c(16), ktegev c(16), kkululiik c(16),ktululiik c(16),kproj c(16),kosak c(16),ksubjk c(16),;
+	ktegsuund c(16),kallikas c(16),krahavoog c(16),akrahavood c(16), kulumrahavoog c(16))
+
+WAIT WINDOW 'Avan sqlPV ..' nowait
+
+
+lcString = "SELECT Library.id, Library.kood, Library.nimetus, Library.rekvid, library.muud,Pv_kaart.vastisikid, Asutus.nimetus AS vastisik, Pv_kaart.algkulum,"+;
+  	" Pv_kaart.kulum, Pv_kaart.soetmaks, Pv_kaart.soetkpv, Grupp.nimetus AS grupp, grupp.tun1, grupp.tun2, Pv_kaart.konto, Pv_kaart.gruppid,"+;
+  	" Pv_kaart.tunnus, Pv_kaart.mahakantud, Pv_kaart.muud AS rentnik, Pv_kaart.parhind "+;
+ 	" FROM Library INNER JOIN Pv_kaart ON  Library.id = Pv_kaart.parentid "+;
+    " INNER JOIN asutus ON  Pv_kaart.vastisikid = Asutus.id "+;
+    " INNER JOIN Library Grupp ON  Pv_kaart.gruppid = Grupp.id "
+
+ lError = SQLEXEC(gnHandle,lcString,'sqlPv')
+ IF lError < 0
+ 	SET STEP ON 
+ 	RETURN lError
+ ENDIF
+ 
+lcString = " SELECT Pv_oper.parentid, Pv_oper.nomid, Pv_oper.doklausid,"+;
+  " Pv_oper.lausendid, Pv_oper.journalid, Pv_oper.journal1id, Pv_oper.liik,"+;
+  " Pv_oper.kpv, Pv_oper.summa, Pv_oper.muud, Pv_oper.kood1, Pv_oper.kood2,"+;
+  " Pv_oper.kood3, Pv_oper.kood4, Pv_oper.kood5, Pv_oper.konto, Pv_oper.tp,"+;
+  " Pv_oper.asutusid, Pv_oper.tunnus, Pv_oper.proj "+;
+  " FROM pv_oper "
+
+ lError = SQLEXEC(gnHandle,lcString,'sqlPvOper')
+ IF lError < 0
+ 	SET STEP ON 
+ 	RETURN lError
+ ENDIF
+
+lcString = " SELECT library.* FROM library where library = 'KONTOD' "
+
+ lError = SQLEXEC(gnHandle,lcString,'sqlKonto')
+ IF lError < 0
+ 	SET STEP ON 
+ 	RETURN lError
+ ENDIF
+
+ 
+WAIT WINDOW 'Avan sqlPv .. done kokku' + STR(RECCOUNT('sqlPv'),9) TIMEOUT 1
+SELECT sqlPv
+SCAN
+	INSERT INTO tmpPv (vastisik, akonto, invnr, pvnimi, kpv, kkpv, info, kogus,algmaks,;
+		kulumprot, ulekulum, kulumalgkpv, kulukr, kuludb, tegev, allikas, rahavoog, ;
+		sasukood, sasunimi, kulumrahavoog) VALUES ;
+		(sqlpv.vastisik, sqlpv.konto, sqlpv.kood, sqlpv.nimetus, sqlpv.soetkpv, fnc_kkpv(sqlpv.id), sqlpv.muud, 1,sqlpv.soetmaks,;
+		sqlpv.kulum, sqlpv.algkulum, fnc_kulumalgkpv(sqlpv.id), fnc_kulumKonto(sqlpv.id,'KR'), fnc_kulumKonto(sqlpv.id,'DB'),;
+		fnc_klassif(sqlPv.id,'TT'), fnc_klassif(sqlPv.id,'A'), fnc_klassif(sqlPv.id,'R'),;
+		fnc_pvasutus(sqlPv.id,'KOOD'), fnc_pvasutus(sqlPv.id,'NIMI'), fnc_klassif(sqlPv.id,'R','K'))
+		
+		
+ENDSCAN
+RETURN RECCOUNT('tmpPv')
+ENDFUNC
+
+FUNCTION fnc_pvasutus
+LPARAMETERS tnId,tcLiik
+LOCAL lcReturn
+lcReturn = ''
+lcAlias = ALIAS()
+SELECT sqlPvOper
+LOCATE FOR parentid = tnId AND liik = 1 
+IF !EMPTY(sqlPvOper.asutusId)
+	lcString = "SELECT regkood, nimetus from asutus where id = "+STR(sqlPvOper.asutusId,9) 
+	lError = SQLEXEC(gnHandle,lcString,'sqlAsutus')
+	IF lError < 0
+ 		SET STEP ON 
+*	 	RETURN lError
+	 ENDIF
+ENDIF
+IF USED('sqlAsutus') AND RECCOUNT('sqlAsutus') > 0
+	DO case
+		CASE tcLiik = 'KOOD'
+			lcReturn = sqlAsutus.regkood
+		CASE tcLiik = 'NIMETUS'
+			lcReturn = sqlAsutus.nimetus	
+	ENDCASE
+	USE IN sqlAsutus
+ENDIF
+
+SELECT (lcAlias)
+RETURN lcreturn
+ENDFUNC
+
+
+FUNCTION fnc_klassif
+LPARAMETERS tnid, tcLiik, tcKulum
+LOCAL lcKood
+lcKood = ''
+lcAlias = ALIAS()
+DO CASE 
+	CASE tcLiik = 'TT'
+		SELECT sqlPvOper
+		LOCATE FOR parentId = tnid AND liik = 1
+		IF FOUND()
+			lcKood = sqlPvOper.kood1
+		ENDIF
+	CASE tcLiik = 'A'
+		SELECT sqlPvOper
+		LOCATE FOR parentId = tnid AND liik = 1
+		IF FOUND()
+			lcKood = sqlPvOper.kood2
+		ENDIF
+	CASE tcLiik = 'R' AND EMPTY(tcKulum)
+		SELECT sqlPvOper
+		LOCATE FOR parentId = tnid AND liik = 1
+		IF FOUND()
+			lcKood = sqlPvOper.kood3
+		ENDIF
+	CASE tcLiik = 'R' AND !EMPTY(tcKulum)
+		SELECT sqlPvOper
+		LOCATE FOR parentId = tnid AND liik = 2
+		IF FOUND()
+			lcKood = sqlPvOper.kood3
+		ENDIF
+		
+ENDCASE
+
+
+SELECT (lcAlias)
+RETURN lcKood
+ENDFUNC
+
+
+
+FUNCTION fnc_kulumKonto
+LPARAMETERS tnId, tcLiik
+LOCAl lcKonto
+lcKonto = ''
+
+lcAlias = ALIAS()
+DO case
+	CASE tcLiik = 'DB'
+		* KULUKONTO -> korr.konto
+		SELECT sqlpvOper
+		LOCATE FOR parentid = tnid AND liik = 2 AND !EMPTY(sqlPvOper.konto)
+		IF FOUND()
+			lcKonto = sqlPvOper.konto
+		ENDIF
+		
+	CASE tcLiik = 'KR'
+		* ARVKONTO
+		SELECT sqlKonto
+		LOCATE FOR id = sqlPv.tun2 
+		IF FOUND()
+			lcKonto = sqlKonto.kood
+		ENDIF
+		
+ENDCASE
+
+SELECT (lcAlias)
+RETURN lcKonto
+ENDFUNC
+
+
+FUNCTION fnc_kulumalgkpv
+LPARAMETERS tnid
+ldKpv = {}
+lcAlias = ALIAS()
+SELECT TOP 1 kpv FROM sqlpvoper WHERE parentid = tnId AND liik = 2 ORDER BY kpv INTO CURSOR tmpKulum
+IF RECCOUNT('tmpKulum') > 0
+	ldKpv = tmpKulum.kpv
+ENDIF
+USE IN tmpKulum
+SELECT (lcAlias)
+RETURN ldKpv
+ENDFUNC
+
+
+FUNCTION fnc_kkpv
+LPARAMETERS tnid
+lcAlias = ALIAS()
+
+SELECT sqlPvOper
+LOCATE FOR parentId = tnid AND liik = 1
+
+SELECT (lcAlias)
+
+IF FOUND()
+	RETURN sqlPvOper.kpv
+ELSE
+	RETURN sqlpv.soetkpv
+ENDIF
+
+ENDFUNC
+
+
+TEXT
+1. A C50 Allüksus  
+2. B C50 Vastutav isik 
+3. C C7 Arvel konto 
+4. D C3 Mem.order 
+5. E C50 Arvele objekti nimi 
+6. F C10 Inventari number 
+7. G C100 Põhivara nimi 
+8. H D Arvele kuupäev 
+9. I C50 Kasutusele kuupäev 
+10. J C10 Riigivara number 
+11. K C20 Dokumendi number 
+12. L C250 Info 
+13. M N15.3 Kogus 
+14. N N15.2 Algmaksumus 
+15. O C10.3 Kulumi protsent 
+16. P N15.2 Ületulnud kulum 
+17. Q D Kulumi arvutamise alguse kuupäev 
+18. R C7 Kulumi kreedit konto 
+19. S C7 Kulumi deebet konto 
+20. T C16 Allüksuse kulu objekt 
+21. U C16 Allüksuse tegevusala 
+22. V C16 Allüksuse kulu liik 
+23. W C16 Allüksuse tulu liik 
+24. X C16 Allüksuse projekt 
+25. Y C16 Allüksuse osakond 
+26. Z C16 Allüksuse subjekt 
+27. AA C16 Allüksuse tegevussuund 
+28. AB C16 Allüksuse allikas 
+29. AC C16 Allüksuse rahavoog 
+30. AD C7 Kande konto 
+
+31. AE C7 Ületulnud kulumi deebet 
+32. AF C50 Saadud asutus reg.kood 
+33. AG C50 Saadud asutuse nimi 
+34. AH C16 Kande kulu objekt 
+35. AI C16 Kande tegevusala 
+36. AJ C16 Kande kulu liik 
+37. AK C16 Kande tulu liik 
+38. AL C16 Kande projekt 
+39. AM C16 Kande osakond 
+40. AN C16 Kande subjekt 
+41. AO C16 Kande tegevussuund 
+42. AP C16 Kande allikas 
+43. AQ C16 Kande rahavoog 
+44. AR C16 Arvele tulnud konto rahavoog 
+45. AS C16 Kulumi rahavoog 
+
+ENDTEXT
+
+
+
+FUNCTION fnc_klientid
+CREATE CURSOR tmpKlient (Iskukood c(11),PNIMI C(50), enimi c(50), sIskukood c(11),sPNIMI C(50), senimi c(50),;
+	olepnr c(20),pank c(3), panknimi c(50), bic c(9), allkood c(16), allnimi c(50))
+	
+
+WAIT WINDOW 'Avan sqlTootajad ..' nowait
+
+lcString = "SELECT Asutus.regkood as Iskukood, Asutus.nimetus as PNIMI, asutusaa.aa, asutusaa.pank,"+;
+  	" Tooleping.id as lepingid, osakond.kood as allkood, osakond.nimetus as allnimi "+;
+ 	" FROM asutus INNER JOIN tooleping  ON  Asutus.id = Tooleping.parentid "+;
+    " INNER JOIN asutusaa ON  asutusaa.parentid = asutus.id "+;
+    " INNER JOIN library osakond  ON  Tooleping.osakondid = osakond.id "+;
+    " where not EMPTY(asutusaa.aa) "
+    
+ lError = SQLEXEC(gnHandle,lcString,'sqlKlientid')
+ IF lError < 0
+ 	SET STEP ON 
+ 	RETURN lError
+ ENDIF
+ 
+WAIT WINDOW 'Avan sqlKlientid .. done kokku' + STR(RECCOUNT('sqlKlientid'),9) TIMEOUT 1
+
+SELECT sqlKlientid
+SCAN
+INSERT into tmpKlient (Iskukood,PNIMI , enimi, sIskukood ,sPNIMI , senimi ,;
+	pank , bic, allkood, allnimi) VALUES (;
+	alLTRIM(sqlKlientid.Iskukood), alLTRIM(fnc_pnimi(sqlKlientid.pnimi)), alLTRIM(fnc_enimi(sqlKlientid.pnimi)),;
+	alLTRIM(sqlKlientid.Iskukood), alLTRIM(fnc_pnimi(sqlKlientid.pnimi)), alLTRIM(fnc_enimi(sqlKlientid.pnimi)),;
+	sqlKlientid.pank, sqlKlientid.aa, sqlKlientid.allkood , sqlKlientid.allnimi)
+	
+
+ENDSCAN
+
+SELECT tmpKlient
+
+RETURN reccount('tmpKlient')
+ENDFUNC
+
+
+FUNCTION fnc_palk_maksud
+WAIT WINDOW 'fnc_Palga_töötasud ..' nowait
+
+CREATE CURSOR tmpPalgaMaksud	 ( Iskukood c(11),PNIMI C(50), enimi c(50), tlpnr c(10), allkood c(16), allnimi c(50),;
+maksutunnus c(1), kuu n(2), aasta n(4), arvkuu n(2), arvaasta n(4), mkuu n(2), maasta n(4), tulumaks n(15,2),sotsmaks n(15,2),tki n(15,2),;
+tka n(15,2), pm n(15,2))
+
+
+SELECT sqlPalkJaak
+SCAN
+	WAIT WINDOW 'Töötan :' + STR(RECNO('sqlPalkJaak')) nowait
+	FOR i = 1 TO 5
+	INSERT INTO tmpPalgaMaksud (Iskukood ,PNIMI, enimi, tlpnr, allkood, allnimi ,;
+		maksutunnus , kuu , aasta , arvkuu, arvaasta , mkuu, maasta ,tulumaks, sotsmaks,tki,tka, pm) VALUES (;
+		alLTRIM(sqlPalkJaak.Iskukood), alLTRIM(fnc_pnimi(sqlPalkJaak.pnimi)), alLTRIM(fnc_enimi(sqlPalkJaak.pnimi)),;
+		ALLTRIM(fnc_tlpnr(sqlPalkJaak.lepingid)), sqlPalkJaak.allkood , sqlPalkJaak.allnimi,;
+		fnc_maksuliik(i),sqlpalkJaak.kuu,sqlpalkJaak.aasta,;
+ 		sqlpalkJaak.kuu,sqlpalkJaak.aasta, sqlpalkJaak.kuu,sqlpalkJaak.aasta,;
+ 		IIF(i=1,sqlPalkJaak.tulumaks,0), IIF(i=2,sqlPalkJaak.sotsmaks,0), IIF(i=3,sqlPalkJaak.tki,0),;
+ 		IIF(i=4,sqlPalkJaak.tka,0), IIF(i=5,sqlPalkJaak.pm,0))
+	ENDFOR
+	
+
+ENDSCAN
+
+select tmpPalgaMaksud
+brow
+WAIT WINDOW 'fnc_Palga_maksud ..done' TIMEOUT 1
+RETURN RECCOUNT('tmpPalgaMaksud')
+
+ENDFUNC
+
+FUNCTION fnc_maksuliik
+LPARAMETERS tnmaksud
+DO case
+	CASE tnmaksud = 1
+		RETURN 'T'
+	CASE tnmaksud = 2
+		RETURN 'S'
+	CASE tnmaksud = 3
+		RETURN 'A'
+	CASE tnmaksud = 4
+		RETURN 'V'
+	CASE tnmaksud = 5
+		RETURN 'P'
+endcase
+
+ENDFUNC
+
+FUNCTION fnc_palgatootasud
+
+WAIT WINDOW 'fnc_Palga_töötasud ..' nowait
+
+CREATE CURSOR tmpPalgaTasu	 ( Iskukood c(11),PNIMI C(50), enimi c(50), tlpnr c(10), allkood c(16), allnimi c(50),;
+tasuliik c(2), tululiik c(2), tulunimi c(50), tasudb c(7), tasukr c(7), PAEV N(2), kuu n(2), aasta n(4),;
+arvAlgpaev n(2),arvLoppPaev n(2), arvkuu n(2), arvaasta n(4), mkuu n(2), maasta n(4), kogus n(15,3), uhind n(15,3),;
+norm n(15,3), maar n(15,3), koef n(15,3), summa n(15,2), plehenr n(8), info c(200), tulumaks n(15,2),sotsmaks n(15,2),tki n(15,2),;
+tka n(15,2), pm n(15,2))
+
+
+lcString = "SELECT Asutus.regkood as Iskukood, Asutus.nimetus as PNIMI, osakond.kood as allkood, osakond.nimetus as allnimi,"+;
+" Tooleping.id as lepingid, Tooleping.aa, Tooleping.pank,  "+;
+" Palk_jaak.kuu, Palk_jaak.aasta, Palk_jaak.jaak, Palk_jaak.arvestatud, Palk_jaak.kinni, Palk_jaak.tka, Palk_jaak.tki,"+;
+" Palk_jaak.pm, Palk_jaak.tulumaks, Palk_jaak.sotsmaks, Palk_jaak.muud, Palk_jaak.g31 "+;
+" FROM asutus  INNER JOIN tooleping ON  Asutus.id = Tooleping.parentid "+;
+" inner join  palk_jaak on Palk_jaak.lepingid = tooleping.id "+;
+" inner join library osakond on tooleping.osakondid = osakond.id "+;
+" where palk_jaak.arvestatud > 0 "
+
+WAIT WINDOW 'Avan sqlPalkJaak .. ' nowait
+
+lError = SQLEXEC(gnHandle,lcString,'sqlPalkJaak')
+ IF lError < 0
+ 	SET STEP ON 
+ 	RETURN lError
+ ENDIF
+ 
+WAIT WINDOW 'Avan sqlPalkJaak .. done kokku' + STR(RECCOUNT('sqlPalkJaak'),9) TIMEOUT 1
+
+SET STEP ON 
+SELECT sqlPalkJaak
+SCAN
+	WAIT WINDOW 'Töötan :' + STR(RECNO('sqlPalkJaak')) nowait
+	INSERT INTO tmpPalgaTasu (Iskukood ,PNIMI, enimi, tlpnr, allkood, allnimi ,;
+		tasuliik, tululiik, tulunimi , tasudb , tasukr , PAEV , kuu , aasta ,;
+		arvAlgpaev , arvLoppPaev, arvkuu, arvaasta , mkuu, maasta ,koef , summa, plehenr, tulumaks, sotsmaks,tki,tka, pm) VALUES (;
+		alLTRIM(sqlPalkJaak.Iskukood), alLTRIM(fnc_pnimi(sqlPalkJaak.pnimi)), alLTRIM(fnc_enimi(sqlPalkJaak.pnimi)),;
+		ALLTRIM(fnc_tlpnr(sqlPalkJaak.lepingid)), sqlPalkJaak.allkood , sqlPalkJaak.allnimi,;
+		'01',fnc_tululiik(sqlPalkJaak.lepingid,1),fnc_tululiik(sqlPalkJaak.lepingid,0),;
+ 		fnc_konto(1), fnc_konto(0), fnc_lastpaev(sqlpalkJaak.aasta,sqlpalkJaak.kuu),sqlpalkJaak.kuu,sqlpalkJaak.aasta,;
+ 		1, fnc_lastpaev(sqlpalkJaak.aasta,sqlpalkJaak.kuu),;
+ 		sqlpalkJaak.kuu,sqlpalkJaak.aasta, sqlpalkJaak.kuu,sqlpalkJaak.aasta,1,;
+ 		sqlPalkJaak.arvestatud, RECNO('sqlPalkJaak'), sqlPalkJaak.tulumaks, sqlPalkJaak.sotsmaks, sqlPalkJaak.tki, sqlPalkJaak.tka, sqlPalkJaak.pm)
+
+ENDSCAN
+
+select tmpPalgaTasu
+
+WAIT WINDOW 'fnc_Palga_töötasud ..done' TIMEOUT 1
+RETURN RECCOUNT('tmpPalgaTasu')
+
+ENDFUNC
+
+
+
+FUNCTION fnc_lastpaev
+LPARAMETERS tnAasta, tnKuu
+LOCAL lnpaev, ldKpv 
+lnPaev = 0
+ldKpv = DATE(tnAasta, tnKuu,1)
+lnPaev = DAY(GOMONTH(ldKpv,1)-1)
+RETURN lnPaev
+ENDFUNC
+
+
+FUNCTION fnc_tululiik
+LPARAMETERS tnlepingId, tnOpt
+LOCAL lcTuluLiik, lcAlias
+lcTuluLiik = ''
+lcAlias = ALIAS()
+IF !USED('sqlPalkKaart')
+	RETURN lcTuluLiik
+ENDIF
+SELECT sqlPalkKaart
+LOCATE FOR lepingid = tnlepingid AND liik = 1
+IF FOUND()
+	lcTuluLiik = IIF(!EMPTY(tnOpt),sqlPalkKaart.tululiik,sqlPalkKaart.palknimi)
+ENDIF
+
+SELECT (lcAlias)
+
+RETURN lcTuluLiik
+
+ENDFUNC
+
+
+
+FUNCTION fnc_Palga_pusiandmed
+WAIT WINDOW 'fnc_Palga_pusiandmed ..' nowait
+
+CREATE CURSOR tmpPalgaKaart ( Iskukood c(11),PNIMI C(50), enimi c(50), tlpnr c(10), allkood c(16), allnimi c(50),;
+tasuliik c(2), tululiik c(2), tulunimi c(50), tasudb c(7), tasukr c(7), algkpv d, loppkpv d, info c(200), summa n(15,3),;
+percent n(15,3), iregkood c(11), inimi c(50), ieesnimi c(50), sregkood c(11), snimi c(50), seesnimi c(50), aa c(20), pank c(3),;
+panknimi c(50)  )
+
+lcString = "SELECT Asutus.regkood as Iskukood, Asutus.nimetus as PNIMI, osakond.kood as allkood, osakond.nimetus as allnimi,"+;
+" Tooleping.id as lepingid, Tooleping.aa, Tooleping.pank, Palk_kaart.summa, Palk_kaart.percent_, Palk_kaart.tulumaks, "+;
+" Palk_kaart.tulumaar, Palk_kaart.status, Palk_kaart.muud,  Palk_kaart.alimentid, Palk_kaart.tunnusid, palklib.kood as palkkood, "+;
+"  palklib.nimetus as palknimi, Palk_lib.liik, Palk_lib.tund, Palk_lib.maks, "+;
+"  Palk_lib.algoritm, Palk_lib.asutusest, Palk_lib.palgafond, "+;
+"  Palk_lib.konto, klassiflib.konto as korkonto, Palk_lib.tululiik, Palk_lib.elatis, Palk_lib.sots, "+;
+"  osakond.kood as allkood, osakond.nimetus as allnimi "+;
+" FROM asutus  INNER JOIN tooleping ON  Asutus.id = Tooleping.parentid "+;
+" INNER JOIN palk_kaart ON  Tooleping.id = Palk_kaart.lepingid "+;
+" INNER JOIN library palklib ON  Palk_kaart.libid = palklib.id "+;
+" INNER JOIN palk_lib ON  Palk_kaart.libid = Palk_lib.parentid "+;
+" INNER JOIN klassiflib ON  Palk_kaart.libid = klassiflib.libid "+;
+" INNER JOIN library osakond ON  Tooleping.osakondid = osakond.id "+;
+" where palk_kaart.status = 1 AND palk_lib.liik = 1 "	
+
+ lError = SQLEXEC(gnHandle,lcString,'sqlPalkKaart')
+ IF lError < 0
+ 	SET STEP ON 
+ 	RETURN lError
+ ENDIF
+ 
+WAIT WINDOW 'Avan sqlPalkKaart .. done kokku' + STR(RECCOUNT('sqlPalkKaart'),9) TIMEOUT 1
+
+
+SELECT sqlPalkKaart
+SCAN
+ 	 WAIT WINDOW 'Töötlen sqlPalkKaart ...' + STR(RECNO('sqlTootajad')) nowait
+	INSERT into tmpPalgaKaart ( Iskukood,PNIMI , enimi , tlpnr , allkood , allnimi , tululiik, tulunimi , tasudb ,; 
+		tasukr, algkpv , loppkpv , info , summa,percent, iregkood , inimi , ieesnimi, sregkood, snimi, seesnimi , aa, pank ) VALUES (;
+		alLTRIM(sqlPalkKaart.Iskukood),alLTRIM(fnc_pnimi(sqlPalkKaart.pnimi)), alLTRIM(fnc_enimi(sqlPalkKaart.pnimi)),;
+		ALLTRIM(fnc_tlpnr(sqlPalkKaart.lepingid)), sqlPalkKaart.allkood , sqlPalkKaart.allnimi,;
+		sqlPalkKaart.tululiik, sqlPalkKaart.palknimi, fnc_konto(1), fnc_konto(0), {},{},;
+		IIF(ISNULL(sqlPalkKaart.muud),'',sqlPalkKaart.muud), IIF(sqlPalkKaart.percent_ = 0, sqlPalkKaart.summa, 0), IIF(sqlPalkKaart.percent_ = 1, sqlPalkKaart.summa, 0),;
+		alLTRIM(sqlPalkKaart.Iskukood),alLTRIM(fnc_pnimi(sqlPalkKaart.pnimi)), alLTRIM(fnc_enimi(sqlPalkKaart.pnimi)),;
+		alLTRIM(sqlPalkKaart.Iskukood),alLTRIM(fnc_pnimi(sqlPalkKaart.pnimi)), alLTRIM(fnc_enimi(sqlPalkKaart.pnimi)),;
+		alLTRIM(sqlPalkKaart.aa), alLTRIM(STR(sqlPalkKaart.pank,3)))
+		
+		
+
+ENDSCAN
+
+SELECT tmpPalgaKaart
+*BROWSE
+
+*USE IN sqlPalkKaart
+WAIT WINDOW 'fnc_Palga_pusiandmed .. done' TIMEOUT 1
+
+RETURN RECCOUNT('tmpPalgakaart')
+ENDFUNC
+
+
+FUNCTION fnc_konto
+LPARAMETERS tnIfDb
+LOCAL lcKonto
+lcKonto = ''
+IF !USED('sqlpalkKaart') OR EOF('sqlPalkKaart')
+	RETURN lckonto
+ENDIF
+
+DO case
+	CASE sqlPalkKaart.liik = 1 
+		* arv, kr = 202000, db = konto
+		lcKonto = IIF(EMPTY(tnIfDb),'202000',sqlPalkKaart.korkonto)
+	CASE sqlPalkKaart.liik = 2
+		* kinni, db = 202000, kr = konto
+		lcKonto = IIF(!EMPTY(tnIfDb),'202000',sqlPalkKaart.korkonto)
+*!*		CASE sqlPalkKaart.liik = 6 
+*!*			* arv, kr = 202000, db = konto
+*!*			lcKonto = IIF(EMPTY(tnIfDb),'202000',sqlPalkKaart.konto)
+		
+endcase
+RETURN lcKonto
+ENDFUNC
+
+
+
+FUNCTION fnc_tlpnr
+LPARAMETERS tnLepingId
+LOCAL lcNumber, lcAlias
+lcNumber = ''
+lcAlias = ALIAS()
+SELECT sqlTootajad
+LOCATE FOR  sqlTootajad.lepingId = tnLepingId
+IF FOUND()
+	lcNumber = STR(RECNO('sqlTootajad'),6)
+ENDIF
+SELECT (lcAlias)
+	
+RETURN lcNumber
+ENDFUNC
+
+
+
+
+FUNCTION fnc_tootajad
+* Töötajate import failist 
+WAIT WINDOW 'fnc_tootajad ..' nowait
+CREATE CURSOR tmpTootaja (Iskukood c(11),PNIMI C(50), enimi c(50), sugu c(1), skpv d, resident n(1),mriik c(5), ;
+	mvmart c(10),oecdart c(10),mtoend c(10), tmtunnus c(1), smtunnus c(1),tkmtunnus c(1), pmkpv d, tlpnr c(10),;
+	algkpv d, loppkpv d,ametkood c(4), ametnimi c(50), tlptyyp c(1), koormus n(10,3), allkood c(16), allnimi c(50))
+	
+
+WAIT WINDOW 'Avan sqlTootajad ..' nowait
+
+lcString = "SELECT Asutus.regkood as Iskukood, Asutus.nimetus as PNIMI, Tooleping.algab as algkpv, Tooleping.lopp as loppkpv,"+;
+  	" Tooleping.id as lepingid, Tooleping.pohikoht, Tooleping.koormus, Tooleping.palk,"+;
+  	" Tooleping.tasuliik, Tooleping.toend, Tooleping.resident, Tooleping.riik,"+;
+  	" osakond.kood as allkood, osakond.nimetus as allnimi, amet.kood as ametkood, amet.nimetus as ametnimi "+;
+ 	" FROM asutus INNER JOIN tooleping  ON  Asutus.id = Tooleping.parentid "+;
+    " INNER JOIN library amet ON  Tooleping.ametid = amet.id "+;
+    " INNER JOIN library osakond  ON  Tooleping.osakondid = osakond.id"
+    
+ lError = SQLEXEC(gnHandle,lcString,'sqlTootajad')
+ IF lError < 0
+ 	SET STEP ON 
+ 	RETURN lError
+ ENDIF
+ 
+WAIT WINDOW 'Avan sqlTootajad .. done kokku' + STR(RECCOUNT('sqlTootajad'),9) TIMEOUT 1
+
+WAIT WINDOW 'Avan sqlPm ..' nowait
+ 
+ lcString = "SELECT distinct Asutus.regkood as iskukood "+;
+ 	" FROM asutus INNER JOIN tooleping ON Asutus.id = Tooleping.parentid "+;
+    " INNER JOIN palk_kaart ON Tooleping.id = Palk_kaart.lepingid "+;
+    " INNER JOIN palk_lib ON Palk_kaart.libid = Palk_lib.parentid "+;
+    " where palk_lib.liik = 8 and palk_kaart.status = 1 "
+
+
+ lError = SQLEXEC(gnHandle,lcString,'sqlPm')
+ IF lError < 0
+ 	SET STEP ON 
+ 	RETURN lError
+ ENDIF
+
+WAIT WINDOW 'Avan sqlPm .. done kokku' + STR(RECCOUNT('sqlPm'),9) TIMEOUT 1
+
+
+ 
+ SELECT sqlTootajad
+ SCAN
+ 	 WAIT WINDOW 'Töötlen sqlTootajad ...' + STR(RECNO('sqlTootajad')) nowait
+	 INSERT INTO tmpTootaja (Iskukood,PNIMI, enimi, sugu, skpv, resident,mriik, mtoend, tmtunnus, smtunnus,;
+	 	tkmtunnus, pmkpv, tlpnr,algkpv, loppkpv,ametkood, ametnimi, tlptyyp, koormus, allkood, allnimi) VALUES ;
+	 (LTRIM(sqlTootajad.Iskukood),alLTRIM(fnc_pnimi(sqlTootajad.pnimi)), alLTRIM(fnc_enimi(sqlTootajad.pnimi)),;
+	  IIF(LEFT(alLTRIM(sqlTootajad.Iskukood),1)='3','M','N'), fnc_skpv(sqlTootajad.Iskukood), IIF(!EMPTY(sqlTootajad.resident),0,1),;
+	   sqlTootajad.riik, IIF(ISNULL(sqlTootajad.toend),' ',DTOC(sqlTootajad.toend)), '2', '0', '1', fnc_pmkpv(sqlTootajad.Iskukood),STR(RECNO('sqlTootajad'),6) ,;
+	   sqlTootajad.algkpv, IIF(ISNULL(sqlTootajad.loppkpv),{},sqlTootajad.loppkpv), sqlTootajad.ametkood, sqlTootajad.ametnimi,;
+	   '1', sqlTootajad.koormus, sqlTootajad.allkood, sqlTootajad.allnimi)
+ 	
+ ENDSCAN
+    
+    
+ SELECT  tmpTootaja 
+* BROWSE
+ 
+*USE IN  sqlTootajad
+WAIT WINDOW 'fnc_tootajad ..' TIMEOUT 1
+
+RETURN RECCOUNT('tmpTootaja')
+ENDFUNC
+
+   
+    
+FUNCTION fnc_skpv
+LPARAMETERS tciskukood
+LOCAL ldKpv, lcAasta, lcKuu, lcPaev
+ldKpv = {}
+IF EMPTY(tciskukood) OR LEN(ALLTRIM(tciskukood)) < 7
+	RETURN ldKpv
+ENDIF
+
+lcAasta = '19'+SUBSTR(tcIskukood,2,2)
+lcKuu = SUBSTR(tcIskukood,4,2)
+lcPaev = SUBSTR(tcIskukood,6,2)
+IF VAL(lcKuu) > 12 OR VAL(lcPaev) > 31 OR VAL(lcaasta) < 1901
+	RETURN ldKpv
+ENDIF
+
+ldKpv = EVALUATE('date('+lcAasta+','+lcKuu+','+lcPaev+')')
+RETURN ldKpv
+ENDFUNC
+    
+    
+FUNCTION fnc_pmkpv
+LPARAMETERS tcIskukood
+LOCAL ldKpv
+ldKpv = {}
+IF !EMPTY(tciskukood) AND USED('sqlPm')
+	SELECT sqlPm
+	LOCATE FOR iskukood = tciskukood
+	IF FOUND()
+		ldKpv = DATE(2007,01,01)
+	ENDIF
+	
+ENDIF
+
+RETURN ldKpv
+
+ENDFUNC
+    
+	
+FUNCTION fnc_pnimi
+LPARAMETERS tcNimi
+LOCAL lcPnimi, lnSpace
+lcPnimi = ''
+lnSpace = 0
+lnSpace = ATC(SPACE(1),ALLTRIM(tcNimi))
+IF  lnSpace > 0
+	lcPnimi = RIGHT(ALLTRIM(tcNimi),(LEN(ALLTRIM(tcNimi)) - lnSpace))	
+ENDIF
+RETURN lcPnimi
+ENDFUNC
+	
+FUNCTION fnc_enimi
+LPARAMETERS tcNimi
+LOCAL lcEnimi
+lcEnimi = ''
+lnSpace = 0
+lnSpace = ATC(SPACE(1),ALLTRIM(tcNimi))
+IF  lnSpace > 0
+	lcEnimi = left(ALLTRIM(tcNimi),lnSpace)	
+ENDIF
+
+RETURN lcEnimi
+
+ENDFUNC
+
+
+FUNCTION fnc_asutus
+* Asutuste/isikute import failist
+WAIT WINDOW 'fnc_asutus ..' nowait
+
+LOCAL lcString , lError
+
+CREATE CURSOR tmpAsutus (regkood c(11), nimetus c(50), tyyp c(50), aadress1 c(40), aadress2 c(40), aadress3 c(40),;
+	pindeks c(20), meil c(50), telefon c(20), aa c(20), pkood c(3), pank c(50), bic c(9), vnumber1 c(20), vnumber2 c(20),;
+	lepingnr c(20), ipaadr c(50), lisa c(30) )
+
+
+lcString = "SELECT LEFT(Asutus.regkood,11)::varchar as regkood, LEFT(Asutus.nimetus,50)::varchar as nimetus , LEFT(Asutus.omvorm,50)::varchar as tyyp,"+; 
+	"LEFT(Asutus.aadress,40)::varchar as aadress1, Asutus.tel as telefon, Asutus.email as meil,"+;
+	" LEFT(ifnull(Asutusaa.aa,SPACE(20)),20)::varchar as aa, LEFT(ifnull(Asutusaa.pank,SPACE(3)),3)::varchar as pkood "+;
+ 	" FROM asutus LEFT OUTER JOIN asutusaa ON  Asutus.id = Asutusaa.parentid order by asutus.nimetus "
+ 
+ lError = SQLEXEC(gnHandle,lcString,'sqlAsutus')
+ IF lError < 0
+ 	SET STEP ON 
+ 	RETURN lError
+ ENDIF
+ 
+ SELECT sqlAsutus
+ SCAN
+	 INSERT INTO tmpAsutus (regkood, nimetus, tyyp, aadress1, telefon,meil, aa, pkood ) VALUES ;
+	 (LTRIM(sqlAsutus.regkood), LTRIM(sqlAsutus.nimetus), LTRIM(sqlAsutus.tyyp), LTRIM(sqlAsutus.aadress1), LTRIM(sqlAsutus.telefon),;
+	  LTRIM(sqlAsutus.meil), LTRIM(sqlAsutus.aa), LTRIM(sqlAsutus.pkood))
+ 	
+ ENDSCAN
+ 
+SELECT tmpAsutus
+
+WAIT WINDOW 'fnc_asutus ..' TIMEOUT 1
+
+RETURN RECCOUNT('tmpAsutus')
+	
+ENDFUNC
+
+
+

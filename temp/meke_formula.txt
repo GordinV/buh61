@@ -1,0 +1,3 @@
+( ?{kutteSEJ - ?vd1  -  ?vd2  - ?[fncSoeVett  * ?fncInim  -  ?[fncKPindA   *  ?{fncK   *  ?mop1 - ?[t1  -  ?[t12  -  ?[t34  -  ?[t14  -  ?[fncVK  *  ?KutteVanni )  /  ?[fncKPindT  *  ?fncKPindT
+
+( ?{kutteSEJ - ?[vd1  -  ?[vd2  - ?[fncSoeVett  * ?[fncInim  -  ?[fncKPindA   *  ?{fncK   *  ?mop1 - ?[t1  -  ?[t12  -  ?[t34  -  ?[t14  -  ?[fncVK  *  ?KutteVanni )  / + ?[fncKPindT

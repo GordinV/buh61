@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<FailedApplication xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="EAAVFailedApplication.xsd">
+  <Header appId="EAAV" date="2012-11-01" receiverId="VASTUVÕTJA" senderId="SAATJA" fileId="2" infileId="11" fileFailReason="99"/>
+  <Footer totalNr="0"/>
+</FailedApplication>

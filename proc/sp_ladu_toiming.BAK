@@ -1,0 +1,84 @@
+*Procedure sp_trig_i_arv1
+* check for versioon
+IF gVersia <> 'VFP'
+	RETURN .t.
+ENDIF
+
+
+
+	Set Talk Off
+	Set Notify Off
+
+	If arv.operId > 0  And arv.liik = 1
+&&	/* vara sisetulik*/
+		Insert Into ladu_jaak (rekvid, dokItemid, nomId, Userid, kpv, hind, kogus, maha, jaak) Values;
+			(arv.rekvid, arv1.Id, arv1.nomId,arv.Userid, arv.kpv, arv1.hind, arv1.kogus, 0, arv1.kogus)
+	Endif
+	If arv.operId > 0  And arv.liik = 0
+		If !Used('ladu_grupp')
+			Use ladu_grupp In 0
+		Endif
+		Select ladu_grupp
+		Locate For nomId = arv1.nomId
+		If !Found()
+&& teenus
+			Return .T.
+		Endif
+&&	/*vara valjaminek */
+		Begin Transaction
+		Select liik From ladu_config Where ladu_config.rekvid = arv.rekvid Into Cursor qryLifoFifo
+		lnLifoFifo = Iif (Empty (qryLifoFifo.liik),1,qryLifoFifo.liik)
+		Use In qryLifoFifo
+		If lnLifoFifo = 1
+&&		/* Lifo */
+			Select   Id, jaak, maha, kpv, dokItemid  ;
+				from ladu_jaak ;
+				where rekvid = arv.rekvid;
+				and jaak > 0;
+				and nomId = arv1.nomId;
+				and Not Deleted();
+				order By kpv;
+				into Cursor cur_ladujaak
+		Else
+&&		/* FiFo*/
+			Select   Id, jaak, maha, kpv, dokItemid   ;
+				from ladu_jaak;
+				where rekvid = arv.rekvid;
+				and jaak > 0;
+				and nomId = arv.nomId;
+				and Not Deleted();
+				order By kpv Desc;
+				into Cursor cur_ladujaak
+
+		Endif
+		lnKogus = arv1.kogus
+		Selec cur_ladujaak
+		Scan
+			If cur_ladujaak.jaak >= arv1.kogus And arv1.kogus > 0
+				Update ladu_jaak Set jaak = cur_ladujaak.jaak - lnKogus, ;
+					maha = cur_ladujaak.maha + lnKogus Where Id = cur_ladujaak.Id
+				lnKogus = 0
+*!*					If (cur_ladujaak.maha ) > cur_ladujaak.jaak
+*!*						Rollback
+*!*						Messagebox(' ei saa mahakandma nii palja kaupa','Kontrol')
+*!*						Exit
+*!*					Endif
+*!*					Exit
+			Endif
+			If cur_ladujaak.jaak < lnKogus And lnKogus >= 0
+				Update ladu_jaak Set jaak = 0, maha = maha + (lnKogus - cur_ladujaak.jaak) Where Id = cur_ladujaak.Id
+				lnKogus = lnKogus - cur_ladujaak.jaak
+			Endif
+			Delete From ladu_jaak Where jaak = 0
+		Endscan
+		Use In cur_ladujaak
+		End Transaction
+*!*			If lnKogus > 0
+*!*				Rollback
+*!*				glError = .T.
+*!*				Messagebox ('Ladus ei ole kaupa','Kontrol')
+*!*			Else
+*!*	&&			do sp_recalc_ladujaak with arv.rekvid,arv1.NomId,0
+*!*			Endif
+	Endif
+Endproc

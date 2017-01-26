@@ -1,0 +1,185 @@
+Parameter cWhere
+Local lnAlgJaak
+lnAlgJaak = 0
+Create Cursor avans_report3 (Number m, selg m, algJaak Y, LoppJaak Y, deebet Y, kreedit Y, konto c(20), isik c(254), asutusId Int)
+Index On Left(Ltrim(Rtrim(isik)),40)+'/'+konto Tag kood
+Set Order To kood
+
+Create Cursor fltrReport (Filter m)
+Append Blank
+lcperiod = 'Period:' + Dtoc(fltrAvans.kpv1)+'-'+Dtoc(fltrAvans.kpv2)
+lcisik = Iif(!Empty(fltrAvans.isik),'Isik:'+Ltrim(Rtrim(fltrAvans.isik)),'')
+lcNumber = Iif(!Empty(fltrAvans.Number),'Number:'+Ltrim(Rtrim(fltrAvans.Number)),'')
+lcNimetus = Iif(!Empty(fltrAvans.nimetus),'Nimetus:'+Rtrim(Ltrim(fltrAvans.nimetus)),'')
+lcKonto = Iif(!Empty(fltrAvans.konto),'Konto:'+Ltrim(Rtrim(fltrAvans.konto)),'')
+lcTunnus = Iif(!Empty(fltrAvans.tunnus),'Ьksus:'+Ltrim(Rtrim(fltrAvans.tunnus)),'')
+
+
+Replace fltrReport.Filter With lcperiod +Space(1)+lcisik+Space(1)+lcNumber+Space(1)+;
+	lcNimetus+Space(1)+lcKonto +Space(1)+lcTunnus In fltrReport
+tcIsik = '%'+rtrim(ltrim(fltrAvans.isik))+'%'
+tcNumber = ltrim(rtrim(fltrAvans.number))+'%'
+tdKpv1 = iif(empty(fltrAvans.kpv1),date(year(date()),1,1),fltrAvans.kpv1)
+tdKpv2 = iif(empty(fltrAvans.kpv2),date(year(date()),12,31),fltrAvans.kpv2)
+tnSumma1 = fltrAvans.Summa1
+tnSumma2 = iif(empty(fltrAvans.Summa2),999999999,fltrAvans.Summa2)
+tcNimetus = '%'+rtrim(ltrim(fltrAvans.nimetus))+'%'
+tcKonto = ltrim(rtrim(fltrAvans.konto))+'%'
+tcTunnus = ltrim(rtrim(fltrAvans.tunnus))+'%'
+tcuritus = '%'+rtrim(ltrim(fltrAvans.kood4))+'%'
+tcProj = '%'+rtrim(ltrim(fltrAvans.proj))+'%'
+tcValuuta = '%'
+
+tcAmetnik = '%'
+
+
+cQuery = 'curAvans'
+
+oDb.Use(cQuery,'qryAvans')
+
+dkpv1 = tdKpv1
+dkpv2 = tdKpv2
+tcKood1 = '%'
+tcKood2 = '%'
+tcKood3 = '%'
+tcKood4 = '%'
+tcKood5 = '%'
+cKreedit = '%%'
+cDok = '%%'
+cSelg = '%%'
+nSumma1 = -99999999
+nSumma2 = 999999999
+tcTpD = '%'
+tcTpK = '%'
+tcKasutaja = '%'
+tcMuud = '%'
+tcValuuta = '%'
+
+If gVersia = 'PG'
+
+	oDb.Use ('qryAvansDokprop','qryDokPropId')
+
+	Select qryDokPropId
+	Scan
+* select alg.jaak kontode jargi
+
+		tnid = qryDokPropId.dokpropId
+		oDb.Use ('v_dokprop','qryDokProp')
+
+		lcdate = "DATE("+Str(Year(tdKpv1-1),4)+","+ Str(Month(tdKpv1-1),2)+","+Str(Day(tdKpv1-1),2)+")"
+		lcdate1 = "DATE("+Str(Year(tdKpv1),4)+","+ Str(Month(tdKpv1),2)+","+Str(Day(tdKpv1),2)+")"
+		lcdate2 = "DATE("+Str(Year(tdKpv2),4)+","+ Str(Month(tdKpv2),2)+","+Str(Day(tdKpv2),2)+")"
+
+		lError = oDb.Exec("sp_subkontod_report "," '"+Ltrim(Rtrim(qryDokProp.konto))+"%',"+;
+			Str(grekv)+","+lcdate1+","+lcdate2+",0,'"+;
+			LTRIM(Rtrim(lcTunnus))+"%',1","qryKbAsu")
+
+		If Used('qryKbAsu')
+			tcTimestamp = Alltrim(qryKbAsu.sp_subkontod_report)
+			oDb.Use('tmpsubkontod_report')
+
+
+			Select avans_report3
+			Insert Into avans_report3(algJaak , konto , isik , asutusId, LoppJaak );
+				SELECT tmpsubkontod_report.algJaak	, tmpsubkontod_report.konto, ;
+				tmpsubkontod_report.asutus, tmpsubkontod_report.asutusId, tmpsubkontod_report.algJaak;
+				FROM tmpsubkontod_report Where konto = qryDokProp.konto
+			SELECT tmpsubkontod_report
+			Select avans_report3
+			Use In qryKbAsu
+			Use In tmpsubkontod_report
+
+		Else
+			Select 0
+			Return .F.
+		Endif
+
+
+	Endscan
+
+Endif
+
+If !Used ('QRYdokpropId')
+	Select Distinct dokpropId From qryAvans   Into Cursor qryDokPropId
+Endif
+
+
+*	Where dokpropId = qryDokPropId.dokpropId And asutusId = qryDokPropId.asutusId
+
+* select algJaak
+
+Select algJaak, asutusId From avans_report3  Where algJaak <> 0 Into Cursor qryAlgJaak
+
+
+Select qryDokPropId
+Scan
+*!*		Select comAsutusRemote
+*!*		If Tag() <> 'ID'
+*!*			Set Order To Id
+*!*		Endif
+*!*		Seek qryDokPropId.asutusId
+
+	tnid = qryDokPropId.dokpropId
+	oDb.Use ('v_dokprop','qryDokProp')
+	cDeebet = Ltrim(Rtrim(qryDokProp.konto))+'%'
+	cAsutus = '%'+Ltrim(Rtrim(fltrAvans.isik))+'%'
+
+	oDb.Use ('curJournal','qryJournal')
+
+*!*			lnAlgJaak = analise_formula('ASD('+LTRIM(RTRIM(qryDokProp.konto))+','+ALLTRIM(STR(qryDokPropId.asutusid))+')', ;
+*!*			tdkpv1-1)
+
+* отчеты
+
+
+* выданные суммы
+
+	Insert Into avans_report3 (Number,  kreedit, konto, isik, asutusId, algJaak);
+		SELECT  Ltrim(Rtrim(Number))+Space(1)+Dtoc(kpv)+Chr(13), (qryAvans.Summa*qryAvans.kuurs), qryDokProp.konto, ;
+		comAsutusRemote.nimetus, qryAvans.asutusId, Iif(Isnull(qryAlgJaak.algJaak),000000000,qryAlgJaak.algJaak) As algJaak ;
+		FROM qryAvans inner Join comAsutusRemote On qryAvans.asutusId = comAsutusRemote.Id;
+		left Outer Join qryAlgJaak On qryAlgJaak.asutusId = comAsutusRemote.Id;
+		WHERE  qryAvans.dokpropId = qryDokProp.Id
+
+
+
+
+	Select qryJournal
+	Scan
+		Select avans_report3
+		Locate For asutusId = qryJournal.asutusId And Number = qryJournal.dok
+		If Found()
+			Replace deebet With (qryJournal.Summa*qryJournal.kuurs) + avans_report3.deebet	In avans_report3
+			Replace Number With 'Db. '+Dtoc(qryJournal.kpv) Additive In avans_report3
+		Else
+			Select qryAlgJaak
+			Locate For asutusId = qryJournal.asutusId
+			If Found()
+				lnAlgJaak = qryAlgJaak.algJaak
+			Else
+				lnAlgJaak = 0
+			Endif
+			Insert Into avans_report3 (Number,  deebet, konto, isik, asutusId, algJaak) Values;
+				('Db'+Ltrim(Rtrim(qryJournal.dok))+Space(1)+Dtoc(qryJournal.kpv), (qryJournal.Summa*qryJournal.kuurs),;
+				qryJournal.deebet, qryJournal.asutus, qryJournal.asutusId, lnAlgJaak)
+		Endif
+
+	Endscan
+	Select Sum(deebet) As db, Sum(kreedit) As kr, asutusId, konto From avans_report3 Group By konto, asutusId Into Cursor qryAvansKb
+	Select qryAvansKb
+	Scan
+		Update avans_report3 Set LoppJaak = avans_report3.algJaak +qryAvansKb.db - qryAvansKb.kr ;
+			WHERE asutusId = qryAvansKb.asutusId And konto = qryAvansKb.konto
+	Endscan
+	Use In qryAvansKb
+Endscan
+
+If Used ('qryAlgJaak')
+	Use In qryAlgJaak
+Endif
+
+Select avans_report3
+If Reccount() < 1
+	Append Blank
+Endif
+

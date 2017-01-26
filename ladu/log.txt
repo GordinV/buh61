@@ -1,0 +1,11 @@
+Vormid: ladu, arvsisse
+		
+Classes: laod, connect, arve
+
+Menu: laod
+
+reposit: curladuArved, curvara
+
+
+Markused
+kood, nimetus, kogus, mootuhik

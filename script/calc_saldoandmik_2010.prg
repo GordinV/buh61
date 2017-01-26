@@ -1,0 +1,70 @@
+
+gnHandle = SQLCONNECT('narvalvpg','vlad')
+
+IF gnHandle < 0 
+	MESSAGEBOX('Error in conn 2010')
+	return
+ENDIF
+
+lcString = "select id, nimetus from rekv where parentid <> 9999 "
+
+lnError = SQLEXEC(gnHandle,lcString,'qryRekv')
+IF lnError < 1
+	MESSAGEBOX('Viga')
+	SET STEP ON 
+	return
+ENDIF
+
+SELECT qryRekv
+SCAN 
+*	FOR i = 1 TO 12
+		i = 7
+		WAIT WINDOW 'Arvestan..'+ALLTRIM(qryRekv.nimetus)+STR(i) nowait
+		IF i < 12 
+			lnPaev = DAY(DATE(2010,i+1,1)-1)
+		ELSE
+			lnPaev = 31
+		ENDIF
+			
+		lcKpv = "DATE(2010,"+STR(i,2)+","+STR(lnPaev,2)+")"
+*!*			lcString = " select count(id)::integer as id from saldoandmik where rekvid = "+STR(qryRekv.id)+ " and aasta = 2009 and kuu = "+STR(i)
+*!*			lnError = SQLEXEC(gnHandle,lcString,'qryTMP')
+*!*			IF lnError < 0 
+*!*				MESSAGEBOX('Viga')
+*!*				SET STEP ON 
+*!*				EXIT			
+*!*			ENDIF
+*!*			IF RECCOUNT('qryTmp') = 0 OR  qryTmp.id =  0  	
+			lcString = "select sp_saldoandmik_report("+STR(qryRekv.id,9)+","+lcKpv+",2010,2,0)"
+			lnError = SQLEXEC(gnHandle,lcString,'qryTMP')
+			IF lnError < 0 
+				MESSAGEBOX('Viga')
+				SET STEP ON 
+				EXIT			
+			ENDIF
+	        tcTimestamp = ALLTRIM(qryTMP.sp_saldoandmik_report)
+	        lcString = "select konto,  sum(db) as db, sum(kr) as kr from tmp_saldoandmik where rekvid = "+STR(qryRekv.id)+" and timestamp = '"+tcTimestamp+"' and konto like '100%' group by konto order by konto  "
+	        leRror = sqlexec(gnHandle,lcString,'qrysaldoandmik')
+			IF lnError < 0 
+					MESSAGEBOX('Viga')
+					SET STEP ON 
+					EXIT			
+			ENDIF			
+			
+			IF !USED('tmpSaldoandmikud')
+				CREATE CURSOR tmpSaldoandmikud (konto c(20), db n(14,2), kr n(14,2), rekvId i, nimetus c(254))
+			endif
+
+			INSERT INTO tmpSaldoandmikud (konto , db , kr , rekvId , nimetus ) SELECT konto, db, kr, qryrekv.id, qryRekv.nimetus FROM qrysaldoandmik
+			
+*	ENDFOR
+	IF lnError < 0 
+		EXIT		
+	endif
+	
+ENDSCAN
+
+
+=SQLDISCONNECT(gnHandle2009)
+
+=SQLDISCONNECT(gnHandle)

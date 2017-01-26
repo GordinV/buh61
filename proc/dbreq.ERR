@@ -1,0 +1,2 @@
+cString = cString + space(1) + ' into cursor '+lcCursor'
+Error in line 49: Syntax error.

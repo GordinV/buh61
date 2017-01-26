@@ -1,0 +1,49 @@
+ PARAMETER cwHere
+ IF ISDIGIT(ALLTRIM(cwHere))
+      cwHere = VAL(ALLTRIM(cwHere))
+ ENDIF
+
+ tnId = cwHere
+ cqUery = 'print_arv1'
+ WITH odB
+      .usE(cqUery,'arve_report1')
+      .usE('v_arv3','qryArv3')
+ ENDWITH
+ SELECT qryArv3
+ LOCATE FOR auToid > 0
+ 
+ SELECT coMauto
+ LOCATE FOR id=qrYarv3.auToid
+ UPDATE arve_report1 SET auTo = LTRIM(RTRIM(coMauto.maRk))+SPACE(1)+ ;
+        LTRIM(RTRIM(coMauto.reGnum))
+ SELECT arVe_report1
+GO top
+
+	Create Cursor arve_lausend (Id Int, lausend m)
+	Insert Into arve_lausend (Id) Values (arve_report1.JOURNALID)
+	tnId =arve_report1.JOURNALID
+	tnAasta = Year (arve_report1.kpv)
+*!*		.Use ('QRYJOURNALNUMBER')
+*!*		If Reccount ('QRYJOURNALNUMBER') > 0
+*		tnId = QRYJOURNALNUMBER.JOURNALID
+		odb.Use ('v_journal1','qryJournal1')
+		Select qryJournal1
+		Scan
+			lcString =  'D '+Ltrim(Rtrim(qryJournal1.deebet))+Space(1)+;
+				'K '+Ltrim(Rtrim(qryJournal1.kreedit)) + Space(1)+;
+				alltrim(Str (qryJournal1.Summa,12,2)) + Chr(13)
+			Replace arve_lausend.lausend With lcString Additive In arve_lausend
+		Endscan
+
+*!*		Endif
+*!*		If Used ('QRYJOURNALNUMBER')
+*!*			Use In QRYJOURNALNUMBER
+*!*		Endif
+
+	SELECT arve_lausend
+	GO top
+	
+	 SELECT arVe_report1
+
+
+ENDPROC

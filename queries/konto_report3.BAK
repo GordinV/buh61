@@ -1,0 +1,43 @@
+Parameter cWhere
+local lnrecno
+lnRecno = 0
+tcKood = ltrim(rtrim(fltrKontod.kood))+'%'
+tcNimetus = '%'+ltrim(rtrim(fltrKontod.nimetus))+'%'
+oDb.use('printkontod')
+create cursor konto_report1 (id int, kood c(20), nimetus c(254), muud m, type c(10),;
+	aasta int, algsaldo y, liik c(40), pohikonto c(20))
+index on rtrim(pohikonto)+alltrim(kood) tag konto 
+set order to konto
+select printkontod
+scan
+	lcType = ''
+	do case
+		case printkontod.type = 1
+			lcType = 'SD'
+		case printkontod.type = 2
+			lcType = 'SK'
+		case printkontod.type = 3
+			lcType = 'D'
+		case printkontod.type = 4
+			lcType = 'K'
+		case printkontod.type = 5
+			lcType = 'DK'
+	endcase
+	lcLiik = ''
+	do case
+		case printkontod.liik = 1
+			lcLiik = 'KONTO'
+		case printkontod.liik = 2
+			lcLiik = 'POHIKONTO'
+		case printkontod.liik = 3
+			lcLiik = 'SUBKONTO'
+	endcase
+	insert into konto_report1 (id, kood, nimetus, muud, type, aasta, algsaldo, liik, pohikonto);
+		values (printkontod.id, iif(printkontod.liik = 3,printkontod.kood,space(20)), printkontod.nimetus, printkontod.muud, ;
+		lcType,printkontod.aasta, printkontod.algsaldo,lcLiik,; 
+		iif (printkontod.liik = 1 or printkontod.liik = 2,printkontod.kood, printkontod.pohikonto)  )
+	select printkontod
+endscan
+use in printkontod
+select konto_report1
+go top

@@ -1,0 +1,16 @@
+lnWidth = val(alltrim(mline(reposit.prop2,1))
+Error in line 114: Function name is missing ).
+lnDec = val(alltrim(mline(reposit.prop3,1))
+Error in line 115: Function name is missing ).
+lnWidth = val(alltrim(mline(reposit.prop2,1))
+Error in line 118: Function name is missing ).
+lnDec = val(alltrim(mline(reposit.prop3,1))
+Error in line 119: Function name is missing ).
+lnWidth = val(alltrim(mline(reposit.prop2,1))
+Error in line 122: Function name is missing ).
+lnDec = val(alltrim(mline(reposit.prop3,1))
+Error in line 123: Function name is missing ).
+lnWidth = val(alltrim(mline(reposit.prop2,1))
+Error in line 126: Function name is missing ).
+lnDec = val(alltrim(mline(reposit.prop3,1))
+Error in line 127: Function name is missing ).

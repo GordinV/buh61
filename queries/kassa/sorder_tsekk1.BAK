@@ -1,0 +1,67 @@
+PARAMETERS tnid
+CREATE CURSOR qryOrder (nimetus c(40), hind n(12,2), kogus n(9,2), reasumma n(12,2),kbmta n(12,2),;
+	kbmkokku n(12,2), arvnr c(20), number c(20), kpv d, nimi c(120), dokument c(120), ksumma n(12,2),skokku n(12,2),;
+	ametnik c(120), kassa c(120), regkood c(20), asutus c(120), aadress m, kmkr c(20), muud m )
+
+lcString = "select k1.number, k1.kpv, k1.nimi, k1.dokument, k1.summa as ksumma,k1.muud,"+;
+	" arv.number as arvnr, arv.kbmta, arv.kbm as kbmkokku, arv.summa as skokku, n.nimetus, arv1.kogus, arv1.hind, arv1.kbm, arv1.summa as reasumma,"+;
+	" userid.ametnik,"+;
+	" aa.nimetus as kassa, "+;
+	" rekv.regkood, rekv.nimetus as asutus, rekv.aadress, rekv.kbmkood as kmkr "+;
+	" from korder1 k1 left outer join arv on k1.arvid = arv.id "+;
+	" inner join userid on k1.userid = userid.id "+;
+	" inner join aa on aa.id = k1.kassaid "+;
+	" inner join rekv on rekv.id = k1.rekvid "+;
+	" left outer join arv1 on arv.id = arv1.parentid "+;
+	" left outer join nomenklatuur n on arv1.nomid = n.id "+;
+	" where k1.id = "+(tnId)
+	
+lnError = SQLEXEC(gnHandle,lcString,'qry')
+IF lnError < 0
+	MESSAGEBOX('Viga')
+	RETURN .f.
+ENDIF
+SELECT qryOrder
+APPEND FROM DBF('qry')
+
+SET STEP ON 
+cReport = 'reports\kassa\sorder_tsekk1.frx'
+Report form (cReport)   NOCONSOLE to PRINTER 
+
+
+*!*	SET CONSOLE OFF
+*!*	SET PRINTER on
+*!*	? ALLTRIM(qryOrder.asutus)
+*!*	? ALLTRIM(qryOrder.aadress)
+*!*	? 'Reg.nr. '+qryOrder.regkood+'/'+qryOrder.kmkr
+*!*	? 'Kassa:'+qryOrder.kassa
+*!*	? 'Teenindaja:'+qryOrder.ametnik
+*!*	?
+*!*	? '     Arve nr.  '+qryOrder.arvnr
+*!*	*!*	? 'Nimetus'+SPACE(40)+'Kogus '+' Hind' +' Summa '  
+*!*	*!*	?'-------------------------------------------------------------------'          
+*!*	SELECT qryOrder
+*!*	SCAN
+*!*	? qryOrder.nimetus+' '+(STR(qryOrder.kogus,9,2))+' '+(STR(qryOrder.hind,9,2))+' '+(STR(qryOrder.reasumma,9,2))
+*!*	ENDSCAN
+*!*	SELECT qryOrder
+*!*	GO top
+*!*	? 'Summa kokku  :' +STR(qryOrder.skokku,12,2)
+*!*	? 'Käibemaks    :'+STR(QRYoRDER.KBMKOKKU,12,2)
+*!*	? 'Summa ilma kb-ta :'+ STR(QRYoRDER.kbmta,12,2)
+*!*	?
+*!*	? 'Tasutud kokku:'+STR(qryOrder.ksumma,12,2)
+*!*	? propis(qryOrder.skokku,'EUR')
+*!*	?
+*!*	*IF !EMPTY(qryOrder.muud) AND ATC('tagasi',qryOrder.muud) > 0 
+*!*	? qryOrder.muud
+*!*	? 'Täname'
+*!*	*ENDIF
+
+*!*	?
+*!*	?? DTOC(DATE())+' '
+*!*	?? TIME()
+
+*!*	SET PRINTER to
+*!*	SET PRINTER off
+USE IN qryorder

@@ -1,0 +1,257 @@
+Wait window [Dokumendite kontrolimine ...] nowait
+lError =doktyyp_kontrollimine('ARV','Arved')
+lError=doktyyp_kontrollimine('SORDER','Kassa sissetuliku orderid')
+lError=doktyyp_kontrollimine('VORDER','Kassa väljaminelu orderid')
+lError=doktyyp_kontrollimine('PALK','Palga arvestamine')
+lError=doktyyp_kontrollimine('LADU','Ladu operatsioonid')
+lError=doktyyp_kontrollimine('PAIGUTUS','PV paigutamine')
+lError=doktyyp_kontrollimine('MAHAKANDMINE','PV likvideerimine')
+lError=doktyyp_kontrollimine('KULUM','Kulumi arvestamine')
+lError=doktyyp_kontrollimine('PARANDUS','PV parandamine')
+If used ('v_library') and reccount ('v_library') > 0
+	Wait window [Dokumendite salvestamine ...] nowait
+	With oDb
+		.opentransaction()
+		lError = .cursorupdate ('v_library')
+		If lError = .f.
+			.rollback()
+			If config.debug = 1
+				Messagebox ('Viga, esimine statr ebaõnnestus','Kontrol')
+			Endif
+		Else
+			.commit()
+		Endif
+	Endwith
+Endif
+If used ('v_library')
+	Use in v_library
+Endif
+
+If 'PALK' $ CURKEY.VERSIA
+	If !used ('comPalklib')
+		oDb.use('comPalklib','comPalklib')
+	Endif
+	If reccount ('comPalklib') = 0
+		Do tehe_palga_profill
+	Endif
+Endif
+If 'POHIVARA' $ CURKEY.VERSIA
+		Do tehe_pv_profill
+endif
+tnId = gRekv
+oDb.use ('v_rekv')
+Replace v_rekv.recalc with 1 in v_rekv
+lError = oDb.cursorupdate('v_rekv')
+Use in v_rekv
+
+Function tehe_pv_profill
+	Wait window [PV hälestamine...] nowait
+	With oDb
+&& PV gruppid
+		.use('comGrupp','comGrupp')
+		If reccount ('comGrupp') < 1
+			.use ('v_library','v_library',.t.)
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PVGRUPP','HOONED','Hooned')
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PVGRUPP','TRANSAPORT','Transpordite vahendid')
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PVGRUPP','ARVUTID','Arvutid ja büro tehhnika')
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PVGRUPP','PROGRAMMID','Programmid')
+		Endif
+&& PV Operatsioonid
+
+		Select comNomremote
+		Locate for dok $ 'PAIGUTUS'
+		If !found ()
+			If !used ('v_nomenklatuur')
+				.use ('v_nomenklatuur','v_nomenklatuur',.t.)
+			Endif
+			Insert into v_nomenklatuur (kood, nimetus, dok) values ;
+				('PAIGUTUS', 'PV paigutamine', 'PAIGUTUS')
+		Endif
+		Select comNomremote
+		Locate for dok $ 'KULUM'
+		If !found ()
+			If !used ('v_nomenklatuur')
+				.use ('v_nomenklatuur','v_nomenklatuur',.t.)
+			Endif
+			Insert into v_nomenklatuur (kood, nimetus, dok) values ;
+				('KULUM', 'Kulumi arvestamine', 'KULUM')
+		Endif
+		Select comNomremote
+		Locate for dok $ 'MAHAKANDMINE'
+		If !found ()
+			If !used ('v_nomenklatuur')
+				.use ('v_nomenklatuur','v_nomenklatuur',.t.)
+			Endif
+			Insert into v_nomenklatuur (kood, nimetus, dok) values ;
+				('MAHAKANDMINE', 'PV likvideerimine', 'MAHAKANDMINE')
+		Endif
+		Select comNomremote
+		Locate for dok $ 'PARANDUS'
+		If !found ()
+			If !used ('v_nomenklatuur')
+				.use ('v_nomenklatuur','v_nomenklatuur',.t.)
+			Endif
+			Insert into v_nomenklatuur (kood, nimetus, dok) values ;
+				('PARANDUS', 'PV parandamine', 'PARANDUS')
+		Endif
+		if (USED ('v_library') AND reccount ('v_library') > 0) or (used ('v_nomenklatuur') and reccount ('v_nomenklatuur') > 0)
+			lError = .t.
+			.opentransaction()
+			if USED ('v_library') and reccount ('v_library') > 0
+				lError = .cursorupdate('v_library')
+			endif
+			if lError = .t. and USED ('v_nomenklatuur') and reccount ('v_nomenklatuur') > 0
+				lerror = .cursorupdate('v_nomenklatuur')
+			endif
+			if lError = .t.
+				.commit()
+			else
+				.rollback()
+			endif
+		endif
+		if used ('v_library')
+			use in v_library
+		endif
+		if used ('v_nomenklatuur')
+			use in v_nomenklatuur
+		endif
+		if used ('comGrupp')
+			use in comGrupp
+		endif
+	Endwith
+	Return
+Endproc
+
+Function tehe_palga_profill
+	Wait window [Palga hälestamine...] nowait
+	With oDb
+		If !used ('v_library')
+			.use ('v_library','v_library',.t.)
+		Endif
+		If !used ('v_palk_lib')
+			.use ('v_palk_lib','v_palk_lib',.t.)
+		Endif
+		.opentransaction()
+		Insert into v_library (rekvid, library,kood, nimetus) values;
+			(gRekv, 'PALK','PALK','Palk')
+		lError = .cursorupdate('v_library')
+		If lError = .t.
+			Insert into v_palk_lib (parentid,liik,tund,maks, palgafond, asutusest, algoritm,round) values ;
+				(v_library.id,1,1,1,0,0,'26',0.01)
+			lError = .cursorupdate('v_palk_lib')
+		Endif
+		If lError = .t.
+			Select v_library
+			Zap
+			Select v_palk_lib
+			Zap
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PALK','TULU26','Tulumaks 26%')
+			lError = .cursorupdate('v_library')
+			If lError = .t.
+				Insert into v_palk_lib (parentid,liik,tund,maks, palgafond, asutusest, algoritm,round) values ;
+					(v_library.id,4,1,0,1,0,'26',1)
+				lError = .cursorupdate('v_palk_lib')
+			Endif
+		Endif
+		If lError = .t.
+			Select v_library
+			Zap
+			Select v_palk_lib
+			Zap
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PALK','SOTS','Sotsmaks 33%')
+			lError = .cursorupdate('v_library')
+			If lError = .t.
+				Insert into v_palk_lib (parentid,liik,tund,maks, palgafond, asutusest, algoritm,round) values ;
+					(v_library.id,5,1,0,1,0,'33',1)
+				lError = .cursorupdate('v_palk_lib')
+			Endif
+		Endif
+		If lError = .t.
+			Select v_library
+			Zap
+			Select v_palk_lib
+			Zap
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PALK','PM','Pensionimaks 2%')
+			lError = .cursorupdate('v_library')
+			If lError = .t.
+				Insert into v_palk_lib (parentid,liik,tund,maks, palgafond, asutusest, algoritm,round) values ;
+					(v_library.id,8,1,1,1,0,'2',1)
+				lError = .cursorupdate('v_palk_lib')
+			Endif
+		Endif
+		If lError = .t.
+			Select v_library
+			Zap
+			Select v_palk_lib
+			Zap
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PALK','TMI','Töökindlustusmaks isikutelt 1%')
+			lError = .cursorupdate('v_library')
+			If lError = .t.
+				Insert into v_palk_lib (parentid,liik,tund,maks, palgafond, asutusest, algoritm,round) values ;
+					(v_library.id,7,1,1,1,0,'1',1)
+				lError = .cursorupdate('v_palk_lib')
+			Endif
+		Endif
+		If lError = .t.
+			Select v_library
+			Zap
+			Select v_palk_lib
+			Zap
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PALK','TMA','Töökindlustusmaks asutuselt 0.5%')
+			lError = .cursorupdate('v_library')
+			If lError = .t.
+				Insert into v_palk_lib (parentid,liik,tund,maks, palgafond, asutusest, algoritm,round) values ;
+					(v_library.id,7,1,0,1,0,'1',1)
+				lError = .cursorupdate('v_palk_lib')
+			Endif
+		Endif
+		If lError = .t.
+			Select v_library
+			Zap
+			Select v_palk_lib
+			Zap
+			Insert into v_library (rekvid, library,kood, nimetus) values;
+				(gRekv, 'PALK','TASU','Väljamaksed')
+			lError = .cursorupdate('v_library')
+			If lError = .t.
+				Insert into v_palk_lib (parentid,liik,tund,maks, palgafond, asutusest, algoritm,round) values ;
+					(v_library.id,6,1,0,0,0,'100',0.05)
+				lError = .cursorupdate('v_palk_lib')
+			Endif
+		Endif
+		If lError = .t.
+			Wait window [Salvestamine...] nowait
+			.commit()
+		Else
+			Wait window [Viga...] nowait
+			.rollback()
+		Endif
+	Endwith
+	Return
+
+Function doktyyp_kontrollimine
+	Parameter tcDok, tcDoknimetus
+	cType = tcDok
+	If tcDok = 'PAIGUTUS' OR tcDok = 'MAHAKANDMIME' or tcDok = 'PARANDUS' OR tcDok = 'KULUM'
+		cType = 'POHIVARA'
+	Endif
+	If cType $ CURKEY.VERSIA
+	Else
+		Select COMDOKremote
+		Locate for tcDok $ COMDOKremote.kood
+		If !found ()
+			If !used ('v_library')
+				oDb.use ('v_library','v_library',.t.)
+			Endif
+			Insert into v_library (rekvid, library, kood, nimetus) values (gRekv,'DOK',tcDok,tcDoknimetus)
+		Endif
+	Endif

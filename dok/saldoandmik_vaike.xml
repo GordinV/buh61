@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1"?><!DOCTYPE RWSaldoandmik SYSTEM "saldoandmik_1.0.dtd"><RWSaldoandmik aruandeaasta="2007" registrikood="70000272" loomiseKuupaev="2003-12-12"><Tabel>
+<Kirje><Konto val="100000"/><TP val=""/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="46762,98"/></Kirje>
+<Kirje><Konto val="100080"/><TP val=""/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="32000,02"/></Kirje>
+<Kirje><Konto val="100100"/><TP val="900651"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="2001,79"/></Kirje>
+<Kirje><Konto val="100100"/><TP val="012427"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="35038"/></Kirje>
+<Kirje><Konto val="100100"/><TP val="800699"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="118833,75"/></Kirje>
+<Kirje><Konto val="100100"/><TP val="800599"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="1511385,93"/></Kirje>
+<Kirje><Konto val="100100"/><TP val="800401"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="29051630,82"/></Kirje>
+<Kirje><Konto val="100100"/><TP val="800402"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="34776611,81"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="017001"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="-25739,63"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="189101"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="0,05"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="185130"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="0,19"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="110101"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="0,28"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="013011"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="0,46"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="008047"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="2"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="900506"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="8"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="620201"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="18,61"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="021501"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="89"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="122104"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="183"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="900426"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="197"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="185132"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="289"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="361401"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="305"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="359301"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="320"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="413401"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="561"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="271101"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="677,68"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="558301"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="714"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="547401"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="760"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="354401"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="828"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="444103"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="930"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="120104"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="939"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="188402"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="949"/></Kirje>
+<Kirje><Konto val="102000"/><TP val="163101"/><TT val=""/><A val=""/><R val=""/><Sum liik="D" val="967"/></Kirje>
+</Tabel></RWSaldoandmik>

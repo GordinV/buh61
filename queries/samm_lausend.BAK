@@ -1,0 +1,100 @@
+Parameter tnDok
+Local  lnResult
+If vartype(odb) <> 'O'
+	Set classlib to classes\classlib
+	odb = createobject('db')
+Endif
+&&tnDok = 1
+If !used('curSource')
+	Create cursor curSource (id int, kood c(20), nimetus c(120))
+Endif
+If !used('curValitud')
+	Create cursor curValitud (id int, kood c(20), nimetus c(120))
+Endif
+*!*	If !used('curResult')
+*!*		Create cursor curResult (id int, lausendId int, dokId int)
+*!*	Endif
+odb.use('curlausDok')
+odb.use('v_lausd','curresult',.t.)
+Select curresult
+Append from dbf('curlausDok')
+lnStep = 1
+Do while lnStep > 0
+	Do case
+		Case lnStep = 1
+			Do get_lausendid_list
+*!*			Case lnStep = 2
+*!*				Do get_lepingu_list
+*!*			Case lnStep > 2
+*!*				Do arvutus
+	Endcase
+Enddo
+If used('curSource')
+	Use in curSource
+Endif
+If used('curvalitud')
+	Use in curValitud
+Endif
+
+Function get_lausendid_list
+	odb.use('comLausend','comLausendSamm',.t.)
+	odb.dbreq('comLausendSamm',0,'comLausend')
+	Select curValitud
+	If reccount('curvalitud') > 0
+		Zap
+	Endif
+	Select comlausendSamm
+	Scan
+		Insert into curSource (id, kood, nimetus ) values (comlausendSamm.id,;
+			alltrim(comlausendSamm.deebet)+'-'+alltrim(comlausendSamm.kreedit),rtrim(comlausendSamm.nimetus))
+		Select curresult
+		Locate for lausendId = comlausendSamm.id
+		If found()
+			Insert into curValitud (id, kood, nimetus ) values (comlausendSamm.id,;
+				alltrim(comlausendSamm.deebet)+'-'+alltrim(comlausendSamm.kreedit),rtrim(comlausendSamm.nimetus))
+			Delete from curSource where id = comlausendSamm.id
+		Endif
+	Endscan
+	Do form forms\samm with '1', iif(config.keel = 2,'Lausendid','Проводки'),iif(config.keel = 2,;
+		'Valitud lausendid','Выбранные проводки') to nResult
+	If nResult = 1
+		Select distinc id  from curValitud into cursor qry
+		Select qry
+		Scan
+			Select curresult
+			Locate for lausendId = qry.id
+			If !found()
+				Insert into curresult (lausendId, dokid);
+					values (qry.id, tnDok)
+			Endif
+		Endscan
+		set step on
+		Select curresult
+		Select id from curresult where curresult.lausendId not in (select id from qry );
+			and curresult.id > 0 into cursor qry2
+		Select qry2
+		lnRec = reccount ('qry2')
+		If lnRec > 0
+			Wait window [всего ] + str (lnRec ) + [ к удалению ] timeout 1
+			Select qry2
+			Scan for id > 0
+				Select curresult
+				Delete for id = qry2.id
+			Endscan
+		Endif
+		Use in qry2
+		Use in qry
+		Select curValitud
+		Zap
+		lnStep = 0
+		lError = odb.cursorupdate('curResult','v_lausd',gnHandle)
+		If lError = .f.
+			messagebox('Viga','Update')
+			Set step on
+		Endif
+	Endif
+	If nResult = 0
+		lnStep = 0
+	Endif
+
+	Return

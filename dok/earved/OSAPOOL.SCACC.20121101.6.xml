@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<SellerContractAccepted appId="SCAcc" date="2012-11-01" receiverId="VASTUVÕTJA" senderId="SAATJA" fileId="6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="scaccSellerContractAccepted.xsd">
+	<ContractAccepted>
+		<ChannelId>PANK_BIC</ChannelId>
+		<!-- Panga BIC kood, kus veaolukord tekkis -->
+		<Accepted>YES</Accepted>
+		<!-- Müüja lepingu aktsepteerimine - YES/NO tüüpi-->
+		<SellerName>TESTMÜÜJA</SellerName>
+		<!-- Müüja nimi -->
+		<SellerRegNumber>1234</SellerRegNumber>
+		<!-- Müüja reg.kood -->
+		<SellerContractId>123456789</SellerContractId>
+		<!-- Müüja lepingu number pangas -->
+	</ContractAccepted>
+</SellerContractAccepted>

@@ -1,0 +1,58 @@
+Parameter cWhere
+If Isdigit(Alltrim(cWhere))
+	cWhere = Val(Alltrim(cWhere))
+Endif
+tnId = cWhere
+cQuery = 'print_arv1'
+oDb.Use(cQuery,'arve_report1')
+SELECT arve_report1
+Select comAsutusRemote
+*!*	If Tag() <> 'ID'
+*!*		Set Order To Id
+*!*	Endif
+LOCATE FOR id =  arve_report1.asutusId
+
+
+If Found()
+	lnJaak = 0
+	IF !EMPTY(arve_report1.konto)
+		lnJaak = analise_formula('ASD('+Ltrim(Rtrim(arve_report1.konto))+','+Alltrim(Str(arve_report1.asutusId))+')', arve_report1.kpv, 'CursorAlgSaldo')
+	ENDIF
+	
+	Update arve_report1 Set asutus = Rtrim(Ltrim(comAsutusRemote.nimetus))+Space(1)+Trim(comAsutusRemote.omvorm), jaak = lnJaak
+
+Endif
+
+Select arve_report1
+Scan
+	lnrecno = RECNO('arve_report1')
+	Select comNomRemote
+*!*		If Tag() <> 'ID'
+*!*			Set Order To Id
+*!*		Endif
+	LOCATE FOR id = arve_report1.nomid
+	lcKbm = ''
+
+	Do Case
+		Case comNomRemote.doklausid = 0
+			lcKbm =  '18%'
+		Case comNomRemote.doklausid = 1
+			lcKbm =  '0%'
+		Case comNomRemote.doklausid = 2
+			lcKbm =  '5%'
+		Case comNomRemote.doklausid = 4
+			lcKbm =  '9%'
+		otherwise
+			lcKbm =  'Vaba'
+	Endcase
+	SELECT arve_report1
+	Replace km With lcKbm In arve_report1
+	GO lnRecno
+Endscan
+
+
+&&use (cQuery) in 0 alias arve_report1
+Select arve_report1
+INDEX ON KM TAG Km 
+SET ORDER TO KM
+

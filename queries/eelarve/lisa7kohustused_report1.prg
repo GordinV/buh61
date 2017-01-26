@@ -1,0 +1,401 @@
+Parameter cWhere
+Local lnDeebet, lnKreedit
+tcAllikas = '%'
+tcArtikkel = '%'
+tcTegev = '%'
+tcObjekt = '%'
+tcEelAllikas = '%'
+lnDeebet = 0
+lnKreedit = 0
+tcTpD = '%'
+tcTpK = '%'
+
+dKpv1 = Iif(!Empty(fltrAruanne.kpv1), fltrAruanne.kpv1,Date(Year(Date()),1,1))
+dKpv2 = Iif(!Empty(fltrAruanne.kpv2), fltrAruanne.kpv2,Date())
+Replace fltrAruanne.kpv1 With dKpv1,;
+	fltrAruanne.kpv2 With dKpv2 In fltrAruanne
+
+Create Cursor tmppeakontod (konto c(4))
+Insert Into tmppeakontod (konto) Values ('240')
+Insert Into tmppeakontod (konto) Values ('241')
+Insert Into tmppeakontod (konto) Values ('242')
+Insert Into tmppeakontod (konto) Values ('243')
+Insert Into tmppeakontod (konto) Values ('244')
+Insert Into tmppeakontod (konto) Values ('245')
+Insert Into tmppeakontod (konto) Values ('247')
+Insert Into tmppeakontod (konto) Values ('248')
+Insert Into tmppeakontod (konto) Values ('249')
+Insert Into tmppeakontod (konto) Values ('281')
+Insert Into tmppeakontod (konto) Values ('289')
+Insert Into tmppeakontod (konto) Values ('256')
+Insert Into tmppeakontod (konto) Values ('257')
+Insert Into tmppeakontod (konto) Values ('258')
+Insert Into tmppeakontod (konto) Values ('259')
+Insert Into tmppeakontod (konto) Values ('262')
+Insert Into tmppeakontod (konto) Values ('271')
+Insert Into tmppeakontod (konto) Values ('272')
+Insert Into tmppeakontod (konto) Values ('275')
+Insert Into tmppeakontod (konto) Values ('292')
+Insert Into tmppeakontod (konto) Values ('293')
+Insert Into tmppeakontod (konto) Values ('297')
+Insert Into tmppeakontod (konto) Values ('298')
+Insert Into tmppeakontod (konto) Values ('299')
+Insert Into tmppeakontod (konto) Values ('231')
+Insert Into tmppeakontod (konto) Values ('234')
+Insert Into tmppeakontod (konto) Values ('235')
+Insert Into tmppeakontod (konto) Values ('236')
+Insert Into tmppeakontod (konto) Values ('237')
+Insert Into tmppeakontod (konto) Values ('238')
+Insert Into tmppeakontod (konto) Values ('239')
+Insert Into tmppeakontod (konto) Values ('221')
+
+With odb
+	tnAsutusId1 = 0
+	tnAsutusId2 = 999999999
+	cAsutus = '%%'
+
+	Create Cursor KaibeAsutusAndmik_report1 (algsaldo N(12,2),deebet N(12,2),;
+		kreedit N(12,2),lsaldo N(12,2), konto c(20), nimetus c(120), asutus c(120), Asutusid Int)
+	Index On Asutusid Tag Asutusid
+	Index On Alltrim(Str (Asutusid))+':' + Alltrim(konto) Tag klkonto
+	Index On Left (Upper (asutus),40) Tag asutus
+	Set Order To Asutusid
+&& algsaldo arvestused
+	dKpv2 = dKpv1
+	dKpv1 = Date(Year(dKpv1), Month(dKpv1),1)
+	If Used('cursorSaldod1')
+		Use In cursorSaldod1
+	Endif
+	Wait Window [Arvestan alg.saldo ..] Nowait
+	tnAasta = Year(dKpv1)
+&&Use querySubKontod in 0 alias 'kontonimetused'
+	If !Used ('curAasta')
+		.Use ('curAasta')
+	Endif
+	Select Top 1 kuu, aasta From curAasta Order By aasta Desc, kuu Desc Where kinni = 'Jah' Into Cursor qryAasta
+
+	If Reccount ('qryAasta') > 0 And qryAasta.aasta < tnAasta
+		tnAasta = qryAasta.aasta
+	Else
+		Select curAasta
+		Calculate Min(aasta) To tnAasta
+		If Empty (tnAasta)
+			tnAasta = Year (dKpv1)
+		Endif
+	Endif
+	Use In qryAasta
+
+	tcKonto = '24%'
+	.Use('querySubKontod','kontonimetused')
+	tcKonto = '28%'
+	.Use('querySubKontod','kontonimetused28')
+	tcKonto = '25%'
+	.Use('querySubKontod','kontonimetused25')
+	tcKonto = '262%'
+	.Use('querySubKontod','kontonimetused26')
+	tcKonto = '27%'
+	.Use('querySubKontod','kontonimetused27')
+	tcKonto = '29%'
+	.Use('querySubKontod','kontonimetused29')
+	tcKonto = '23%'
+	.Use('querySubKontod','kontonimetused23')
+	tcKonto = '221%'
+	.Use('querySubKontod','kontonimetused221')
+
+	Select kontonimetused
+	Append From Dbf('kontonimetused28')
+	Append From Dbf('kontonimetused25')
+	Append From Dbf('kontonimetused26')
+	Append From Dbf('kontonimetused27')
+	Append From Dbf('kontonimetused29')
+	Append From Dbf('kontonimetused23')
+	Append From Dbf('kontonimetused221')
+	Use In kontonimetused28
+	Use In kontonimetused25
+	Use In kontonimetused26
+	Use In kontonimetused27
+	Use In kontonimetused29
+	Use In kontonimetused23
+	Use In kontonimetused221
+	tnAasta = Year(dKpv1)
+
+	Select kontonimetused
+	Scan
+		Insert Into KaibeAsutusAndmik_report1 (algsaldo, konto, nimetus, asutus, Asutusid) Values ;
+			(kontonimetused.algsaldo, kontonimetused.kood, kontonimetused.kontonimi, ;
+			kontonimetused.nimetus, kontonimetused.Asutusid)
+	Endscan
+	Select KaibeAsutusAndmik_report1
+	tcAsutus = '%'
+	tnSaldo1 = -999999999
+	tnSaldo2 = 999999999
+	tnlSaldo1 = -999999999
+	tnlSaldo2 = 999999999
+	tnDb1 = -999999999
+	tnDb2 = 999999999
+	tnKr1 = -999999999
+	tnKr2 = 999999999
+	tcKonto = '24%'
+	lError = .Exec ("sp_klsaldo ",Str (grekv)+","+Str(Month (dKpv1),2)+","+Str (tnAasta,4)+",'"+Alltrim(tcKonto)+"%','"+cAsutus+"'",'cursorSaldod' )
+	tcKonto = '28%'
+	lError = .Exec ("sp_klsaldo ",Str (grekv)+","+Str(Month (dKpv1),2)+","+Str (tnAasta,4)+",'"+Alltrim(tcKonto)+"%',;
+	'"+cAsutus+"'",'cursorSaldod28' )
+	tcKonto = '25%'
+	lError = .Exec ("sp_klsaldo ",Str (grekv)+","+Str(Month (dKpv1),2)+","+Str (tnAasta,4)+",'"+Alltrim(tcKonto)+"%',;
+	'"+cAsutus+"'",'cursorSaldod25' )
+	tcKonto = '262%'
+	lError = .Exec ("sp_klsaldo ",Str (grekv)+","+Str(Month (dKpv1),2)+","+Str (tnAasta,4)+",'"+Alltrim(tcKonto)+"%',;
+	'"+cAsutus+"'",'cursorSaldod26' )
+	tcKonto = '27%'
+	lError = .Exec ("sp_klsaldo ",Str (grekv)+","+Str(Month (dKpv1),2)+","+Str (tnAasta,4)+",'"+Alltrim(tcKonto)+"%',;
+	'"+cAsutus+"'",'cursorSaldod27' )
+	tcKonto = '29%'
+	lError = .Exec ("sp_klsaldo ",Str (grekv)+","+Str(Month (dKpv1),2)+","+Str (tnAasta,4)+",'"+Alltrim(tcKonto)+"%',;
+	'"+cAsutus+"'",'cursorSaldod29' )
+	tcKonto = '23%'
+	lError = .Exec ("sp_klsaldo ",Str (grekv)+","+Str(Month (dKpv1),2)+","+Str (tnAasta,4)+",'"+Alltrim(tcKonto)+"%',;
+	'"+cAsutus+"'",'cursorSaldod23' )
+	tcKonto = '221%'
+	lError = .Exec ("sp_klsaldo ",Str (grekv)+","+Str(Month (dKpv1),2)+","+Str (tnAasta,4)+",'"+Alltrim(tcKonto)+"%',;
+	'"+cAsutus+"'",'cursorSaldod22' )
+
+
+	Select cursorSaldod
+	Append From Dbf('cursorSaldod28')
+	Append From Dbf('cursorSaldod25')
+	Append From Dbf('cursorSaldod26')
+	Append From Dbf('cursorSaldod27')
+	Append From Dbf('cursorSaldod29')
+	Append From Dbf('cursorSaldod23')
+	Append From Dbf('cursorSaldod22')
+	Use In cursorSaldod28
+	Use In cursorSaldod25
+	Use In cursorSaldod26
+	Use In cursorSaldod27
+	Use In cursorSaldod29
+	Use In cursorSaldod23
+	Use In cursorSaldod22
+
+
+	Delete From cursorSaldod Where Left(Alltrim(konto),3) Not In (Select konto From tmppeakontod)
+	If dKpv1 < fltrAruanne.kpv1
+		cDok = '%%'
+		cSelg = '%%'
+		nSumma1 = -99999999
+		nSumma2 = 999999999
+		cKreedit = '%%'
+		cDeebet = '28%'
+		.Use('curJournal','JournalQuery1')
+		cDeebet = '25%'
+		.Use('curJournal','JournalQuery1_25')
+		cDeebet = '26%'
+		.Use('curJournal','JournalQuery1_26')
+		cDeebet = '27%'
+		.Use('curJournal','JournalQuery1_27')
+		cDeebet = '29%'
+		.Use('curJournal','JournalQuery1_29')
+		cDeebet = '23%'
+		.Use('curJournal','JournalQuery1_23')
+		cDeebet = '221%'
+		.Use('curJournal','JournalQuery1_221')
+		Select JournalQuery1
+		Append From Dbf('JournalQuery1_25')
+		Append From Dbf('JournalQuery1_26')
+		Append From Dbf('JournalQuery1_27')
+		Append From Dbf('JournalQuery1_29')
+		Append From Dbf('JournalQuery1_23')
+		Append From Dbf('JournalQuery1_221')
+		Use In JournalQuery1_25
+		Use In JournalQuery1_26
+		Use In JournalQuery1_27
+		Use In JournalQuery1_29
+		Use In JournalQuery1_23
+		Use In JournalQuery1_221
+
+		cDeebet = '%'
+		cKreedit = '28%'
+		.Use('curJournal','JournalQuery1')
+		cKreedit = '25%'
+		.Use('curJournal','JournalQuery1_25')
+		cKreedit = '26%'
+		.Use('curJournal','JournalQuery1_26')
+		cKreedit = '27%'
+		.Use('curJournal','JournalQuery1_27')
+		cKreedit = '29%'
+		.Use('curJournal','JournalQuery1_29')
+		cKreedit = '23%'
+		.Use('curJournal','JournalQuery1_23')
+		cKreedit = '221%'
+		.Use('curJournal','JournalQuery1_221')
+		Select JournalQuery1
+		Append From Dbf('JournalQuery1_25')
+		Append From Dbf('JournalQuery1_26')
+		Append From Dbf('JournalQuery1_27')
+		Append From Dbf('JournalQuery1_29')
+		Append From Dbf('JournalQuery1_23')
+		Append From Dbf('JournalQuery1_221')
+		Use In JournalQuery1_25
+		Use In JournalQuery1_26
+		Use In JournalQuery1_27
+		Use In JournalQuery1_29
+		Use In JournalQuery1_23
+		Use In JournalQuery1_221
+
+		Select JournalQuery1
+		Append From Dbf(JournalQuery1_)
+		Use In JournalQuery1_
+		Select cursorSaldod
+		Scan
+			Select JournalQuery1
+			Sum Summa For Alltrim(deebet) = Alltrim(cursorSaldod.konto) And;
+				JournalQuery1.Asutusid = cursorSaldod.Asutusid  To lnDeebet
+			Sum Summa For Alltrim(kreedit) = Alltrim(cursorSaldod.konto) And;
+				JournalQuery1.Asutusid = cursorSaldod.Asutusid To lnKreedit
+
+			Select KaibeAsutusAndmik_report1
+			Locate For Alltrim(konto) == Alltrim(cursorSaldod.konto) And Asutusid = cursorSaldod.Asutusid
+			If !Found ()
+				Select comKontodRemote
+				Locate For konto = cursorSaldod.konto
+				Select comAsutusRemote
+				Locate For Id = cursorSaldod.Asutusid
+				Insert Into KaibeAsutusAndmik_report1 (algsaldo, konto, nimetus, asutus, Asutusid) Values ;
+					(0, comKontodRemote.kood, comKontodRemote.nimetus, ;
+					comAsutusRemote.nimetus, cursorSaldod.Asutusid)
+			Endif
+			Replace algsaldo With (cursorSaldod.deebet - cursorSaldod.kreedit)+lnDeebet-lnKreedit,;
+				lsaldo With algsaldo + deebet - kreedit  In KaibeAsutusAndmik_report1
+		Endscan
+	Else
+		Select cursorSaldod
+		Scan
+			Update KaibeAsutusAndmik_report1 Set ;
+				algsaldo = cursorSaldod.deebet - cursorSaldod.kreedit,;
+				lsaldo = algsaldo + deebet - kreedit;
+				where konto = cursorSaldod.konto And Asutusid = cursorSaldod.Asutusid
+		Endscan
+	Endif
+	Use In kontonimetused
+	Wait Window [Arvestan kaibed ..] Nowait
+	Select KaibeAsutusAndmik_report1
+&& обороты
+	dKpv1 = fltrAruanne.kpv1
+	dKpv2 = fltrAruanne.kpv2
+	cKreedit = '%%'
+	cDok = '%%'
+	cSelg = '%%'
+	nSumma1 = -99999999
+	nSumma2 = 999999999
+	cDeebet = '28%'
+	.Use('curJournal','JournalQuery1')
+	cDeebet = '25%'
+	.Use('curJournal','JournalQuery1_25')
+	cDeebet = '26%'
+	.Use('curJournal','JournalQuery1_26')
+	cDeebet = '27%'
+	.Use('curJournal','JournalQuery1_27')
+	cDeebet = '29%'
+	.Use('curJournal','JournalQuery1_29')
+	cDeebet = '23%'
+	.Use('curJournal','JournalQuery1_23')
+	cDeebet = '221%'
+	.Use('curJournal','JournalQuery1_221')
+	Select JournalQuery1
+	Append From Dbf('JournalQuery1_25')
+	Append From Dbf('JournalQuery1_26')
+	Append From Dbf('JournalQuery1_27')
+	Append From Dbf('JournalQuery1_29')
+	Append From Dbf('JournalQuery1_23')
+	Append From Dbf('JournalQuery1_221')
+	Use In JournalQuery1_25
+	Use In JournalQuery1_26
+	Use In JournalQuery1_27
+	Use In JournalQuery1_29
+	Use In JournalQuery1_23
+	Use In JournalQuery1_221
+
+	Delete From JournalQuery1 Where Left(Alltrim(deebet),3) Not In (Select konto From tmppeakontod)
+*!*			('240', '241', '242', '243', '244', '245', '247', '248', '249','281','289','256', '257', '258', '259','262',;
+*!*			'271', '272','275','292', '293', '297', '298','299','231', '234', '235', '236', '237', '238','239','221')
+	Select KaibeAsutusAndmik_report1
+	Set Order To klkonto
+	Select JournalQuery1
+	Scan
+		Select KaibeAsutusAndmik_report1
+		cIndex = Alltrim(Str (JournalQuery1.Asutusid))+':'+Alltrim(JournalQuery1.deebet)
+		Seek cIndex
+		If Found ()
+			Replace deebet With deebet + JournalQuery1.Summa ;
+				lsaldo With algsaldo + deebet - kreedit In KaibeAsutusAndmik_report1
+		Else
+			Select comKontodRemote
+			Locate For kood = JournalQuery1.deebet
+			Insert Into KaibeAsutusAndmik_report1 (algsaldo, konto, nimetus, asutus, Asutusid, deebet) Values ;
+				(0, JournalQuery1.deebet, comKontodRemote.nimetus, ;
+				JournalQuery1.asutus, JournalQuery1.Asutusid,JournalQuery1.Summa)
+		Endif
+	Endscan
+	cDeebet = '%%'
+	cKreedit = '28%'
+	.Use('curJournal','JournalQuery1')
+	cKreedit = '25%'
+	.Use('curJournal','JournalQuery1_25')
+	cKreedit = '26%'
+	.Use('curJournal','JournalQuery1_26')
+	cKreedit = '27%'
+	.Use('curJournal','JournalQuery1_27')
+	cKreedit = '29%'
+	.Use('curJournal','JournalQuery1_29')
+	cKreedit = '23%'
+	.Use('curJournal','JournalQuery1_23')
+	cKreedit = '221%'
+	.Use('curJournal','JournalQuery1_221')
+	Select JournalQuery1
+	Append From Dbf('JournalQuery1_25')
+	Append From Dbf('JournalQuery1_26')
+	Append From Dbf('JournalQuery1_27')
+	Append From Dbf('JournalQuery1_29')
+	Append From Dbf('JournalQuery1_23')
+	Append From Dbf('JournalQuery1_221')
+	Use In JournalQuery1_25
+	Use In JournalQuery1_26
+	Use In JournalQuery1_27
+	Use In JournalQuery1_29
+	Use In JournalQuery1_23
+	Use In JournalQuery1_221
+
+	Delete From JournalQuery1 Where Left(Alltrim(kreedit),3) Not In (Select konto From tmppeakontod)
+*!*			('240', '241', '242', '243', '244', '245', '247', '248', '249','281','289','256', '257', '258', '259','262',;
+*!*			'271', '272','275','292', '293', '297', '298','299','231', '234', '235', '236', '237', '238','239','221')
+	Select KaibeAsutusAndmik_report1
+	Set Order To klkonto
+	Select JournalQuery1
+
+	Scan
+		Select KaibeAsutusAndmik_report1
+		cIndex = Alltrim(Str (JournalQuery1.Asutusid))+':'+Alltrim(JournalQuery1.kreedit)
+		Seek cIndex
+		If Found ()
+			Replace kreedit With kreedit + JournalQuery1.Summa,;
+				lsaldo With algsaldo + deebet - kreedit In KaibeAsutusAndmik_report1
+		Else
+			Select comKontodRemote
+			Locate For kood = JournalQuery1.kreedit
+			Insert Into KaibeAsutusAndmik_report1 (algsaldo, konto, nimetus, asutus, Asutusid, kreedit) Values ;
+				(0, JournalQuery1.kreedit, comKontodRemote.nimetus, ;
+				JournalQuery1.asutus, JournalQuery1.Asutusid,JournalQuery1.Summa)
+		Endif
+	Endscan
+Endwith
+If Used('Journalquery1')
+	Use In JournalQuery1
+Endif
+If Used('cursorSaldod')
+	Use In cursorSaldod
+Endif
+Clear
+Select KaibeAsutusAndmik_report1
+Delete From KaibeAsutusAndmik_report1 Where Empty (lsaldo) Or 	Left(Alltrim(konto),3) Not In (Select konto From tmppeakontod)
+*!*			('240', '241', '242', '243', '244', '245', '247', '248', '249','281','289','256', '257', '258', '259','262',;
+*!*			'271', '272','275','292', '293', '297', '298','299','231', '234', '235', '236', '237', '238','239','221')
+Set Order To asutus

@@ -1,0 +1,34 @@
+Parameter tcWhere
+if !used('fltrPalkOper')
+	return .f.
+ENDIF
+CREATE CURSOR palkoper_report1 (isikukood c(20), nimetus c(254), summa y, isik c(254))
+
+tcNimetus = +'%'+ltrim(rtrim(fltrPalkOper.nimetus))+'%'
+tcIsik = '%'+ltrim(rtrim(fltrPalkOper.isik))+'%'
+tcLiik = '%'+ltrim(rtrim(fltrPalkOper.liik))+'%'
+tcTund = '%'+ltrim(rtrim(fltrPalkOper.tund))+'%'
+tcMaks = '%'+ltrim(rtrim(fltrPalkOper.Maks))+'%'
+dKpv1 = iif(empty(fltrPalkOper.kpv1),date(year(date()),month(date()),1),fltrPalkOper.kpv1)
+dKpv2 = iif(empty(fltrPalkOper.kpv2),date(year(date()),month(date())+1,1),fltrPalkOper.kpv2)
+tnSumma1 = fltrPalkOper.Summa1
+tnSumma2 = iif(empty(fltrPalkOper.Summa2),999999999,fltrPalkOper.Summa2)
+tcValuuta = '%'
+oDb.use('curPalkOper','qryPalkOper1')
+
+SELECT comAsutusRemote.regkood as isikukood, qryPalkOper1.nimetus, sum(qryPalkOper1.summa * qryPalkOper1.kuurs) as summa, qryPalkOper1.isik ;
+	FROM qryPalkOper1 INNER JOIN comAsutusRemote ON  comAsutusRemote.id = qryPalkOper1.isikId;
+	WHERE tun1 > 0;
+	GROUP BY qryPalkOper1.nimetus, qryPalkOper1.isik, comAsutusRemote.regkood;
+	order BY qryPalkOper1.nimetus, qryPalkOper1.isik, comAsutusRemote.regkood;
+	INTO CURSOR qry1
+	
+USE IN qryPalkOper1
+
+select palkoper_report1
+APPEND FROM DBF('qry1')
+IF RECCOUNT('palkoper_report1') < 1
+	APPEND BLANK
+ENDIF
+
+USE IN qry1

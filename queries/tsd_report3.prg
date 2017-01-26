@@ -1,0 +1,202 @@
+Parameter tcWhere
+If !Empty (fltrAruanne.asutusId)
+	Select comAsutusRemote
+	Locate For Id = fltrAruanne.asutusId
+	tcIsik = Rtrim(comAsutusRemote.nimetus)+'%'
+Else
+	tcIsik = '%%'
+Endif
+tdKpv1 = fltrAruanne.kpv1
+tdKpv2 = fltrAruanne.kpv2
+tnOsakondId1 = fltrAruanne.osakondId
+tnOsakondId2 = Iif (Empty (fltrAruanne.osakondId),999999999,fltrAruanne.osakondId)
+
+tnParent = iif(empty(fltrAruanne.kond),4,3)
+
+With oDb
+	.Use ('printTSD')
+	.Use ('printTSD1','printTSD1_')
+Endwith
+tnId = gRekv
+Create Cursor ftsd_report (asutus c(254) Default qryRekv.nimetus, regnum c(20) Default qryRekv.regkood,;
+	aadress c(254) Default qryRekv.aadress, AASTA Int Default Year(fltrAruanne.kpv1),;
+	kuu Int Default Month (fltrAruanne.kpv1),;
+	juhataja c(120) Default qryRekv.juht, pearaama c(120) Default qryRekv.raama, tel c(40) Default qryRekv.tel,;
+	isikukd c(11), nimi c(120),;
+	sots Y, arvsots Y, tulu Y, palk26 Y,palk15 Y,palk10 Y,palk5 Y,palk0 Y, tm Y, atm Y, pm Y,pkoht Int, pohikoht Int,;
+	k_sots Y, k_tulu Y, k_palk Y, k_tm Y, k_atm Y, k_pm Y, k_arvsots Y, liik c(120), kood c(6), riik c(3), aaddr c(120), toend c(20))
+Append Blank
+
+Select printtsd1_
+
+Select Count(*) As Count, Sum(tm) As tm, Sum(atm) As atm,  Sum(pm) As pm, Sum(TULUMAKS) As TULUMAKS,  Sum(SOTSMAKS) As SOTSMAKS, ;
+	SUM(palk26) As palk26,  Sum(palk15) As palk15, Sum(palk10) As palk10,  Sum(palk5) As palk5, Sum(palk0) As palk0,;
+	SUM(palk_04) As ELATIS, SUM(palk_02) as palk_02, SUM(palk_03) as palk_03,;
+	SUM(0) palk_04,SUM(palk_05) as palk_05, SUM(palk_06) as palk_06, SUM(palk_07) as palk_07,;
+	SUM(palk_08) as palk_08,SUM(palk_09) as palk_09, SUM(palk_10) as palk_10, ;
+	SUM(palk_11) as palk_11, SUM(palk_12) as palk_12, SUM(palk_13) as palk_13,;
+	SUM(palk_14) as palk_14,SUM(palk_15) as palk_15, SUM(palk_16) as palk_16, SUM(palk_17) as palk_17,;
+	SUM(palk_18) as palk_18,SUM(palk_19) as palk_19, SUM(palk_19a) as palk_19a,SUM(palk_20) as palk_20,;
+	SUM(palk_21) as palk_21, sum(palksots) as palksots, isikukood, isik, resident,  riik, toend  From  printtsd1_ ;
+	GROUP By isikukood, isik,resident, riik, toend ;
+	into Cursor printtsd1
+Select printtsd1
+SCAN FOR printtsd1.resident= 0
+	Select ftsd_report
+	If !Empty(ftsd_report.nimi)
+		Append Blank
+	Endif
+	lcKood = ''
+	lcLiik = ''
+	SELECT comAsutusRemote
+	LOCATE FOR regkood = printtsd1.isikukood
+	if EMPTY(lcKood) AND (printtsd1.palk_02+printtsd1.palk_03+printtsd1.palk_04+printtsd1.palk_05+;
+			printtsd1.palk_06+printtsd1.palk_07+printtsd1.palk_08+printtsd1.palk_09+printtsd1.palk_10+;
+			printtsd1.palk_11+printtsd1.palk_12+printtsd1.palk_13+printtsd1.palk_14+printtsd1.palk_15+;
+			printtsd1.palk_16+printtsd1.palk_17+printtsd1.palk_18+printtsd1.palk_19+printtsd1.palk_19a+;
+			printtsd1.palk_20+printtsd1.palk_21) > 0
+			IF EMPTY(lcKood) AND printtsd1.palk_02 > 0
+				lcKood = '02'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_03 > 0
+				lcKood = '03'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_04 > 0
+				lcKood = '04'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_05 > 0
+				lcKood = '05'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_06 > 0
+				lcKood = '07'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_07 > 0
+				lcKood = '07'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_08 > 0
+				lcKood = '08'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_09 > 0
+				lcKood = '09'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_10 > 0
+				lcKood = '10'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_11 > 0
+				lcKood = '11'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_12 > 0
+				lcKood = '12'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_13 > 0
+				lcKood = '13'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_14 > 0
+				lcKood = '14'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_15 > 0
+				lcKood = '15'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_16 > 0
+				lcKood = '16'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_17 > 0
+				lcKood = '17'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_18 > 0
+				lcKood = '18'
+			endif
+			IF EMPTY(lcKood) AND printtsd1.palk_19 > 0
+				lcKood = '19'
+			ENDIF
+			IF EMPTY(lcKood) AND printtsd1.palk_19a > 0
+				lcKood = '19a'
+			ENDIF
+			IF EMPTY(lcKood) AND printtsd1.palk_20 > 0
+				lcKood = '20'
+			ENDIF
+			IF EMPTY(lcKood) AND printtsd1.palk_21 > 0
+				lcKood = '21'
+			ENDIF
+		endif
+	lcLiik = FLIIK(lcKood)
+
+	Replace isikukd With printtsd1.isikukood,;
+		nimi With printtsd1.isik,;
+		sots With ROUND(printtsd1.SOTSMAKS/fltrPrinter.kuurs,2),;
+		arvsots With ROUND(printtsd1.palksots/fltrPrinter.kuurs,2),;
+		tulu With ROUND(printtsd1.TULUMAKS/fltrPrinter.kuurs,2),;
+		palk26 With ROUND(printtsd1.palk26/fltrPrinter.kuurs,2),;
+		palk15 With ROUND(printtsd1.palk15/fltrPrinter.kuurs,2),;
+		palk10 With ROUND(printtsd1.palk10/fltrPrinter.kuurs,2),;
+		palk5 With ROUND(printtsd1.palk5/fltrPrinter.kuurs,2),;
+		palk0 With ROUND(printtsd1.palk0/fltrPrinter.kuurs,2),;
+		tm With ROUND(printtsd1.tm/fltrPrinter.kuurs,2),;
+		atm With ROUND((printtsd1.palk26+printtsd1.palk15+printtsd1.palk10+printtsd1.palk5+printtsd1.palk0)/fltrPrinter.kuurs,2),;
+		pm With ROUND(printtsd1.pm/fltrPrinter.kuurs,2),;
+		kood With lcKood,;
+		liik WITH lcLiik,;
+		aaddr WITH comAsutusRemote.aadress,; 
+		toend WITH IIF(ISNULL(printtsd1.toend),'',printtsd1.toend),;
+		riik WITH printtsd1.riik In ftsd_report
+
+	Replace k_sots With ROUND(printTsd.SOTSMAKS/fltrPrinter.kuurs,2) ,;
+		k_tulu With ROUND(printTsd.TULUMAKS/fltrPrinter.kuurs,2),;
+		k_palk With ROUND(printTsd.palk/fltrPrinter.kuurs,2),;
+		k_arvsots With ROUND(printTsd.palksots/fltrPrinter.kuurs,2),;
+		k_atm With ROUND(printTsd.palk/fltrPrinter.kuurs,2),;
+		k_tm With ROUND(printTsd.tm/fltrPrinter.kuurs,2),;
+		k_pm With ROUND(printTsd.pm/fltrPrinter.kuurs,2) In ftsd_report
+Endscan
+Select ftsd_report
+lnRec = Reccount ('ftsd_report')
+lnAddrec =  Iif (lnRec > 6,Mod (lnRec, 6),6-lnRec)
+If lnAddrec > 0
+	For i = 1 To lnAddrec
+		Append Blank
+		Replace k_sots With ROUND(printTsd.SOTSMAKS,0) ,;
+			k_tulu With ROUND(printTsd.TULUMAKS,0),;
+			k_palk With ROUND(printTsd.palk,0),;
+			k_arvsots With ROUND(printTsd.palksots,0),;
+			k_atm With ROUND(printTsd.palk,0),;
+			k_tm With ROUND(printTsd.tm,0),;
+			k_pm With ROUND(printTsd.pm,0) In ftsd_report
+	Endfor
+Endif
+Use In printTsd
+Use In printtsd1
+Select ftsd_report
+
+
+FUNCTION fliik
+LPARAMETERS tckood
+IF !USED('comTululiik')
+	CREATE CURSOR comTululiik (kood c(2), nimetus c(120))
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('01','Põhipalk')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('02','rendi- või üüritulu ning litsentsitasud')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('03','intressid')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('04','elatis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('05','Eesti riigi poolt seaduse alusel makstav pension')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('06','stipendiumid, toetused, kultuuri-, spordi- ja teaduspreemiad ning loteriivõidud')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('07','ajutise töövõimetuse rahaline hüvitis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('08','investeerimisriskiga elukindlustuslepingu alusel kindlustusvõtjale või soodustatud isikule väljamakstav summa')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('09','26% maksumääraga maksustatavad väljamaksed, mis on tehtud täiendava kogumispensioni kindlustuslepingu alusel või vabatahtlikust pensionifondist')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('10','10% maksumääraga maksustatavad väljamaksed, mis on tehtud täiendava kogumispensioni kindlustuslepingu alusel või vabatahtlikust pensionifondist')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('11','juriidilise isiku juhtimis- või kontrollorgani liikmele makstav tasu')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('12','seoses tööõnnetusega või kutsehaigusega makstav hüvitis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('13','- töölepingu lõpetamisel "Eesti Vabariigi töölepingu seaduse" alusel või teenistusest vabastamisel "Avaliku teenistuse seaduse" alusel töötajale või avalikule teenistujale makstavad hüvitised')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('14','muud väljamaksed')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('15','töövõtu-, käsundus- või muu võlaõigusliku lepingu alusel makstav töö- või teenustasu')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('16','Töötukassa poolt "Töötuskindlustuse seaduse" alusel väljamakstav töötuskindlustushüvitis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('17','Töötukassa poolt "Töötuskindlustuse seaduse" alusel väljamakstav hüvitis töölepingute kollektiivse ülesütlemise korral')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('18','Töötukassa poolt "Töötuskindlustuse seaduse" alusel väljamakstav hüvitis tööandja maksejõuetuse korral')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('19','Vanemahüvitise seaduse" (RT I 2003, 82, 549) alusel väljamakstav vanemahüvitis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('19a','teenistusest vabastamisel teenistujale makstavad hüvitised')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('20','üliõpilaste tulu')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('21','muu tulu')
+ENDIF
+SELECT comTululiik
+LOCATE FOR kood = tckood
+RETURN comTululiik.nimetus
+ENDFUNC
+

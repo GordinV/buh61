@@ -1,0 +1,153 @@
+Set step on
+Create cursor curKey (versia m)
+Append blank
+Replace versia with 'EELARVE' in curKey
+Create cursor v_account (admin int default 1)
+Append blank
+*!*	gnhandle = sqlconnect ('narva','jelena','208')
+*!*	&&,'zinaida','159')
+*!*	gversia = 'MSSQL'
+*!*	grekv = 2
+&&cdata = 'c:\buh50\dbase\buhdata5.dbc'
+*!*	cdata = 'e:\files\buh52\dbase\buhdata5.dbc'
+gnHandle = 1
+gversia = 'VFP'
+&&Open data (cdata)
+grekv = 1
+Local lError
+If v_account.admin < 1
+	Return .t.
+Endif
+CREATE cursor scrBilanss (nimetus c(254), rea c(20), konto c(20))
+insert into scrBilanss (nimetus, rea, konto) values ('НЕТТО-ОБОРОТ РЕАЛИЗАЦИИ','1','' )
+insert into scrBilanss (nimetus, rea, konto) values ('нетто-реализация хлебобулоч. продукции','1.1','KK(46-1)')
+insert into scrBilanss (nimetus, rea, konto) values ('нетто-реализация от розничной продажи','1.2','KK(46-2)')
+insert into scrBilanss (nimetus, rea, konto) values ('нетто-оборот от прочей реализации','1.3','KK(46-3)+KK(46-5)')
+insert into scrBilanss (nimetus, rea, konto) values ('ПРОЧИЕ ДОХОДЫ ОТ ПРЕДПРИНИМАТЕЛЬСТВА','2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Прочие доходы от предпринимательства','2.1','KK(48)')
+insert into scrBilanss (nimetus, rea, konto) values ('Полученные пени и прочие востребования','2.2','KK(48-1)')
+insert into scrBilanss (nimetus, rea, konto) values ('ОСНОВНОЕ СЫРЬЁ, МАТЕРИАЛ','3','')
+insert into scrBilanss (nimetus, rea, konto) values ('сырье,материал на производство','3.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('сырье, материал на проч реализ ','3.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('товар для продажи','3.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('УСЛУГИ','4','')
+insert into scrBilanss (nimetus, rea, konto) values ('Транспортно-складские расходы','4.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы связи','4.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы на охрану объектов','4.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('Услуги банка','4.4','')
+insert into scrBilanss (nimetus, rea, konto) values ('Прочие услуги','4.5','')
+insert into scrBilanss (nimetus, rea, konto) values ('РАЗЛИЧНЫЕ РАСХОДЫ ПО ПРЕДПРИНИМАТЕЛЬСТВУ','5','')
+insert into scrBilanss (nimetus, rea, konto) values ('Командировочные расходы','5.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Канцелярские расходы','5.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы по использованию личного а/транспорта','5.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы на аренду','5.4','')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы на телефон','5.5','')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы по окруж среде','5.6','')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы на рекламу','5.7','')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы по спецльготе','5.8','')
+insert into scrBilanss (nimetus, rea, konto) values ('Услуги аудитора','5.9','')
+insert into scrBilanss (nimetus, rea, konto) values ('Другие различные расходы по предпринимательству','5.10','')
+insert into scrBilanss (nimetus, rea, konto) values ('РАСХОДЫ НА РАБОЧУЮ СИЛУ','6','')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы на зарплату','6.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Социальные налоги','6.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('ИЗНОС','7','')
+insert into scrBilanss (nimetus, rea, konto) values ('Износ основного имущества','7.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Уценка оборотного имущества','7.2', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ПРОЧИЕ РАСХОДЫ ПО ПРЕДПРИНИМАТЕЛЬСТВУ','8', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Штрафы, уплаченные при неисполн. договоров','8.1', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Прочие коммерчес расх-ды','8.2', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Уплаченные пени и прочие востреб.','8.3', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Убыток прошлых лет выявл.в отч. периоде','8.4', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Убыток от продажи и списания сырья .товара и основных средств','8.5', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Прочие расходы','8.6', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ФИНАНСОВЫЕ ДОХОДЫ','9', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Прочие доходы от интрессов и финансовые доходы','9.1', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ФИНАНСОВЫЕ РАСХОДЫ','10', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Расходы по интрессам','10.1', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Прочие финансовые расходы','10.2', '')
+insert into scrBilanss (nimetus, rea, konto) values ('РЕЗУЛЬТАТ','11', '')
+insert into scrBilanss (nimetus, rea, konto) values ('РАСХОДЫ ПО ПРЕДПРИНИМАТЕЛЬСТВУ ВСЕГО','11.1', 'REA(3)+REA(4)+REA(5)+REA(6)+REA(7)+REA(8)')
+insert into scrBilanss (nimetus, rea, konto) values ('ДОХОДЫ ОТ ПРЕДПРИНИМАТЕЛЬСТВА ВСЕГО','11.2', 'REA(1)+REA(2)')
+insert into scrBilanss (nimetus, rea, konto) values ('ПРИБЫЛЬ (-УБЫТОК) ОТ ПРЕДПРИНИМАТЕЛЬСТВА','11.3', 'REA(11.2)-REA(11.1)')
+insert into scrBilanss (nimetus, rea, konto) values ('ПРИБЫЛЬ (-УБЫТОК) ОТ ХОЗЯЙСТВЕННОЙ ДЕЯТЕЛЬНОСТИ','11.4', 'REA(11.3)+REA(9)-REA(10)')
+
+lError =  _alter_vfp()
+
+
+*!*	Do case
+*!*		Case gversia = 'VFP'
+*!*			Select qryKey
+*!*			Scan for mline(qryKey.connect,1) = 'FOX'
+*!*				lcdata = mline(qryKey.vfp,1)
+*!*				If file (lcdata)
+*!*					Open data (lcdata)
+*!*					lcdefault = sys(5)+sys(2003)
+*!*					Set DEFAULT TO justpath (lcdata)
+*!*					lError =  _alter_vfp()
+*!*					Close data
+*!*					Set default to (lcdefault)
+*!*				Endif
+*!*			Endscan
+*!*			Use in qryKey
+*!*		Case gversia = 'MSSQL'
+*!*			=sqlexec (gnhandle,'begin transaction')
+*!*			lError = _alter_mssql ()
+*!*			If vartype (lError ) = 'N'
+*!*				lError = iif( lError = 1,.t.,.f.)
+*!*			Endif
+*!*			If lError = .f.
+*!*				=sqlexec (gnhandle,'rollback')
+*!*			Else
+*!*				=sqlexec (gnhandle,'commit')
+*!*			Endif
+*!*	Endcase
+
+*!*	If lError = .f.
+*!*		Messagebox ('Viga')
+*!*	Endif
+If gversia <> 'VFP'
+	=sqldisconnect (gnhandle)
+Endif
+Return lError
+
+Function _alter_vfp
+&& выборка имеющихся рекв.
+select id from rekv into cursor qry_Rekv
+&& выборка имеющихся строк баланса
+SELECT Library.kood, Library.nimetus, Library.library, Library.id,  Library.rekvid ;
+ FROM Library WHERE Library.library LIKE 'TULEM%' into cursor qry_bilanss
+
+select qry_rekv
+scan
+	select scrBilanss
+	scan
+		wait window [kontroling..]+scrBilanss.rea timeout 1
+		select qry_bilanss
+		locate for alltrim(kood) = alltrim(qry_bilanss.kood) and;
+			alltrim(upper(nimetus)) = alltrim(upper(qry_bilanss.nimetus))
+		if !found ()
+			wait window [inserting...]+scrBilanss.rea timeout 1
+			
+			lcString = " insert into library (rekvid, kood, nimetus, library, MUUD ) values ("+;
+				str (qry_rekv.id)+",'"+ ltrim(rtrim(scrBilanss.REA))+"','"+;
+				ltrim(rtrim(scrBilanss.nimetus))+"','"+;
+				"TULEM%','"+ltrim(rtrim(scrBilanss.KONTO)) +"')"
+			&lcString
+		endif 
+	endscan
+endscan
+use in qry_rekv
+use in qry_bilanss
+if used ('library')
+	use in library
+endif
+=SETPROPVIEW()
+Return
+
+Function setpropview
+	lnViews = adbobject (laView,'VIEW')
+	For i = 1 to lnViews
+		lError = dbsetprop(laView(i),'View','FetchAsNeeded',.t.)
+	Endfor
+	Return
+Endproc

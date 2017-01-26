@@ -1,0 +1,98 @@
+TEXT
+Error in line 267: Statement is not in a procedure.
+1. A C50 Allüksus  
+Error in line 268: Statement is not in a procedure.
+2. B C50 Vastutav isik 
+Error in line 269: Statement is not in a procedure.
+3. C C7 Arvel konto 
+Error in line 270: Statement is not in a procedure.
+4. D C3 Mem.order 
+Error in line 271: Statement is not in a procedure.
+5. E C50 Arvele objekti nimi 
+Error in line 272: Statement is not in a procedure.
+6. F C10 Inventari number 
+Error in line 273: Statement is not in a procedure.
+7. G C100 Põhivara nimi 
+Error in line 274: Statement is not in a procedure.
+8. H D Arvele kuupäev 
+Error in line 275: Statement is not in a procedure.
+9. I C50 Kasutusele kuupäev 
+Error in line 276: Statement is not in a procedure.
+10. J C10 Riigivara number 
+Error in line 277: Statement is not in a procedure.
+11. K C20 Dokumendi number 
+Error in line 278: Statement is not in a procedure.
+12. L C250 Info 
+Error in line 279: Statement is not in a procedure.
+13. M N15.3 Kogus 
+Error in line 280: Statement is not in a procedure.
+14. N N15.2 Algmaksumus 
+Error in line 281: Statement is not in a procedure.
+15. O C10.3 Kulumi protsent 
+Error in line 282: Statement is not in a procedure.
+16. P N15.2 Ületulnud kulum 
+Error in line 283: Statement is not in a procedure.
+17. Q D Kulumi arvutamise alguse kuupäev 
+Error in line 284: Statement is not in a procedure.
+18. R C7 Kulumi kreedit konto 
+Error in line 285: Statement is not in a procedure.
+19. S C7 Kulumi deebet konto 
+Error in line 286: Statement is not in a procedure.
+20. T C16 Allüksuse kulu objekt 
+Error in line 287: Statement is not in a procedure.
+21. U C16 Allüksuse tegevusala 
+Error in line 288: Statement is not in a procedure.
+22. V C16 Allüksuse kulu liik 
+Error in line 289: Statement is not in a procedure.
+23. W C16 Allüksuse tulu liik 
+Error in line 290: Statement is not in a procedure.
+24. X C16 Allüksuse projekt 
+Error in line 291: Statement is not in a procedure.
+25. Y C16 Allüksuse osakond 
+Error in line 292: Statement is not in a procedure.
+26. Z C16 Allüksuse subjekt 
+Error in line 293: Statement is not in a procedure.
+27. AA C16 Allüksuse tegevussuund 
+Error in line 294: Statement is not in a procedure.
+28. AB C16 Allüksuse allikas 
+Error in line 295: Statement is not in a procedure.
+29. AC C16 Allüksuse rahavoog 
+Error in line 296: Statement is not in a procedure.
+30. AD C7 Kande konto 
+Error in line 297: Statement is not in a procedure.
+
+Error in line 298: Statement is not in a procedure.
+31. AE C7 Ületulnud kulumi deebet 
+Error in line 299: Statement is not in a procedure.
+32. AF C50 Saadud asutus reg.kood 
+Error in line 300: Statement is not in a procedure.
+33. AG C50 Saadud asutuse nimi 
+Error in line 301: Statement is not in a procedure.
+34. AH C16 Kande kulu objekt 
+Error in line 302: Statement is not in a procedure.
+35. AI C16 Kande tegevusala 
+Error in line 303: Statement is not in a procedure.
+36. AJ C16 Kande kulu liik 
+Error in line 304: Statement is not in a procedure.
+37. AK C16 Kande tulu liik 
+Error in line 305: Statement is not in a procedure.
+38. AL C16 Kande projekt 
+Error in line 306: Statement is not in a procedure.
+39. AM C16 Kande osakond 
+Error in line 307: Statement is not in a procedure.
+40. AN C16 Kande subjekt 
+Error in line 308: Statement is not in a procedure.
+41. AO C16 Kande tegevussuund 
+Error in line 309: Statement is not in a procedure.
+42. AP C16 Kande allikas 
+Error in line 310: Statement is not in a procedure.
+43. AQ C16 Kande rahavoog 
+Error in line 311: Statement is not in a procedure.
+44. AR C16 Arvele tulnud konto rahavoog 
+Error in line 312: Statement is not in a procedure.
+45. AS C16 Kulumi rahavoog 
+Error in line 313: Statement is not in a procedure.
+
+Error in line 314: Statement is not in a procedure.
+ENDTEXT
+Error in line 315: Statement is not in a procedure.

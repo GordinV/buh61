@@ -1,0 +1,2 @@
+replace id WITH 816, objekt WITH 'Palkaruanne', kpv1 = 1, kpv2 = 1 IN aruanne
+Error in line 431: Syntax error.

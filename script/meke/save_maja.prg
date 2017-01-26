@@ -1,0 +1,41 @@
+SET STEP ON 
+gnHandle = SQLConnect('mekearv')
+If gnHandle < 0
+	Set Step On
+	Return
+Endif
+
+If !Used('qryObj')
+	lcString = " select library.id, library.nimetus FROM library inner join objekt on library.id = objekt.libId "
+
+	lError = SQLEXEC(gnHandle,lcString,'qryObj')
+	If Used('qryObj')
+		Select qryObj
+		Browse
+	Else
+		Set Step On
+	Endif
+Endif
+
+
+Select qryObj
+GO top
+Scan
+	lnMaja = Atc('-',qryObj.nimetus,1)
+	If lnMaja > 0
+		Wait Window STR(RECNO('qryObj'))+'/'+STR(RECCOUNT('qryObj'))+'maja:'+Substr(qryObj.nimetus,lnMaja-3,3)+'korter'+Substr(qryObj.nimetus,lnMaja+1,5) Nowait
+		lcString = "update objekt set nait14 = "+STR(VAL(Substr(qryObj.nimetus,lnMaja-3,3)))+","+;
+			"nait15 = "+STR(VAL(Substr(qryObj.nimetus,lnMaja+1,5)))+" where libid = "+Str(qryObj.Id,9)
+		lError = SQLEXEC(gnHandle,lcString)
+		_cliptext = lcString
+			exit
+
+		If lError < 0
+			Set Step On
+			Exit
+		Endif
+	Endif
+Endscan
+
+
+=SQLDISCONNECT(gnHandle)

@@ -1,0 +1,769 @@
+Local lnError, lnAtm
+lnAtm = 0
+lnError = 1
+IF !USED('fltrPrinter')
+	CREATE CURSOR fltrPrinter (kood c(20), kuurs n(14,4), valuuta c(40))
+	APPEND blank
+	replace kood WITH fnc_currentValuuta('VAL',fltrAruanne.kpv1), kuurs WITH fnc_currentValuuta('KUURS',fltrAruanne.kpv1) IN fltrPrinter 
+ENDIF
+
+=run_query()
+*set STEP on
+cFail = 'c:\temp\buh60\EDOK\tsd.txt'
+cFailbak = 'c:\temp\buh60\EDOK\'+Alltrim(Str(grekv))+'tsd'+Sys(2015)+'.bak'
+If File (cFailbak)
+	Erase (cFailbak)
+Endif
+If File(cFail)
+	Rename (cFail) To (cFailbak)
+Endif
+lnhandle = Fcreate(cFail)
+If lnError < 0
+	Return .F.
+ENDIF
+lnAtmMiinus = 0
+
+lnError=Fputs(lnhandle,'#044')
+lnError=Fputs(lnhandle,'#0')
+&&lnError=fputs(lnhandle,'#0')
+lnError=Fputs(lnhandle,Ltrim(Rtrim(qryRekv.regkood)))
+lnError=Fputs(lnhandle,'#1')
+lnError=Fputs(lnhandle,Str(Year(fltrAruanne.kpv1),4))
+lnError=Fputs(lnhandle,'#2')
+lnError=Fputs(lnhandle,Str(Month(fltrAruanne.kpv1),2))
+lnError=Fputs(lnhandle,'#3')
+lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.k_sots,12,2)))
+lnError=Fputs(lnhandle,'#4')
+lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.k_tulu,12,2)))
+lnError=Fputs(lnhandle,'#6')
+lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.k_arvsots,12,2)))
+lnError=Fputs(lnhandle,'#61')
+lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.k_tm,12,2)))
+lnError=Fputs(lnhandle,'#62')
+lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.k_atm,12,2)))
+lnError=Fputs(lnhandle,'#63')
+lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.k_pm,12,2)))
+Select ftsd_report
+Scan For !Empty (ftsd_report.isikukd) AND resident  = 1
+*!*		IF ftsd_report.isikukd = '45107167013'
+*!*			SET STEP ON 
+*!*		ENDIF
+	
+	lnError=Fputs(lnhandle,'#18')
+	lnError=Fputs(lnhandle,Rtrim(Ltrim(ftsd_report.isikukd)))
+	lnError=Fputs(lnhandle,Rtrim(Ltrim(ftsd_report.nimi)))
+	lnError=Fputs(lnhandle,Iif(!Empty(ftsd_report.pohikoht),'1',Space(1)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.g31,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.g32,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.sots,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.arvsots,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.tulu,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.palk26-ftsd_report.G711-ftsd_report.G721-ftsd_report.G731,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.tm,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.atm,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.pm,12,2)))
+	If !Empty (ftsd_report.g71)
+		lnError=Fputs(lnhandle,'#181')	
+		lnError=Fputs(lnhandle,Rtrim(Ltrim(ftsd_report.isikukd)))	
+		lc7x = Iif(!Empty(ftsd_report.g71),ftsd_report.g71,'')
+		lnError=Fputs(lnhandle,lc7x)
+		lc7x1 = Iif(!Empty(ftsd_report.g711),Alltrim(Str(ftsd_report.g711,12,2)),'')
+		lnError=Fputs(lnhandle,lc7x1)
+
+	ENDIF
+	If !Empty (ftsd_report.g72)
+		lnError=Fputs(lnhandle,'#181')	
+		lnError=Fputs(lnhandle,Rtrim(Ltrim(ftsd_report.isikukd)))		
+		lc7x = Iif(!Empty(ftsd_report.g72),ftsd_report.g72,'')
+		lnError=Fputs(lnhandle,lc7x)
+		lc7x1 = Iif(!Empty(ftsd_report.g721),Alltrim(Str(ftsd_report.g721,12,2)),'')
+		lnError=Fputs(lnhandle,lc7x1)
+	ENDIF
+	If !Empty (ftsd_report.g73)
+		lnError=Fputs(lnhandle,'#181')	
+		lnError=Fputs(lnhandle,Rtrim(Ltrim(ftsd_report.isikukd)))	
+		lc7x = Iif(!Empty(ftsd_report.g73),ftsd_report.g73,'')
+		lnError=Fputs(lnhandle,lc7x)
+		lc7x1 = Iif(!Empty(ftsd_report.g731),Alltrim(Str(ftsd_report.g731,12,2)),'')
+		lnError=Fputs(lnhandle,lc7x1)
+	
+	ENDIF
+ENDSCAN
+Scan For !Empty (ftsd_report.isikukd) AND resident  = 0
+	lnError=Fputs(lnhandle,'#19')
+	lnError=Fputs(lnhandle,Rtrim(Ltrim(ftsd_report.isikukd)))
+	lnError=Fputs(lnhandle,Rtrim(Ltrim(ftsd_report.nimi)))
+	lnError=Fputs(lnhandle,ftsd_report.riik)
+	lnError=Fputs(lnhandle,LTRIM(RTRIM(ftsd_report.aaddr)))
+	lnError=Fputs(lnhandle,LTRIM(RTRIM(ftsd_report.liik)))
+	lnError=Fputs(lnhandle,LTRIM(RTRIM(ftsd_report.kood)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.sots,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.arvsots,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.palk26,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.tulu,12,2)))
+	lnError=Fputs(lnhandle,'26')
+	lnError=Fputs(lnhandle,ftsd_report.toend)
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.tm,12,2)))
+	lnError=Fputs(lnhandle,Alltrim(Str(ftsd_report.palk26,12,2)))
+ENDSCAN
+
+* erisoodused
+IF USED('printTSD4') AND RECCOUNT('printTSD4') > 0
+*1
+	lnError=Fputs(lnhandle,'#20')
+*2
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris0100+printTsd4.eris0101+printTsd4.eris0110+printTsd4.eris0111),14,2)))
+*3
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris0200+printTsd4.eris0201+printTsd4.eris0210+printTsd4.eris0211),14,2)))
+*4
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris0300+printTsd4.eris0301+printTsd4.eris0310+printTsd4.eris0311),14,2))) 
+*5
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris0400+printTsd4.eris0401+printTsd4.eris0410+printTsd4.eris0411),14,2))) 
+*6
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris0500+printTsd4.eris0501+printTsd4.eris0510+printTsd4.eris0511),14,2))) 
+*7
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris0600+printTsd4.eris0601+printTsd4.eris0610+printTsd4.eris0611),14,2)))
+*8
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris6100+printTsd4.eris6101+printTsd4.eris6110+printTsd4.eris6111),14,2)))
+*9
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris6200+printTsd4.eris6201+printTsd4.eris6210+printTsd4.eris6211),14,2)))
+*10
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris6300+printTsd4.eris6301+printTsd4.eris6310+printTsd4.eris6311),14,2)))
+*11
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris0700+printTsd4.eris0701+printTsd4.eris0710+printTsd4.eris0711),14,2))) 
+*12
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris7100+printTsd4.eris7101+printTsd4.eris7110+printTsd4.eris7111),14,2))) 
+*13
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris7200+printTsd4.eris7201+printTsd4.eris7210+printTsd4.eris7211),14,2))) 
+*14
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris7300+printTsd4.eris7301+printTsd4.eris7310+printTsd4.eris7311),14,2))) 
+*15
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris0800+printTsd4.eris0801+printTsd4.eris0810+printTsd4.eris0811),14,2))) 
+*16
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris8100+printTsd4.eris8101+printTsd4.eris8110+printTsd4.eris8111),14,2))) 
+*17
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris8200+printTsd4.eris8201+printTsd4.eris8210+printTsd4.eris8211),14,2))) 
+*18
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris8300+printTsd4.eris8301+printTsd4.eris8310+printTsd4.eris8311),14,2))) 
+*19
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris0900+printTsd4.eris0901+printTsd4.eris0910+printTsd4.eris0911),14,2))) 
+*20
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris1000+printTsd4.eris1001+printTsd4.eris1010+printTsd4.eris1011),14,2))) 
+*21
+	lnError=Fputs(lnhandle,ALLTRIM(STR((printTsd4.eris1100+printTsd4.eris1101+printTsd4.eris1110+printTsd4.eris1111),14,2))) 
+*22
+	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*23
+	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2))) 
+*24
+	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*25
+	lnError=Fputs(lnhandle,ALLTRIM(STR((ftsd_report4.summa01+ftsd_report4.summa02+ftsd_report4.summa03+ftsd_report4.summa04+ftsd_report4.summa05+ftsd_report4.summa06+ftsd_report4.summa07+ftsd_report4.summa08+ftsd_report4.summa09+ftsd_report4.summa10+ftsd_report4.summa11),14,2)))
+*26
+	lnError=Fputs(lnhandle,ALLTRIM(STR(printTsd4.eris0110+printTsd4.eris0210+printTsd4.eris0310+printTsd4.eris0410+printTsd4.eris0510+printTsd4.eris0610+printTsd4.eris0710+;
+			printTsd4.eris0101+printTsd4.eris0201+printTsd4.eris0301+printTsd4.eris0401+printTsd4.eris0501+printTsd4.eris0601+printTsd4.eris0701+;
+			printTsd4.eris0801+printTsd4.eris0901+printTsd4.eris1001+printTsd4.eris1101 + ;
+			printTsd4.eris0810+printTsd4.eris0910+printTsd4.eris1010+printTsd4.eris1110,14,2)))
+*27
+	lnError=Fputs(lnhandle,ALLTRIM(STR((ftsd_report4.SUMMA15-ftsd_report4.summa16) * 21/79,14,2)))
+*28
+	lnError=Fputs(lnhandle,ALLTRIM(STR(ftsd_report4.summa15 - ftsd_report4.summa17 + ftsd_report4.summa18 - (ftsd_report4.summa17*21/79),14,2)))
+*29
+	lnError=Fputs(lnhandle,ALLTRIM(STR(ftsd_report4.summa19 * 33 / 100,14,2))) 
+*30 21
+	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*31 211
+	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*32 212
+	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*33 22	
+	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*34 221
+	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*35 222
+	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*36 23	
+ 	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*37 24	
+ 	lnError=Fputs(lnhandle,ALLTRIM(STR(0,14,2)))
+*38 24	
+ 	lnError=Fputs(lnhandle,'')
+
+	
+ENDIF
+	
+
+=Fclose (lnhandle)
+Return
+
+
+Function run_query
+	Parameter tcWhere
+	LOCAL ln31, lnPm, lnTKI
+	lnPm = 0.02
+	lnTKI = 0.028
+	
+	ln31 = 0
+	If !Empty (fltrAruanne.asutusId)
+		Select comAsutusRemote
+		Locate For Id = fltrAruanne.asutusId
+		tcIsik = Rtrim(comAsutusRemote.nimetus)+'%'
+	Else
+		tcIsik = '%%'
+	Endif
+	tdKpv1 = fltrAruanne.kpv1
+	tdKpv2 = fltrAruanne.kpv2
+	tnOsakondId1 = fltrAruanne.osakondId
+	tnOsakondId2 = Iif (Empty (fltrAruanne.osakondId),999999999,fltrAruanne.osakondId)
+	
+* parametrid palk_jaak paringu jaks
+
+tcNimetus = '%'
+tnKuu1 = MONTH(fltrAruanne.kpv1)
+tnKuu2 = MONTH(fltrAruanne.kpv2)
+tnAasta1 = YEAR(fltrAruanne.kpv1)
+tnAasta2 = YEAR(fltrAruanne.kpv2)
+tnArv1 = -999999999
+tnArv2 = 999999999
+tnKinni1 = -999999999
+tnKinni2 = 999999999
+tnTulu1 = -999999999
+tnTulu2 = 999999999
+tnSots1 = -999999999
+tnSots2 = 999999999
+tnJaak1 = -999999999
+tnJaak2 = 999999999
+tcOsakond = '%'
+
+IF !EMPTY (fltrAruanne.osakondId)
+	SELECT comOsakondAruanne
+	LOCATE FOR ID = fltrAruanne.osakondId
+	IF FOUND()
+		tcOsakond = '%'+rtrim(ltrim(comOsakondAruanne.kood))+'%'
+
+	ENDIF
+ENDIF
+
+tnParentRekvId = iif(!empty(fltrAruanne.kond),gRekv,999999)
+tnParent = iif(empty(fltrAruanne.kond),4,3)
+
+
+	With oDb
+		.Use ('printTSD')
+		.Use ('printTSD1', 'printTSD1_')
+		.Use ('printTSD4')
+		tnParentRekvId = iif(!empty(fltrAruanne.kond),3,9)
+		.use ('CURPALKJAAK','qryPalkJaak')
+
+	Endwith
+	tnId = grekv
+Create Cursor ftsd_report (asutus c(254) Default qryRekv.nimetus, regnum c(20) Default qryRekv.regkood,;
+	aadress c(254) Default qryRekv.aadress, AASTA Int Default Year(fltrAruanne.kpv1),;
+	kuu Int Default Month (fltrAruanne.kpv1),;
+	juhataja c(120) Default qryRekv.juht, pearaama c(120) Default qryRekv.raama, tel c(40) Default qryRekv.tel,;
+	isikukd c(11), nimi c(120),;
+	sots Y, arvsots Y, tulu Y, palk26 Y,palk15 Y,palk10 Y,palk5 Y,palk0 Y, tm Y, atm Y, pm Y,pkoht Int, pohikoht Int,;
+	k_sots Y, k_tulu Y, k_palk Y, k_tm Y, k_atm Y, k_pm Y, k_arvsots Y, g31 Y, g32 Y, g71 c(20), g711 y, g72 c(20), g721 y,;
+	g73 c(20), g731 y, liik c(120), kood c(6), riik c(3), aaddr c(120), toend c(20), resident int)
+	Append Blank
+	Select PRINTTSD1_
+	Count For pohikoht = 1 To lnPkoht
+
+
+	Select Count(*) As Count, Sum(tm) As tm, Sum(atm) As atm,  Sum(pm) As pm, Sum(TULUMAKS) As TULUMAKS,  Sum(SOTSMAKS) As SOTSMAKS, ;
+		SUM(palk26) As palk26,  Sum(palk15) As palk15, Sum(palk10) As palk10,  Sum(palk5) As palk5, Sum(palk0) As palk0,;
+		SUM(elatis) As ELATIS, Sum(palk_02) As palk_02, Sum(palk_03) As palk_03,;
+		SUM(palk_04) As palk_04,Sum(palk_05) As palk_05, Sum(palk_06) As palk_06, Sum(palk_07) As palk_07,;
+		SUM(palk_08) As palk_08,Sum(palk_09) As palk_09, Sum(palk_10) As palk_10, ;
+		SUM(palk_11) As palk_11, Sum(palk_12) As palk_12, Sum(palk_13) As palk_13,;
+		SUM(palk_14) As palk_14,Sum(palk_15) As palk_15, Sum(palk_16) As palk_16, Sum(palk_17) As palk_17,;
+		SUM(palk_18) As palk_18,Sum(palk_19) As palk_19,Sum(palk_19a) As palk_19a, Sum(palk_20) As palk_20,;
+		Sum(palk_21) As palk_21,Sum(palk_22) As palk_22,sum(palksots) as palksots,  isikukood, isik, resident, toend, riik  From  PRINTTSD1_ ;
+		GROUP By isikukood, isik, resident, toend, riik;
+		into Cursor printtsd1
+
+	Select printtsd1
+	SCAN 
+		Select PRINTTSD1_
+		Locate For isikukood = printtsd1.isikukood And pohikoht = 1
+		If Found()
+			lPk = 1
+		Else
+			lPk = 0
+		Endif
+
+		lnAtmMiinus = printtsd1.palk_13 + printtsd1.palk_14 + printtsd1.palk_04+printtsd1.palk_07
+	Select qryPalkJaak
+*!*		Locate For REGkood = printtsd1.isikukood 
+*!*		IF FOUND()
+*!*			ln31 = qryPalkJaak.g31
+*!*		ENDIF
+	SUM qryPalkJaak.g31 TO ln31 FOR REGkood = printtsd1.isikukood 
+
+		Select ftsd_report
+		If !Empty(ftsd_report.nimi)
+			Append Blank
+		ENDIF
+		
+*!*			If Empty(lPk)
+*!*				ln31 = 0
+*!*			Else
+*!*				If !Used ('palk_config')
+*!*					oDb.Use ('v_palk_config','palk_config' )
+*!*				Endif
+*!*				lnSumma =  printtsd1.palk26+printtsd1.palk15+printtsd1.palk10+printtsd1.palk5+printtsd1.palk0
+*!*				ln31 = Iif(lnSumma < palk_config.tulubaas,lnSumma, palk_config.tulubaas)
+*!*				lnSumma = lnSumma - printtsd1.tm - printtsd1.pm - printtsd1.ELATIS
+*!*				If lnSumma < ln31
+*!*					ln31 = lnSumma
+*!*				Endif
+*!*			Endif
+
+		lc71 = ''
+		ln711 = 0
+		lc72 = ''
+		ln721 = 0
+		lc73 = ''
+		ln731 = 0
+		If Empty(lc71) And (printtsd1.palk_02+printtsd1.palk_03+printtsd1.palk_04+printtsd1.palk_05+;
+				printtsd1.palk_06+printtsd1.palk_07+printtsd1.palk_08+printtsd1.palk_09+printtsd1.palk_10+;
+				printtsd1.palk_11+printtsd1.palk_12+printtsd1.palk_13+printtsd1.palk_14+printtsd1.palk_15+;
+				printtsd1.palk_16+printtsd1.palk_17+printtsd1.palk_18+printtsd1.palk_19+printtsd1.palk_19a+;
+				printtsd1.palk_20+printtsd1.palk_21+printtsd1.palk_22) <> 0
+			If Empty(lc71) And printtsd1.palk_02 <> 0
+				lc71 = '02'
+				ln711 = printtsd1.palk_02
+			Endif
+			If Empty(lc71) And printtsd1.palk_03 <> 0
+				lc71 = '03'
+				ln711 = printtsd1.palk_03
+			Endif
+			If Empty(lc71) And printtsd1.palk_04 <> 0
+				lc71 = '04'
+				ln711 = printtsd1.palk_04
+			Endif
+			If Empty(lc71) And printtsd1.palk_05 <> 0
+				lc71 = '05'
+				ln711 = printtsd1.palk_05
+			Endif
+			If Empty(lc71) And printtsd1.palk_06 <> 0
+				lc71 = '07'
+				ln711 = printtsd1.palk_07
+			Endif
+			If Empty(lc71) And printtsd1.palk_07 <> 0
+				lc71 = '07'
+				ln711 = printtsd1.palk_07
+			Endif
+			If Empty(lc71) And printtsd1.palk_08 <> 0
+				lc71 = '08'
+				ln711 = printtsd1.palk_08
+			Endif
+			If Empty(lc71) And printtsd1.palk_09 <> 0
+				lc71 = '09'
+				ln711 = printtsd1.palk_09
+			Endif
+			If Empty(lc71) And printtsd1.palk_10 <> 0
+				lc71 = '10'
+				ln711 = printtsd1.palk_10
+			Endif
+			If Empty(lc71) And printtsd1.palk_11 <> 0
+				lc71 = '11'
+				ln711 = printtsd1.palk_11
+			Endif
+			If Empty(lc71) And printtsd1.palk_12 <> 0
+				lc71 = '12'
+				ln711 = printtsd1.palk_12
+			Endif
+			If Empty(lc71) And printtsd1.palk_13 <> 0
+				lc71 = '13'
+				ln711 = printtsd1.palk_13
+			Endif
+			If Empty(lc71) And printtsd1.palk_14 <> 0
+				lc71 = '14'
+				ln711 = printtsd1.palk_14
+			Endif
+			If Empty(lc71) And printtsd1.palk_15 <> 0
+				lc71 = '15'
+				ln711 = printtsd1.palk_15
+			Endif
+			If Empty(lc71) And printtsd1.palk_16 <> 0
+				lc71 = '16'
+				ln711 = printtsd1.palk_16
+			Endif
+			If Empty(lc71) And printtsd1.palk_17 <> 0
+				lc71 = '17'
+				ln711 = printtsd1.palk_17
+			Endif
+			If Empty(lc71) And printtsd1.palk_18 <> 0
+				lc71 = '18'
+				ln711 = printtsd1.palk_18
+			Endif
+			If Empty(lc71) And printtsd1.palk_19 <> 0
+				lc71 = '19'
+				ln711 = printtsd1.palk_19
+			Endif
+			If Empty(lc71) And printtsd1.palk_19a <> 0
+				lc71 = '19a'
+				ln711 = printtsd1.palk_19a
+			Endif
+			If Empty(lc71) And printtsd1.palk_20 <> 0
+				lc71 = '20'
+				ln711 = printtsd1.palk_20
+			Endif
+			If Empty(lc71) And printtsd1.palk_21 <> 0
+				lc71 = '21'
+				ln711 = printtsd1.palk_21
+			Endif
+			If Empty(lc71) And printtsd1.palk_22 <> 0
+				lc71 = '22'
+				ln711 = printtsd1.palk_22
+			Endif
+		Endif
+		If !Empty(lc71) And Empty(lc72) And (printtsd1.palk_02+printtsd1.palk_03+printtsd1.palk_04+printtsd1.palk_05+;
+				printtsd1.palk_06+printtsd1.palk_07+printtsd1.palk_08+printtsd1.palk_09+printtsd1.palk_10+;
+				printtsd1.palk_11+printtsd1.palk_12+printtsd1.palk_13+printtsd1.palk_14+printtsd1.palk_15+;
+				printtsd1.palk_16+printtsd1.palk_17+printtsd1.palk_18+printtsd1.palk_19+printtsd1.palk_19a+;
+				printtsd1.palk_20+printtsd1.palk_21+printtsd1.palk_22) - ln711 <> 0
+			If Empty(lc72) And lc71 <> '02' And printtsd1.palk_02 <> 0
+				lc72 = '02'
+				ln721 = printtsd1.palk_02
+			Endif
+			If Empty(lc72) And lc71 <> '03' And printtsd1.palk_03 <> 0
+				lc72 = '03'
+				ln721 = printtsd1.palk_03
+			Endif
+			If Empty(lc72) And lc71 <> '04' And printtsd1.palk_04 <> 0
+				lc72 = '04'
+				ln721 = printtsd1.palk_04
+			Endif
+			If Empty(lc72) And lc71 <> '05' And printtsd1.palk_05 <> 0
+				lc72 = '05'
+				ln721 = printtsd1.palk_05
+			Endif
+			If Empty(lc72) And lc71 <> '06' And printtsd1.palk_06 <> 0
+				lc72 = '07'
+				ln721 = printtsd1.palk_07
+			Endif
+			If Empty(lc72) And lc71 <> '07' And printtsd1.palk_07 <> 0
+				lc72 = '07'
+				ln721 = printtsd1.palk_07
+			Endif
+			If Empty(lc72) And lc71 <> '08' And printtsd1.palk_08 <> 0
+				lc72 = '08'
+				ln721 = printtsd1.palk_08
+			Endif
+			If Empty(lc72) And lc71 <> '09' And printtsd1.palk_09 <> 0
+				lc72 = '09'
+				ln721 = printtsd1.palk_09
+			Endif
+			If Empty(lc72) And lc71 <> '10' And printtsd1.palk_10 <> 0
+				lc72 = '10'
+				ln721 = printtsd1.palk_10
+			Endif
+			If Empty(lc72) And lc71 <> '11' And printtsd1.palk_11 <> 0
+				lc72 = '11'
+				ln721 = printtsd1.palk_11
+			Endif
+			If Empty(lc72) And lc71 <> '12' And printtsd1.palk_12 <> 0
+				lc72 = '12'
+				ln721 = printtsd1.palk_12
+			Endif
+			If Empty(lc72) And lc71 <> '13' And printtsd1.palk_13 <> 0
+				lc72 = '13'
+				ln721 = printtsd1.palk_13
+			Endif
+			If Empty(lc72) And lc71 <> '14' And printtsd1.palk_14 <> 0
+				lc72 = '14'
+				ln721 = printtsd1.palk_14
+			Endif
+			If Empty(lc72) And lc71 <> '15' And printtsd1.palk_15 <> 0
+				lc72 = '15'
+				ln721 = printtsd1.palk_15
+			Endif
+			If Empty(lc72) And lc71 <> '16' And printtsd1.palk_16 <> 0
+				lc72 = '16'
+				ln721 = printtsd1.palk_16
+			Endif
+			If Empty(lc72) And lc71 <> '17' And printtsd1.palk_17 <> 0
+				lc72 = '17'
+				ln721 = printtsd1.palk_17
+			Endif
+			If Empty(lc72) And lc71 <> '18' And printtsd1.palk_18 <> 0
+				lc72 = '18'
+				ln721 = printtsd1.palk_18
+			Endif
+			If Empty(lc72) And lc71 <> '19' And printtsd1.palk_19 <> 0
+				lc72 = '19'
+				ln721 = printtsd1.palk_19
+			Endif
+			If Empty(lc72) And lc71 <> '19a' And printtsd1.palk_19a <> 0
+				lc72 = '19a'
+				ln721 = printtsd1.palk_19a
+			Endif
+			If Empty(lc72) And lc71 <> '20' And printtsd1.palk_20 <> 0
+				lc72 = '20'
+				ln721 = printtsd1.palk_20
+			Endif
+			If Empty(lc72) And lc71 <> '21' And printtsd1.palk_21 <> 0
+				lc72 = '21'
+				ln721 = printtsd1.palk_21
+			Endif
+			If Empty(lc72) And lc71 <> '21' And printtsd1.palk_22 <> 0
+				lc72 = '22'
+				ln721 = printtsd1.palk_22
+			Endif
+ 		Endif
+
+		If !Empty(lc72) And Empty(lc73) And (printtsd1.palk_02+printtsd1.palk_03+printtsd1.palk_04+printtsd1.palk_05+;
+				printtsd1.palk_06+printtsd1.palk_07+printtsd1.palk_08+printtsd1.palk_09+printtsd1.palk_10+;
+				printtsd1.palk_11+printtsd1.palk_12+printtsd1.palk_13+printtsd1.palk_14+printtsd1.palk_15+;
+				printtsd1.palk_16+printtsd1.palk_17+printtsd1.palk_18+printtsd1.palk_19+printtsd1.palk_19a+;
+				printtsd1.palk_20+printtsd1.palk_21+printtsd1.palk_22) - ln711 - ln721 <> 0
+			If Empty(lc73) And lc71 <> '02' And lc72 <> '02' And printtsd1.palk_02 <> 0
+				lc73 = '02'
+				ln731 = printtsd1.palk_02
+			Endif
+			If Empty(lc73) And lc71 <> '03' And lc72 <> '03' And printtsd1.palk_03 <> 0
+				lc73 = '03'
+				ln731 = printtsd1.palk_03
+			Endif
+			If Empty(lc73) And lc71 <> '04' And lc72 <> '04' And printtsd1.palk_04 <> 0
+				lc73 = '04'
+				ln731 = printtsd1.palk_04
+			Endif
+			If Empty(lc73) And lc71 <> '05' And  lc72 <> '05' And printtsd1.palk_05 <> 0
+				lc73 = '05'
+				ln731 = printtsd1.palk_05
+			Endif
+			If Empty(lc73) And lc71 <> '06' And lc72 <> '06' And printtsd1.palk_06 <> 0
+				lc73 = '07'
+				ln731 = printtsd1.palk_07
+			Endif
+			If Empty(lc73) And lc71 <> '07' And lc72 <> '07' And printtsd1.palk_07 <> 0
+				lc73 = '07'
+				ln731 = printtsd1.palk_07
+			Endif
+			If Empty(lc73) And lc71 <> '08' And lc72 <> '08' And printtsd1.palk_08 <> 0
+				lc73 = '08'
+				ln731 = printtsd1.palk_08
+			Endif
+			If Empty(lc73) And lc71 <> '09' And lc72 <> '09' And printtsd1.palk_09 <> 0
+				lc73 = '09'
+				ln731 = printtsd1.palk_09
+			Endif
+			If Empty(lc73) And lc71 <> '10' And lc72 <> '10' And printtsd1.palk_10 <> 0
+				lc73 = '10'
+				ln731 = printtsd1.palk_10
+			Endif
+			If Empty(lc73) And lc71 <> '11' And lc72 <> '11' And printtsd1.palk_11 <> 0
+				lc73 = '11'
+				ln731 = printtsd1.palk_11
+			Endif
+			If Empty(lc73) And lc71 <> '12' And  lc72 <> '12' And printtsd1.palk_12 <> 0
+				lc73 = '12'
+				ln731 = printtsd1.palk_12
+			Endif
+			If Empty(lc73) And lc71 <> '13' And lc72 <> '13' And printtsd1.palk_13 <> 0
+				lc73 = '13'
+				ln731 = printtsd1.palk_13
+			Endif
+			If Empty(lc73) And lc71 <> '14' And lc72 <> '14' And printtsd1.palk_14 <> 0
+				lc73 = '14'
+				ln731 = printtsd1.palk_14
+			Endif
+			If Empty(lc73) And lc71 <> '15' And lc72 <> '15' And printtsd1.palk_15 <> 0
+				lc73 = '15'
+				ln731 = printtsd1.palk_15
+			Endif
+			If Empty(lc73) And lc71 <> '16' And lc72 <> '16' And printtsd1.palk_16 <> 0
+				lc73 = '16'
+				ln731 = printtsd1.palk_16
+			Endif
+			If Empty(lc73) And lc71 <> '17' And lc72 <> '17' And printtsd1.palk_17 <> 0
+				lc73 = '17'
+				ln731 = printtsd1.palk_17
+			Endif
+			If Empty(lc73) And lc71 <> '18' And lc72 <> '18' And printtsd1.palk_18 <> 0
+				lc73 = '18'
+				ln731 = printtsd1.palk_18
+			Endif
+			If Empty(lc73) And lc71 <> '19' And lc72 <> '19' And printtsd1.palk_19 <> 0
+				lc73 = '19'
+				ln731 = printtsd1.palk_19
+			Endif
+			If Empty(lc73) And lc71 <> '19a' And lc72 <> '19a' And printtsd1.palk_19a <> 0
+				lc73 = '19a'
+				ln731 = printtsd1.palk_19a
+			Endif
+			If Empty(lc73) And lc71 <> '20' And lc72 <> '20' And printtsd1.palk_20 <> 0
+				lc73 = '20'
+				ln731 = printtsd1.palk_20
+			Endif
+			If Empty(lc73) And lc71 <> '21' And lc72 <> '21' And printtsd1.palk_21 <> 0
+				lc73 = '21'
+				ln731 = printtsd1.palk_21
+			Endif
+			If Empty(lc73) And lc71 <> '22' And lc72 <> '22' And printtsd1.palk_22 <> 0
+				lc73 = '22'
+				ln731 = printtsd1.palk_22
+			Endif
+		Endif
+		lcKood = lc71
+		lcLiik = FLIIK(lcKood)
+		
+		Replace isikukd With printtsd1.isikukood,;
+			nimi With printtsd1.isik,;
+			pohikoht With lPk,;
+			sots With ROUND(printtsd1.SOTSMAKS/fltrPrinter.kuurs,2),;
+			arvsots With ROUND(printtsd1.palksots/fltrPrinter.kuurs,2),;
+			tulu With ROUND(printtsd1.TULUMAKS/fltrPrinter.kuurs,2),;
+			palk26 With ROUND(printtsd1.palk26/fltrPrinter.kuurs,2),;
+			palk15 With ROUND(printtsd1.palk15/fltrPrinter.kuurs,2),;
+			palk10 With ROUND(printtsd1.palk10/fltrPrinter.kuurs,2),;
+			palk5 With ROUND(printtsd1.palk5/fltrPrinter.kuurs,2),;
+			palk0 With ROUND(printtsd1.palk0/fltrPrinter.kuurs,2),;
+			tm With ROUND(printtsd1.tm/fltrPrinter.kuurs,2),;
+			atm With ROUND((printtsd1.palk26+printtsd1.palk15+printtsd1.palk10+printtsd1.palk5+printtsd1.palk0 - lnAtmMiinus)/fltrPrinter.kuurs,2),;
+			pm With ROUND(printtsd1.pm/fltrPrinter.kuurs,2),;
+			g31 With ROUND(ln31/fltrPrinter.kuurs,2),;
+			g32 With ROUND((printtsd1.palk_22 - printtsd1.palk_22*lnPm - printtsd1.palk_22*lnTKI )/fltrPrinter.kuurs,2),;
+			g71 With lc71,;
+			g711 With ROUND(ln711/fltrPrinter.kuurs,2),;
+			g72 With lc72,;
+			g721 With ROUND(ln721/fltrPrinter.kuurs,2),;
+			g73 With lc73,;
+			g731 With ROUND(ln731/fltrPrinter.kuurs,2),;
+			pkoht With lnPkoht,;
+			liik WITH lcLiik,;
+			kood With lcKood,;
+			resident WITH printtsd1.resident,;
+			toend WITH IIF(ISNULL(printtsd1.toend),'',printtsd1.toend),;
+			riik WITH printtsd1.riik In ftsd_report
+		
+*!*			* muudatused 2005/04/25
+*!*			IF !EMPTY(lc71)
+*!*				SET STEP ON 
+*!*			endif
+*!*			IF lc71 = '14' OR lc71 = '13' OR lc71 = '04'
+*!*				replace atm  WITH atm - ln711 IN ftsd_report
+*!*			ENDIF
+*!*			IF lc72 = '14' OR lc72 = '13' OR lc72 = '04'
+*!*				replace atm  WITH atm - ln721 IN ftsd_report
+*!*			ENDIF
+*!*			IF lc73 = '14' OR lc73 = '13' OR lc73 = '04'
+*!*				replace atm  WITH atm - ln731 IN ftsd_report
+*!*			ENDIF
+*!*			
+
+
+		IF printtsd1.resident = 0
+			SELECT comAsutusRemote
+			LOCATE FOR regkood = printtsd1.isikukood
+			replace aaddr WITH comAsutusRemote.aadress IN  ftsd_report
+			
+		ENDIF
+		
+		Replace k_sots With ROUND(printTsd.SOTSMAKS/fltrPrinter.kuurs,2) ,;
+			k_tulu With ROUND(printTsd.TULUMAKS/fltrPrinter.kuurs,2),;
+			k_palk With ROUND(printTsd.palk/fltrPrinter.kuurs,2),;
+			k_arvsots With ROUND(printTsd.palksots/fltrPrinter.kuurs,2),;
+			k_atm With ROUND(printTsd.atm/fltrPrinter.kuurs,2),;
+			k_tm With ROUND(printTsd.tm/fltrPrinter.kuurs,2),;
+			k_pm With ROUND(printTsd.pm/fltrPrinter.kuurs,2) In ftsd_report
+	Endscan
+	Select ftsd_report
+*!*		SUM atm TO lnAtm
+*!*		UPDATE ftsd_report SET k_atm = lnAtm
+	
+	lnRec = Reccount ('ftsd_report')
+	lnAddrec =  Iif (lnRec > 6,Mod (lnRec, 6),6-lnRec)
+	If lnAddrec > 0
+		For i = 1 To lnAddrec
+			Append Blank
+			Replace k_sots With ROUND(printTsd.SOTSMAKS/fltrPrinter.kuurs,2) ,;
+				k_tulu With ROUND(printTsd.TULUMAKS/fltrPrinter.kuurs,2),;
+				k_palk With ROUND(printTsd.palk/fltrPrinter.kuurs,2),;
+				k_arvsots With ROUND(printTsd.palksots/fltrPrinter.kuurs,2),;
+				k_atm With ROUND(printTsd.atm/fltrPrinter.kuurs,2),;
+				k_tm With ROUND(printTsd.tm/fltrPrinter.kuurs,2),;
+				k_pm With ROUND(printTsd.pm/fltrPrinter.kuurs,2) In ftsd_report
+		Endfor
+	Endif
+	Use In printTsd
+	Use In printtsd1
+	Select ftsd_report
+
+
+Create cursor ftsd_report4 (asutus c(254) default qryrekv.nimetus, regnum c(20) default qryrekv.regkood,;
+	aadress c(254) default qryrekv.aadress, AASTA int default year(fltrAruanne.kpv1),;
+	kuu int default month (fltrAruanne.kpv1),;
+	juhataja c(120) default qryrekv.juht, pearaama c(120) default qryrekv.raama, tel c(40) default qryrekv.tel,;
+	summa01 n(14,4), summa02 n(14,4), summa03 n(14,4), summa04 n(14,4), summa05 n(14,4), summa06 n(14,4),;
+	summa07 n(14,4), summa08 n(14,4), summa09 n(14,4), summa10 n(14,4), summa11 n(14,4), summa12 n(14,4),;
+	summa13 n(14,4), summa14 n(14,4), summa15 n(14,4), summa16 n(14,4), summa17 n(14,4), summa18 n(14,4),;
+	summa19 n(14,4), summa20 n(14,4), summa21 n(14,4), summa22 n(14,4), summa23 n(14,4), summa24 n(14,4) )
+Append BLANK
+
+replace asutus with qryrekv.nimetus,;
+	 	regnum with qryrekv.regkood,;
+		aadress with qryrekv.aadress,;
+		AASTA with year(fltrAruanne.kpv1),;
+		kuu with month (fltrAruanne.kpv1),;
+		juhataja with qryrekv.juht,;
+		pearaama with qryrekv.raama,;
+		tel with qryrekv.tel,;
+		summa01 WITH  (printTsd4.eris0100+printTsd4.eris0101+printTsd4.eris0110+printTsd4.eris0111),;
+		summa02 WITH  (printTsd4.eris0200+printTsd4.eris0201+printTsd4.eris0210+printTsd4.eris0211),;
+		summa03 WITH  (printTsd4.eris0300+printTsd4.eris0301+printTsd4.eris0310+printTsd4.eris0311),; 
+		summa04 WITH  (printTsd4.eris0400+printTsd4.eris0401+printTsd4.eris0410+printTsd4.eris0411),; 
+		summa05 WITH  (printTsd4.eris0500+printTsd4.eris0501+printTsd4.eris0510+printTsd4.eris0511),; 
+		summa06 WITH  (printTsd4.eris0600+printTsd4.eris0601+printTsd4.eris0610+printTsd4.eris0611),;
+		summa07 WITH  (printTsd4.eris0700+printTsd4.eris0701+printTsd4.eris0710+printTsd4.eris0711),; 
+		summa08 WITH  (printTsd4.eris0800+printTsd4.eris0801+printTsd4.eris0810+printTsd4.eris0811),; 
+		summa09 WITH  (printTsd4.eris0900+printTsd4.eris0901+printTsd4.eris0910+printTsd4.eris0911),; 
+		summa10 WITH  (printTsd4.eris1000+printTsd4.eris1001+printTsd4.eris1010+printTsd4.eris1011),; 
+		summa11 WITH  (printTsd4.eris1100+printTsd4.eris1101+printTsd4.eris1110+printTsd4.eris1111),; 
+		summa15 WITH (summa01+summa02+summa03+summa04+summa05+summa06+summa07+summa08+summa09+summa10+summa11),;
+		summa17 WITH (printTsd4.eris0101+printTsd4.eris0201+printTsd4.eris0301+printTsd4.eris0401+printTsd4.eris0501+printTsd4.eris0601+printTsd4.eris0701+;
+			printTsd4.eris0801+printTsd4.eris0901+printTsd4.eris1001+printTsd4.eris1101),;
+		summa16 WITH (printTsd4.eris0110+printTsd4.eris0210+printTsd4.eris0310+printTsd4.eris0410+printTsd4.eris0510+printTsd4.eris0610+printTsd4.eris0710+;
+			printTsd4.eris0810+printTsd4.eris0910+printTsd4.eris1010+printTsd4.eris1110),;
+		summa18 WITH (SUMMA15-summa16) * 21/79,;
+		summa19 WITH  summa15 - summa17 + summa18 - (summa17*21/79),; 
+		summa20 WITH summa19 * 33 / 100,; 
+		summa21 WITH 0, summa22 WITH 0 , summa23 WITH 0, summa24 WITH 0 IN ftsd_report4
+
+Endfunc
+
+
+FUNCTION fliik
+LPARAMETERS tckood
+IF !USED('comTululiik')
+	CREATE CURSOR comTululiik (kood c(2), nimetus c(120))
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('01','Põhipalk')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('02','rendi- või üüritulu ning litsentsitasud')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('03','intressid')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('04','elatis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('05','Eesti riigi poolt seaduse alusel makstav pension')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('06','stipendiumid, toetused, kultuuri-, spordi- ja teaduspreemiad ning loteriivõidud')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('07','ajutise töövõimetuse rahaline hüvitis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('08','investeerimisriskiga elukindlustuslepingu alusel kindlustusvõtjale või soodustatud isikule väljamakstav summa')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('09','26% maksumääraga maksustatavad väljamaksed, mis on tehtud täiendava kogumispensioni kindlustuslepingu alusel või vabatahtlikust pensionifondist')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('10','10% maksumääraga maksustatavad väljamaksed, mis on tehtud täiendava kogumispensioni kindlustuslepingu alusel või vabatahtlikust pensionifondist')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('11','juriidilise isiku juhtimis- või kontrollorgani liikmele makstav tasu')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('12','seoses tööõnnetusega või kutsehaigusega makstav hüvitis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('13','- töölepingu lõpetamisel "Eesti Vabariigi töölepingu seaduse" alusel või teenistusest vabastamisel "Avaliku teenistuse seaduse" alusel töötajale või avalikule teenistujale makstavad hüvitised')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('14','muud väljamaksed')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('15','töövõtu-, käsundus- või muu võlaõigusliku lepingu alusel makstav töö- või teenustasu')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('16','Töötukassa poolt "Töötuskindlustuse seaduse" alusel väljamakstav töötuskindlustushüvitis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('17','Töötukassa poolt "Töötuskindlustuse seaduse" alusel väljamakstav hüvitis töölepingute kollektiivse ülesütlemise korral')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('18','Töötukassa poolt "Töötuskindlustuse seaduse" alusel väljamakstav hüvitis tööandja maksejõuetuse korral')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('19','Vanemahüvitise seaduse" (RT I 2003, 82, 549) alusel väljamakstav vanemahüvitis')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('19a','teenistusest vabastamisel teenistujale makstavad hüvitised')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('20','üliõpilaste tulu')
+	INSERT INTO comTululiik (kood, nimetus) VALUES ('21','muu tulu')
+ENDIF
+SELECT comTululiik
+LOCATE FOR kood = tckood
+RETURN comTululiik.nimetus
+ENDFUNC

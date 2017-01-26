@@ -1,0 +1,609 @@
+Parameter tcWhere
+Create cursor kuuaruanne_report (order int, gruppId int,koodid int, grupp1 c(1), gr1Nimi c(254),eelgr1 y, aastagr1 y, kuugr1 y,;
+	grupp2 c(2),gr2Nimi c(254), eelgr2 y, aastagr2 y, kuugr2 y, ;
+	grupp3 c(3),gr3Nimi c(254), eelgr3 y, aastagr3 y, kuugr3 y, ;
+	kood c(20), nimetus c(254), eelarve y,aasta y ,kuu y)
+Index on grupp1+'-'+grupp2+'-'+str(gruppId,3)+'-'+str(koodid,9) tag indx
+Index on kood tag kood additive
+Set order to kood
+
+tdKpv1 = date(year(fltrAruanne.kpv1),1,1)
+tdKpv2 = fltrAruanne.kpv2
+tcEelAllikas = '%'
+tnRekv1 = grekv
+tnRekv2 = grekv
+nSamm = 1
+With oDb
+	.use('qryKuuAruanne')
+	Select qryKuuAruanne
+&& aasta algusest
+&& tulud
+	Select 1 as order, left(alltrim(lib.kood),1) as grupp1, left(alltrim(lib.kood),2) as grupp2, lib.kood, lib.nimetus,;
+		sum(iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa)) as aasta ;
+		from comAllikadRemote lib left outer join qryKuuAruanne on lib.id = qryKuuAruanne.id;
+		where left (alltrim(lib.kood),1) = '1';
+		order by lib.kood;
+		group by lib.kood;
+		into cursor qryTulud
+		
+	Select kuuaruanne_report
+	Append from dbf ('qryTulud')
+	Select order, grupp1, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr1Nimi, sum(aasta) as summa ;
+		from qryTulud left outer join comAllikadRemote lib on qryTulud.grupp1 = alltrim(lib.kood);
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryTulud1
+	Select qryTulud1
+	Scan
+		Update kuuaruanne_report set gr1Nimi = qryTulud1.gr1Nimi,;
+			aastagr1 = qryTulud1.summa;
+			where alltrim(grupp1) == alltrim(qryTulud1.grupp1);
+			and order = qryTulud1.order
+	Endscan
+	Use in qryTulud1
+	Select order, grupp2, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr2Nimi, sum(aasta) as summa ;
+		from qryTulud left outer join comAllikadRemote lib on qryTulud.grupp2 = alltrim(lib.kood);
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryTulud2
+	Select qryTulud2
+	Scan
+		Update kuuaruanne_report set gr2Nimi = qryTulud2.gr2Nimi,;
+			aastagr2 = qryTulud2.summa;
+			where alltrim(grupp2) == alltrim(qryTulud2.grupp2);
+			and order = qryTulud2.order
+	Endscan
+	Use in qryTulud2
+2
+&& kulud majanduliku jargi
+	Select 2 as order, left(alltrim(lib.kood),1) as grupp1, left(alltrim(lib.kood),2) as grupp2, lib.kood, lib.nimetus,;
+		iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa) as aasta ;
+		from qryKuuAruanne  full outer join  comArtikkelRemote lib on lib.id = qryKuuAruanne.id2;
+		where left (alltrim(lib.kood),1) = '2';
+		order by lib.kood;
+		into cursor qryKulud_
+
+	Select order, grupp1, grupp2, kood, nimetus, sum(aasta) as aasta from qryKulud_ order by kood group by kood into cursor qryKulud
+	Use in qryKulud_
+	Select kuuaruanne_report
+	Append from dbf ('qryKulud')
+
+	Select order, grupp1, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr1Nimi, sum(aasta) as summa ;
+		from qryKulud left outer join comArtikkelRemote lib on alltrim(qryKulud.grupp1) == alltrim(lib.kood);
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryKulud1
+	Select qryKulud1
+	Scan
+		Update kuuaruanne_report set gr1Nimi = qryKulud1.gr1Nimi,;
+			aastagr1 = qryKulud1.summa;
+			where grupp1 = qryKulud1.grupp1;
+			and order = qryKulud1.order
+	Endscan
+	Use in qryKulud1
+	Select order, grupp2, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr2Nimi, sum(aasta) as summa ;
+		from qryKulud left outer join comArtikkelRemote lib on alltrim(qryKulud.grupp2) == alltrim(lib.kood);
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryKulud2
+	Select qryKulud2
+	Scan
+		Update kuuaruanne_report set gr2Nimi = qryKulud2.gr2Nimi,;
+			aastagr2 = qryKulud2.summa;
+			where alltrim(grupp2) == alltrim(qryKulud2.grupp2);
+			and order = qryKulud2.order
+	Endscan
+	Use in qryKulud2
+
+&& fin. rist. jargi
+	Select 4 as order, left(alltrim(lib.kood),1) as grupp1, left(alltrim(lib.kood),2) as grupp2, lib.kood, lib.nimetus,;
+		iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa) * ;
+		iif (left(alltrim(lib.kood),2) = '31' or left(alltrim(lib.kood),2) = '34',-1,1) as aasta ;
+		from qryKuuAruanne  full outer join  comObjektRemote lib on lib.id = qryKuuAruanne.id;
+		where left (alltrim(lib.kood),1) = '3';
+		order by lib.kood;
+		into cursor qryKulud_
+	Select order, grupp1, grupp2, kood, nimetus, sum(aasta) as aasta from qryKulud_ order by kood group by kood into cursor qryKulud
+	Use in qryKulud_
+	Select kuuaruanne_report
+	Append from dbf ('qryKulud')
+
+	Select order, grupp1, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr1Nimi, sum(aasta) as summa ;
+		from qryKulud left outer join comObjektRemote lib on alltrim(qryKulud.grupp1) == alltrim(lib.kood);
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryKulud1
+	Select qryKulud1
+	Scan
+		Update kuuaruanne_report set gr1Nimi = qryKulud1.gr1Nimi,;
+			aastagr1 = qryKulud1.summa;
+			where grupp1 = qryKulud1.grupp1;
+			and order = qryKulud1.order
+	Endscan
+	Use in qryKulud1
+	Select order, grupp2, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr2Nimi, sum(aasta) as summa ;
+		from qryKulud left outer join comObjektRemote lib on alltrim(qryKulud.grupp2) == alltrim(lib.kood);
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryKulud2
+	Select qryKulud2
+	Scan
+		Update kuuaruanne_report set gr2Nimi = qryKulud2.gr2Nimi,;
+			aastagr2 = qryKulud2.summa;
+			where alltrim(grupp2) == alltrim(qryKulud2.grupp2);
+			and order = qryKulud2.order
+	Endscan
+	Use in qryKulud2
+
+
+&& kulud tegevusalade jargi
+	Select 5 as order, left(alltrim(lib.kood),1) as grupp1, left(alltrim(lib.kood),2) as grupp2, lib.kood, lib.nimetus,;
+		iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa) as aasta ;
+		from qryKuuAruanne left outer join comTegevRemote lib on lib.id = qryKuuAruanne.id;
+		where left (alltrim(lib.kood),1) = '4';
+		order by lib.kood;
+		into cursor qryKulud_
+
+	Select order, grupp1, grupp2, kood, nimetus, sum(aasta) as aasta from qryKulud_ order by kood group by kood into cursor qryKulud
+	Use in qryKulud_
+
+	Select kuuaruanne_report
+	Append from dbf ('qryKulud')
+
+	Select order, grupp1, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr1Nimi, sum(aasta) as summa ;
+		from qryKulud left outer join comTegevRemote lib on qryKulud.grupp1 = alltrim(lib.kood);
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryKulud1
+	Select qryKulud1
+	Scan
+		Update kuuaruanne_report set gr1Nimi = qryKulud1.gr1Nimi,;
+			aastagr1 = qryKulud1.summa;
+			where grupp1 = qryKulud1.grupp1;
+			and order = qryKulud1.order
+	Endscan
+	Use in qryKulud1
+	Select order, grupp2, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr2Nimi, sum(aasta) as summa ;
+		from qryKulud left outer join comTegevRemote lib on alltrim(qryKulud.grupp2) == alltrim(lib.kood);
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryKulud2
+	Select qryKulud2
+	Scan
+		Update kuuaruanne_report set gr2Nimi = qryKulud2.gr2Nimi,;
+			aastagr2 = qryKulud2.summa;
+			where grupp2 = qryKulud2.grupp2;
+			and order = qryKulud2.order
+	Endscan
+	Use in qryKulud2
+
+&& kulud tegevusalade ja majandusliku jargi
+	Select 6 as order, iif(isnull(lib.kood),space(20),left(alltrim(lib.kood),3)) as grupp3, space(254) as gr3Nimi,;
+		lib1.kood, lib1.nimetus,;
+		iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa) as aasta ;
+		from qryKuuAruanne right outer join comTegevRemote lib  on lib.id = qryKuuAruanne.id;
+		right outer join comArtikkelRemote lib1  on lib1.id = qryKuuAruanne.id2;
+		into cursor qryKulud1_
+
+	Select order, grupp3, gr3Nimi, kood, nimetus, sum(aasta) as aasta from qryKulud1_ ;
+		order by grupp3, kood group by grupp3, kood into cursor qryKulud1
+	Use in qryKulud1_
+
+
+	Select order, grupp3, gr3Nimi, kood, nimetus, sum(aasta) as aasta ;
+		from qryKulud1 ;
+		order by grupp3, kood;
+		group by grupp3, kood;
+		into cursor qryKulud
+	Use in qryKulud1
+	Select kuuaruanne_report
+	Append from dbf ('qryKulud')
+
+	Select order, grupp3, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr3Nimi, sum(aasta) as summa ;
+		from qryKulud left outer join comTegevRemote lib on alltrim(qryKulud.grupp3) == alltrim(lib.kood);
+		order by grupp3 ;
+		group by grupp3 ;
+		into cursor qryKulud3
+	Select qryKulud3
+	Scan
+		Update kuuaruanne_report set gr3Nimi = qryKulud3.gr3Nimi,;
+			aastagr3 = qryKulud3.summa;
+			where grupp3 = qryKulud3.grupp3;
+			and order = qryKulud3.order
+	Endscan
+	Use in qryKulud
+	Use in qryKulud3
+
+
+
+&& viimane kuu
+&& tulud
+	tdKpv1 = date(year(fltrAruanne.kpv2),month(fltrAruanne.kpv2),1)
+	tdKpv2 = fltrAruanne.kpv2
+	.use('qryKuuAruanne')
+
+	Select 1 as order, left(alltrim(lib.kood),1) as grupp1, left(alltrim(lib.kood),2) as grupp2,;
+		lib.kood, lib.nimetus,;
+		iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa) as kuu ;
+		from qryKuuAruanne left outer join comAllikadRemote lib on lib.id = qryKuuAruanne.id;
+		where left (alltrim(lib.kood),1) = '1';
+		into cursor qryTulud_
+
+	Select order, grupp1, grupp2, kood, nimetus, sum(kuu) as kuu from qryTulud_ ;
+		order by kood ;
+		group by kood ;
+		into cursor qryTulud
+	Use in qryTulud_
+
+	Select qryTulud
+	Scan for kuu <> 0
+		Select kuuaruanne_report
+		Locate for alltrim(kood) = alltrim(qryTulud.kood) and order = 1
+		If found ()
+			Replace kuu with qryTulud.kuu in kuuaruanne_report
+		Endif
+	Endscan
+
+	Select order, grupp1, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr1Nimi, sum(kuu) as summa ;
+		from qryTulud left outer join comAllikadRemote lib on qryTulud.grupp1 = alltrim(lib.kood);
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryTulud1
+	Select qryTulud1
+	Scan
+		Update kuuaruanne_report set gr1Nimi = qryTulud1.gr1Nimi,;
+			kuugr1 = qryTulud1.summa;
+			where alltrim(grupp1) = alltrim(qryTulud1.grupp1);
+			and order = qryTulud1.order
+	Endscan
+	Use in qryTulud1
+	Select order, grupp2, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr2Nimi, sum(kuu) as summa ;
+		from qryTulud left outer join comAllikadRemote lib on alltrim(qryTulud.grupp2) = alltrim(lib.kood);
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryTulud2
+	Select qryTulud2
+	Scan
+		Update kuuaruanne_report set gr2Nimi = qryTulud2.gr2Nimi,;
+			kuugr2 = qryTulud2.summa;
+			where alltrim(grupp2) = alltrim(qryTulud2.grupp2);
+			and order = qryTulud2.order
+	Endscan
+	Use in qryTulud2
+
+&& kulud majanduliku jargi
+	Select 2 as order, left(alltrim(lib.kood),1) as grupp1, left(alltrim(lib.kood),2) as grupp2,lib.kood, lib.nimetus,;
+		iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa) as kuu ;
+		from comArtikkelRemote lib left outer join qryKuuAruanne on lib.id = qryKuuAruanne.id2;
+		where left (alltrim(lib.kood),1) = '2';
+		order by lib.kood;
+		into cursor qryKulud_
+
+	Select order, grupp1, grupp2, kood, nimetus, sum(kuu) as kuu from qryKulud_ order by kood group by kood into cursor qryKulud
+	Use in qryKulud_
+
+
+	Select qryKulud
+	Scan for kuu <> 0
+		Select kuuaruanne_report
+		Locate for alltrim(kood) == alltrim(qryKulud.kood) and order = 2
+		If found ()
+			Replace kuu with qryKulud.kuu in kuuaruanne_report
+		Endif
+	Endscan
+	Select order, grupp1, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr1Nimi, sum(kuu) as summa ;
+		from qryKulud left outer join comArtikkelRemote lib on alltrim(qryKulud.grupp1) == alltrim(lib.kood);
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryKulud1
+	Select qryKulud1
+	Scan
+		Update kuuaruanne_report set gr1Nimi = qryKulud1.gr1Nimi,;
+			kuugr1 = qryKulud1.summa;
+			where grupp1 = qryKulud1.grupp1;
+			and order = qryKulud1.order
+	Endscan
+	Use in qryKulud1
+	Select order, grupp2, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr2Nimi, sum(kuu) as summa ;
+		from qryKulud left outer join comArtikkelRemote lib on alltrim(qryKulud.grupp2) == alltrim(lib.kood);
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryKulud2
+	Select qryKulud2
+	Scan
+		Update kuuaruanne_report set gr2Nimi = qryKulud2.gr2Nimi,;
+			kuugr2 = qryKulud2.summa;
+			where alltrim(grupp2) == alltrim(qryKulud2.grupp2);
+			and order = qryKulud2.order
+	Endscan
+	Use in qryKulud2
+
+
+&& fin.ristvara jargi
+	Select 4 as order, left(alltrim(lib.kood),1) as grupp1, left(alltrim(lib.kood),2) as grupp2,lib.kood, lib.nimetus,;
+		iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa) * ;
+		iif (left(alltrim(lib.kood),2) = '31' or left(alltrim(lib.kood),2) = '34',-1,1) as kuu ;
+		from comObjektRemote lib left outer join qryKuuAruanne on lib.id = qryKuuAruanne.id;
+		where left (alltrim(lib.kood),1) = '3';
+		order by lib.kood;
+		into cursor qryKulud_
+
+	Select order, grupp1, grupp2, kood, nimetus, sum(kuu) as kuu from qryKulud_ order by kood group by kood into cursor qryKulud
+	Use in qryKulud_
+
+
+	Select qryKulud
+	Scan for kuu <> 0
+		Select kuuaruanne_report
+		Locate for alltrim(kood) == alltrim(qryKulud.kood) and order = 4
+		If found ()
+			Replace kuu with qryKulud.kuu in kuuaruanne_report
+		Endif
+	Endscan
+	Select order, grupp1, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr1Nimi, sum(kuu) as summa ;
+		from qryKulud left outer join comObjektRemote lib on alltrim(qryKulud.grupp1) == alltrim(lib.kood);
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryKulud1
+	Select qryKulud1
+	Scan
+		Update kuuaruanne_report set gr1Nimi = qryKulud1.gr1Nimi,;
+			kuugr1 = qryKulud1.summa;
+			where grupp1 = qryKulud1.grupp1;
+			and order = qryKulud1.order
+	Endscan
+	Use in qryKulud1
+	Select order, grupp2, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr2Nimi, sum(kuu) as summa ;
+		from qryKulud left outer join comObjektRemote lib on alltrim(qryKulud.grupp2) == alltrim(lib.kood);
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryKulud2
+	Select qryKulud2
+	Scan
+		Update kuuaruanne_report set gr2Nimi = qryKulud2.gr2Nimi,;
+			kuugr2 = qryKulud2.summa;
+			where alltrim(grupp2) == alltrim(qryKulud2.grupp2);
+			and order = qryKulud2.order
+	Endscan
+	Use in qryKulud2
+
+
+&& kulud tegevusalade jargi
+	Select 5 as order, left(alltrim(lib.kood),1) as grupp1, left(alltrim(lib.kood),2) as grupp2, lib.kood, lib.nimetus,;
+		iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa) as kuu ;
+		from comTegevRemote lib left outer join qryKuuAruanne on lib.id = qryKuuAruanne.id;
+		where left (alltrim(lib.kood),1) = '4';
+		order by lib.kood;
+		into cursor qryKulud_
+
+	Select order, grupp1, grupp2, kood, nimetus, sum(kuu) as kuu from qryKulud_ order by kood group by kood into cursor qryKulud
+	Use in qryKulud_
+
+
+	Select qryKulud
+	Scan for kuu <> 0
+		Select kuuaruanne_report
+		Locate for alltrim(kood) == alltrim(qryKulud.kood) and order = 4
+		If found ()
+			Replace kuu with qryKulud.kuu in kuuaruanne_report
+		Endif
+	Endscan
+
+	Select order, grupp1, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr1Nimi, sum(kuu) as summa ;
+		from qryKulud left outer join comTegevRemote lib on qryKulud.grupp1 = alltrim(lib.kood);
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryKulud1
+	Select qryKulud1
+	Scan
+		Update kuuaruanne_report set gr1Nimi = qryKulud1.gr1Nimi,;
+			kuugr1 = qryKulud1.summa;
+			where grupp1 = qryKulud1.grupp1;
+			and order = qryKulud1.order
+	Endscan
+	Use in qryKulud1
+	Select order, grupp2, iif(isnull(lib.nimetus), space(254), lib.nimetus) as gr2Nimi, sum(kuu) as summa ;
+		from qryKulud left outer join comTegevRemote lib on alltrim(qryKulud.grupp2) == alltrim(lib.kood);
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryKulud2
+	Select qryKulud2
+	Scan
+		Update kuuaruanne_report set gr2Nimi = qryKulud2.gr2Nimi,;
+			kuugr2 = qryKulud2.summa;
+			where grupp2 = qryKulud2.grupp2;
+			and order = qryKulud2.order
+	Endscan
+	Use in qryKulud2
+
+
+&& kulud tegevusalade ja majandusliku jargi
+	Select 6 as order, iif(isnull(lib.kood),space(20),left(alltrim(lib.kood),3)) as grupp3, space(254) as gr3Nimi,;
+		lib1.kood, lib1.nimetus,;
+		iif(isnull(qryKuuAruanne.summa),000000000,qryKuuAruanne.summa) as kuu ;
+		from qryKuuAruanne right outer join comTegevRemote lib  on lib.id = qryKuuAruanne.id;
+		right outer join comArtikkelRemote lib1  on lib1.id = qryKuuAruanne.id2;
+		into cursor qryKulud1_
+
+	Select order, grupp3, gr3Nimi, kood, nimetus, sum(kuu) as kuu from qryKulud1_ order by kood group by kood into cursor qryKulud1
+	Use in qryKulud1_
+
+
+	Select order, grupp3, gr3Nimi, kood, nimetus, sum(kuu) as kuu ;
+		from qryKulud1 ;
+		order by grupp3, kood;
+		group by grupp3, kood;
+		into cursor qryKulud
+	Use in qryKulud1
+
+	Select qryKulud
+	Scan for kuu <> 0
+		Select kuuaruanne_report
+		Locate for alltrim(grupp3) == alltrim(qryKulud.grupp3) and alltrim(kood) == alltrim(qryKulud.kood) and order = 6
+		If found ()
+			Replace kuu with qryKulud.kuu in kuuaruanne_report
+		Endif
+	Endscan
+
+	Use in qryKulud
+&& Eelarve 
+	tcAllikas = '%'
+	tcAllikaNimi = '%'
+	tnSumma1 = 	-999999999
+	tnSumma2 = 	9999999999
+	tnAasta1 = 	year (fltrAruanne.kpv1)
+	tnAasta2 = 	year (fltrAruanne.kpv2)
+	tcArtikkel = '%'
+	tcAsutus = '%'
+	tctegev = '%'
+	tnTunnus = fltrAruanne.tunn
+	tcEelAllikas = '%'
+	.use ('curEelarve','qryeelarveTulud')
+	.use ('curEelarveKulud','qryeelarveKulud')
+&& tulud	
+	select left(alltrim(allikas),3) as grupp3,left(alltrim(allikas),2) as grupp2, ;
+	left(alltrim(allikas),1) as grupp1, allikas as kood, sum(summa) as summa ;
+	from qryeelarveTulud;
+	order by allikas;
+	group by allikas;
+	into cursor qryEel
+	use in qryeelarveTulud
+
+	Select grupp1, sum(summa) as summa ;
+		from qryEel;
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryEel1
+	Select grupp2, sum(summa) as summa ;
+		from qryEel;
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryEel2
+	Select grupp3, sum(summa) as summa ;
+		from qryEel;
+		order by grupp3 ;
+		group by grupp3 ;
+		into cursor qryEel3
+
+		
+	Select qryEel1
+	Scan
+		Update kuuaruanne_report set Eelgr1 = qryEel1.summa;
+			where grupp1 = qryEel1.grupp1
+	Endscan
+	Use in qryEel1
+
+	Select qryEel2
+	Scan
+		Update kuuaruanne_report set Eelgr2 = qryEel2.summa;
+			where grupp2 = qryEel2.grupp2
+	Endscan
+	Use in qryEel2
+
+	Select qryEel3
+	Scan
+		Update kuuaruanne_report set Eelgr3 = qryEel3.summa;
+			where grupp3 = qryEel3.grupp3
+	Endscan
+	Use in qryEel3
+
+	Select qryEel
+	Scan
+		Update kuuaruanne_report set Eelarve = qryEel.summa;
+			where kood = qryEel.kood
+	Endscan
+	Use in qryEel
+
+&&Kulud	
+	select left(alltrim(tegev),3) as grupp3,left(alltrim(artikkel),2) as grupp2, ;
+	left(alltrim(artikkel),1) as grupp1, artikkel as kood, sum(summa) as summa ;
+	from qryeelarveKulud;
+	order by tegev, artikkel;
+	group by tegev, artikkel;
+	into cursor qryEel
+	use in qryeelarveKulud
+
+	Select grupp1, sum(summa) as summa ;
+		from qryEel;
+		order by grupp1 ;
+		group by grupp1 ;
+		into cursor qryEel1
+	Select grupp2, sum(summa) as summa ;
+		from qryEel;
+		order by grupp2 ;
+		group by grupp2 ;
+		into cursor qryEel2
+	Select grupp3, sum(summa) as summa ;
+		from qryEel;
+		order by grupp3 ;
+		group by grupp3 ;
+		into cursor qryEel3
+
+		
+	Select qryEel1
+	Scan
+		Update kuuaruanne_report set Eelgr1 = qryEel1.summa;
+			where grupp1 = qryEel1.grupp1
+	Endscan
+	Use in qryEel1
+
+	Select qryEel2
+	Scan
+		Update kuuaruanne_report set Eelgr2 = qryEel2.summa;
+			where grupp2 = qryEel2.grupp2
+	Endscan
+	Use in qryEel2
+
+	Select qryEel3
+	Scan
+		Update kuuaruanne_report set Eelgr3 = qryEel3.summa;
+			where grupp2 = qryEel3.grupp3
+	Endscan
+	Use in qryEel3
+
+	Select qryEel
+	Scan
+		Update kuuaruanne_report set Eelarve = qryEel.summa;
+			where kood = qryEel.kood
+	Endscan
+	Use in qryEel
+
+
+&& 8 ulejaak (+) Puudujaak (-)
+	lnTuludAasta = 0
+	lnTuludKuu = 0
+	lnTuludEelarve = 0
+	lnKuludAasta = 0
+	lnKuludKuu = 0
+	lnKuludEelarve = 0
+	Select kuuaruanne_report
+	Locate for order = 1 and alltrim(grupp1) == '1'
+	If found ()
+		lnTuludAasta = kuuaruanne_report.aastagr1
+		lnTuludKuu = kuuaruanne_report.kuugr1
+		lnTuludEelarve = kuuaruanne_report.eelgr1
+	Endif
+	Locate for order = 2 and alltrim(grupp1) == '2'
+	If found ()
+		lnKuludAasta = kuuaruanne_report.aastagr1
+		lnKuludKuu = kuuaruanne_report.kuugr1
+		lnKuludEelarve = kuuaruanne_report.eelgr1
+	Endif
+	lnKuu = lnTuludKuu - lnKuludKuu
+	lnAasta = lnTuludAasta - lnKuludAasta
+	lnEelarve = lnTuludEelarve - lnKuludEelarve
+	Insert into kuuaruanne_report (order, grupp1, grupp2, kood, nimetus, eelgr1, eelarve, aastagr1,aasta, kuugr1, kuu);
+		values (3, '','','8','ÜLEJÄÄK (+) / PUUDUJÄÄK (-)',0,lnEelarve,0,lnAasta, 0,lnKuu )
+Endwith
+Select * from kuuaruanne_report;
+	order by order, grupp3, kood;
+	where iif(fltrAruanne.read = 0,eelarve,1) <> 0;
+	or iif (fltrAruanne.read = 0,aasta,1) <> 0;
+	or iif (fltrAruanne.read = 0,kuu,1) <> 0;
+	into cursor kuuaruanne_report1
+
+
+Use in kuuaruanne_report
+
+
+

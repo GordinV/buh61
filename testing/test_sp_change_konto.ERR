@@ -1,0 +1,4 @@
+lError = .exec ("sp_change_konto ","''+lcVanaKonto+"','"+lcUUsKonto+"'",'')
+Error in line 73: Function name is missing ).
+lError = .exec ("sp_change_konto ","''+lcVanaKonto+"','"+lcUUsKonto+"'",'')
+Error in line 83: Function name is missing ).

@@ -1,0 +1,27 @@
+Parameter cWhere
+*SET STEP ON
+
+If !Used('curReklluba') Or Reccount('curReklluba') = 0
+	Messagebox('Rekl.maksumaksja infot puudub')
+	Use In viivseinfo_report1
+	Select 0
+	Return
+Endif
+* tasu info
+
+	lcString = "select  fncDeklJaak(intressid)::numeric as intrjaak, luba.number, viiviseinfo.*, asutus.regkood, asutus.nimetus as asutus " +;
+		" from viiviseinfo inner join asutus on viiviseinfo.asutusId = asutus.id "+;
+		" inner join toiming  on toiming.id = viiviseinfo.dokid "+;
+		"  inner join toiming INTRESS on intress.id = viiviseinfo.intressid "+;
+		" inner join luba on luba.id = toiming.lubaid "+;
+		" where INTRESS.staatus > 0 and intressid > 0 and dokpaevad > 0 and viiviseinfo.asutusid = " +Str(curReklluba.parentid)+;
+		" order by intressid, deklnumber, doktahtaeg"
+
+	lnError = SQLEXEC(gnHandle,lcString,'viiviseinfo_report1')
+	IF !USED('viiviseinfo_report1')
+		SELECT 0
+		RETURN .f.
+	ENDIF
+	
+Select viiviseinfo_report1
+

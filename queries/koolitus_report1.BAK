@@ -1,0 +1,18 @@
+Parameter cWhere
+If isdigit(alltrim(cWhere))
+	cWhere = val(alltrim(cWhere))
+Endif
+tnId = cWhere
+cQuery = 'print_arv1'
+oDb.use(cQuery,'arve_report1')
+SELECT comAsutusRemote
+IF TAG() <> 'ID'
+	SET ORDER TO id
+ENDIF
+SEEK arve_report1.asutusId
+IF FOUND()
+	UPDATE arve_report1 SET asutus = TRIM(comAsutusRemote.nimetus)+SPACE(1)+TRIM(comAsutusRemote.omvorm) 
+endif
+
+&&use (cQuery) in 0 alias arve_report1
+select arve_report1

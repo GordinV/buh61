@@ -1,0 +1,164 @@
+
+*!*	set step on
+*!*	lreturn = fnc_dtoc(tmpPvKaart.soetkpv)
+*!*	wait window lreturn
+*!*	return
+
+
+gnHandleKoopia = sqlconnect('narvakoopia')
+gnHandleOrig = sqlconnect('NarvaLvPg')
+
+*!*	if empty (gnHandleKoopia) or empty (gnHandleOrig)
+*!*		messagebox('Viga uhenduses')
+*!*		return
+*!*	endif
+*!*	* library
+*!*	wait window 'select library ...' nowait
+*!*	lcString = "select * from library where library = 'POHIVARA' and rekvid in (15, 27)"
+*!*	lError = sqlexec(gnHandleKoopia,lcString,'tmpLibrary')
+
+*!*	if lError < 0
+*!*		set step on
+*!*		return
+*!*	endif
+*!*	wait window 'select library ...done, kokku:'+str(reccount('tmpLibrary')) timeout 3
+
+* pv_kaart
+wait window 'select pv_kaart ...' nowait
+lcString = "select * from pv_kaart where parentid in (select id from library where library = 'POHIVARA' and rekvid in (15, 27))"
+lError = sqlexec(gnHandleKoopia,lcString,'tmpPvKaart')
+
+if lError < 0
+	set step on
+	return
+endif
+wait window 'select pv_kaart ...done, kokku:'+str(reccount('tmpPvKaart')) timeout 3
+
+* pv_oper
+*!*	wait window 'select pv_oper ...' nowait
+
+*!*	lcString = "select * from pv_oper where parentid in (select id from library where library = 'POHIVARA' and rekvid in (15, 27))"
+*!*	lError = sqlexec(gnHandleKoopia,lcString,'tmpPvOper')
+
+*!*	if lError < 0
+*!*		set step on
+*!*		return
+*!*	endif
+*!*	wait window 'select pv_oper ...done, kokku:'+str(reccount('tmpPvOper')) timeout 3
+
+*!*	SET STEP ON
+
+*!*	select tmpLibrary
+*!*	scan
+*!*		wait window 'Library:' + str(recno('tmpLibrary'))+'/'+str(reccount('tmpLibrary')) nowait
+*!*		if !empty(fnc_checkid('library', tmpLibrary.id))
+*!*		
+*!*		lcString = "insert into library (id, rekvid, kood,nimetus,library, muud ,tun1,tun2,tun3,tun4,tun5,vanaid) values ("+;
+*!*			str(tmpLibrary.id,9)+","+ str(tmpLibrary.rekvid,9)+",'" +tmpLibrary.kood+"','"+tmpLibrary.nimetus+"','"+tmpLibrary.library+"','"+;
+*!*			fnc_ifnull(tmpLibrary.muud,'')+"',"+str(tmpLibrary.tun1,9)+","+str(tmpLibrary.tun2,9)+","+str(tmpLibrary.tun3,9)+","+str(tmpLibrary.tun4,9)+","+;
+*!*			str(tmpLibrary.tun5,9)+","+str(fnc_ifnull(tmpLibrary.vanaid,0),9)+")"
+*!*			
+*!*		lError = sqlexec(gnHandleOrig,lcString)
+
+*!*		if lError < 0
+*!*			set step on
+*!*			return
+*!*		endif
+*!*		endif
+*!*		
+*!*	endscan
+
+select tmpPvKaart
+scan
+	wait window 'tmpPvKaart:' + str(recno('tmpPvKaart'))+'/'+str(reccount('tmpPvKaart')) nowait
+	if !empty(fnc_checkid('pv_kaart',tmpPvKaart.id))
+	
+	lcString = "insert into pv_kaart (id,parentid,vastisikid,soetmaks,soetkpv,kulum, algkulum, gruppid,"+;
+	  	"konto, tunnus, mahakantud, otsus, muud,parhind,vanaid) values ("+;
+		str(tmpPvKaart.id,9)+","+ str(tmpPvKaart.parentid,9)+","+str(tmpPvKaart.vastisikid,9)+","+;
+		str(tmpPvKaart.soetmaks,12,2)+",date("+str(year(tmpPvKaart.soetkpv),4)+","+str(month(tmpPvKaart.soetkpv),2)+","+str(day(tmpPvKaart.soetkpv),2) +"),"+;
+		str(tmpPvKaart.kulum,12,2)+","+ str(tmpPvKaart.algkulum,12,2)+","+ str(tmpPvKaart.gruppid,9)+",'"+;
+	  	tmpPvKaart.konto+"',"+str(tmpPvKaart.tunnus,9)+","+;
+	  	iif(isnull(tmpPvKaart.mahakantud),'null',"date("+str(year(tmpPvKaart.mahakantud),4)+","+str(month(tmpPvKaart.mahakantud),2)+","+str(day(tmpPvKaart.mahakantud),2)+")" )+",'"+;
+	  	tmpPvKaart.otsus+"','"+ iif(isnull(tmpPvKaart.muud),'',tmpPvKaart.muud)+"',"+str(tmpPvKaart.parhind,12,2)+","+str(iif(isnull(tmpPvKaart.vanaid),0,tmpPvKaart.vanaid),9)+")"
+		
+	lError = sqlexec(gnHandleOrig,lcString)
+
+	if lError < 0
+		set step on
+		return
+	endif
+	endif
+endscan
+
+*!*	select tmpPvOper
+*!*	scan
+*!*		wait window 'tmpPvOper:' + str(recno('tmpPvOper'))+'/'+str(reccount('tmpPvOper')) nowait
+*!*		if !empty(fnc_checkid('pv_oper',tmpPvOper.id))
+*!*		lcString = "insert into pv_oper (id,parentid,nomid,doklausid,lausendid,journalid,journal1id,liik,kpv,summa,muud,kood1,kood2,kood3,kood4,kood5,konto,tp,asutusid,tunnus,proj) values ("+;
+*!*			str(tmpPvOper.id,9)+","+ str(tmpPvOper.parentid,9)+","+str(tmpPvOper.nomid)+","+str(tmpPvOper.doklausid,9)+","+;
+*!*			str(tmpPvOper.lausendid,9)+","+str(tmpPvOper.journalid,9)+","+str(tmpPvOper.journal1id,9)+","+str(tmpPvOper.liik,9)+","+;
+*!*			fnc_dtoc(tmpPvOper.kpv)+","+str(tmpPvOper.summa,12,2)+",'"+fnc_ifnull(tmpPvOper.muud,'')+"','"+;
+*!*			tmpPvOper.kood1+"','"+tmpPvOper.kood2+"','"+tmpPvOper.kood3+"','"+tmpPvOper.kood4+"','"+tmpPvOper.kood5+"','"+;
+*!*			tmpPvOper.konto +"','"+tmpPvOper.tp+"',"+str(tmpPvOper.asutusid,9)+",'"+tmpPvOper.tunnus+"','"+tmpPvOper.proj+"')"
+*!*			
+*!*		lError = sqlexec(gnHandleOrig,lcString)
+
+*!*		if lError < 0
+*!*			set step on
+*!*			return
+*!*		endif
+*!*		endif
+*!*	endscan
+
+
+=sqldisconnect(gnHandleOrig)
+=sqldisconnect(gnHandleKoopia)
+
+
+Function fnc_ifnull 
+lParameter tNull, tValue
+lreturn = tNull
+if isnull(tNull) 
+	lreturn = tValue
+endif
+return lreturn
+endfun
+
+
+Function fnc_checkid
+lparameter tcTable, TNiD
+lcString = "select id from "+tctable + " WHERE ID = "+ str(tnId) 
+lError = sqlexec(gnHandleOrig,lcString,'tmpid')
+if lError < 0 or !used('tmpId')
+	set step on
+	return .f.
+endif
+if reccount('tmpId') < 1
+	lnReturn = 1
+else
+	lnReturn = 0
+endif
+use in tmpId
+
+return lnReturn
+endfunc
+
+
+
+Function fnc_dtoc
+lParameter tdKpv
+local lcStr
+if isnull(tdKpv) 
+	lcStr = 'null'
+else
+	if !empty (tdKpv)
+		lcStr = "date("+str(year(tdKpv),4)+","+str(month(tdKpv),2)+","+str(day(tdKpv),2)+")"
+	else
+		lcStr = "date(1900,01,01)"
+	endif
+	
+endif
+return lcStr
+endfunc
+

@@ -1,0 +1,209 @@
+*Clear All
+
+
+gnhandle = SQLConnect ('narvalvpg')
+If gnhandle < 0
+	Messagebox('Viga connection','Kontrol')
+	Set Step On
+	Return
+Endif
+grekv = 61
+gversia = 'PG'
+
+
+Local lError
+=sqlexec (gnhandle,'begin work')
+Set Step On
+lError = _alter_pg ()
+If Vartype (lError ) = 'N'
+	lError = Iif( lError = 1,.T.,.F.)
+Endif
+If lError = .F.
+	=sqlexec (gnhandle,'ROLLBACK WORK')
+Else
+	=sqlexec (gnhandle,'COMMIT WORK')
+*!*		Wait Window 'Grant access to views' Nowait
+*!*		lError =pg_grant_views()
+*!*		Wait Window 'Grant access to tables' Nowait
+*!*		lError = pg_grant_tables()
+Endif
+=SQLDISCONNECT(gnhandle)
+If Used('qryLog')
+	Copy Memo qryLog.Log To Buh60Dblog.Log
+	Use In qryLog
+Endif
+
+Function _alter_pg
+	
+	SELECT pv_kultuur
+	SCAN FOR pv_kultuur.a <> 'Grupp'
+		lError = pv_varaamet_import()
+	ENDSCAN
+	
+	Return lError
+Endfunc
+
+Function pv_varaamet_import
+	LOCAL lnrekvid,lnvastIsikId,lnGruppId
+	lnrekvid = 61
+*	lnvastIsikId = 45
+	
+	lcString = "select id from asutus where UPPER(replace(nimetus, ' ', '')) like '%" +UPPER(CHRTRAN(pv_kultuur.N,' ',''))+"%'"
+	lError = sqlexec(gnhandle, lcString,'qryId')
+	If lError < 1 OR RECCOUNT('qryId') < 1
+		Messagebox("Viga "+lcString,'Kontrol')
+		Set Step On
+		RETURN lError
+	Endif
+
+	lnvastIsikId = qryId.id
+
+
+&& kontrol
+	Wait Window pv_kultuur.a Nowait
+	lcString = "select id from library where UPPER(replace(nimetus, ' ', '')) like '%" + UPPER(CHRTRAN(pv_kultuur.a,' ',''))+ "%' and library = 'PVGRUPP' and rekvid =" + STR(lnrekvId) 
+	lError = sqlexec(gnhandle, lcString,'qryId')
+	If lError < 1 
+		Messagebox("Viga "+lcString,'Kontrol')
+		Set Step On
+		RETURN lError
+	ENDIF
+	
+	
+	
+	If Reccount('qryId') < 1
+		
+		lcString = "select id from library where library = 'KONTOD' AND kood = '"+ALLTRIM(pv_kultuur.d)+"'"
+		lError = sqlexec(gnhandle, lcString,'qryKontoId')
+		If lError < 1 
+			Messagebox("Viga "+lcString,'Kontrol')
+			Set Step On
+			RETURN lError
+		ENDIF
+
+		lcString = "select id from library where library = 'KONTOD' AND kood = '"+ALLTRIM(pv_kultuur.e)+"'"
+		lError = sqlexec(gnhandle, lcString,'qryKulumKontoId')
+		If lError < 1 
+			Messagebox("Viga "+lcString,'Kontrol')
+			Set Step On
+			RETURN lError
+		ENDIF
+	
+	
+		lcString = " insert into library (rekvid,kood,nimetus,library, tun1, tun2) values ("+;
+			STR(lnrekvId)+",'" + LEFT(LTRIM(RTRIM(pv_kultuur.a)),20)+"','"+ LTRIM(RTRIM(pv_kultuur.a)) +"','PVGRUPP',"+;
+			STR(qryKontoId.id)+","+STR(qryKulumKontoId.id)+")"
+			
+		lError = sqlexec(gnhandle, lcString)
+		If lError < 1
+			Messagebox("Viga "+lcString,'Kontrol')
+			Set Step On
+			_Cliptext = lcString
+			Return lError
+		Endif
+		If lError > 0
+			lcString = "select id from library where KOOD = '"+LEFT(LTRIM(RTRIM(pv_kultuur.a)),20)+"' and library = 'PVGRUPP' and rekvid =" + STR(lnrekvId) 
+			lError = sqlexec(gnhandle, lcString,'qryid')
+			If lError < 1
+				Messagebox("Viga "+lcString,'Kontrol')
+				Set Step On
+				_Cliptext = lcString
+				Return lError
+			Endif
+			lnGruppId = qryId.id
+		Endif
+	Else
+		lnGruppId =  qryId.Id
+	Endif
+
+	If lError < 0 OR lnGruppid = 0
+		SET STEP ON 
+		Return lError
+	Endif
+
+
+*	Use (lcFile) In 0 Alias v_pvvara
+
+* kontrolime inv.number
+		lcInv = LEFT(LTRIM(RTRIM(pv_kultuur.l)),20)
+		lcString = "select id from curPohivara where kood = '"+Trim(lcInv)+"' and rekvid = " + STR(lnRekvid)
+
+		lError = sqlexec(gnhandle, lcString,'qryId')
+		If lError < 1
+			Messagebox("Viga "+lcString,'Kontrol')
+			Set Step On
+			_Cliptext = lcString
+			Exit
+			Return lError
+		Endif
+
+
+		If Reccount('qryId') < 1
+*  uus pv
+			lcMark = LTRIM(RTRIM(pv_kultuur.b))+SPACE(1)+LTRIM(RTRIM(pv_kultuur.c))
+
+			lcString = " insert into library (rekvid,kood,nimetus,library, muud) values ("+;
+				Str(lnrekvid)+",'"+Ltrim(Rtrim(lcInv))+"','"+;
+				LTRIM(Rtrim(pv_kultuur.g))+"','POHIVARA','')"
+
+			lError = sqlexec(gnhandle, lcString)
+			If lError < 1
+				Messagebox("Viga "+lcString,'Kontrol')
+				Set Step On
+				_Cliptext = lcString
+				Exit
+				Return lError
+			Endif
+
+			lcString = " select id from library where rekvid = " + STR(lnRekvid)+ " and kood = '"+Trim(lcInv)+ "'"
+			lError = sqlexec(gnhandle, lcString,'qryid')
+			IF RECCOUNT('qryid') < 1 
+				SET STEP ON 
+				RETURN -1
+			ENDIF
+			
+
+			lcSoet = (pv_kultuur.i)
+			lcSoetKpv = 'date('+Right(Alltrim(pv_kultuur.h),4)+','+Substr(Alltrim(pv_kultuur.h),4,2)+','+Left(ALLTRIM(pv_kultuur.h),2)+')'
+			IF EMPTY(pv_kultuur.h)
+				lcSoetKpv = 'date(2006,01,01)'
+			ENDIF
+			
+			lcAlgkulum = (ALLTRIM(pv_kultuur.j))	
+			
+			lcNomId = '4309'
+
+
+			lcString = " insert into pv_kaart (parentid,  vastisikid,  soetmaks,soetkpv,  kulum ,  algkulum ,"+;
+				" gruppid,  tunnus, MUUD, konto) values ("+;
+				Str( qryid.Id)+","+Str(lnvastIsikId)+","+;
+				lcSoet+","+lcSoetKpv+","+STR(VAL(PV_kultuur.k))+","+lcAlgKulum+","+;
+				STR(lnGruppId)+",1,'"+Ltrim(Rtrim(lcmark))+"','"+Ltrim(Rtrim(pv_kultuur.d))+"')"
+
+			lError = sqlexec(gnhandle, lcString)
+			If lError < 1
+				Messagebox("Viga "+lcString,'Kontrol')
+				Set Step On
+				_Cliptext = lcString
+				Exit
+				Return lError
+			ENDIF
+			
+			lcString = " insert into pv_oper (parentid,  nomid, liik, kpv, summa, muud ) values ("+;
+					Str( qryid.Id)+"," + lcNomId+",1,DATE(2006,01,01),"+;
+					lcSoet+",SPACE(1))"
+
+			lError = sqlexec(gnhandle, lcString)
+			If lError < 1
+				Messagebox("Viga "+lcString,'Kontrol')
+				Set Step On
+				_Cliptext = lcString
+				Exit
+				Return lError
+			ENDIF
+
+			
+		Endif
+
+	Return lError
+Endfunc

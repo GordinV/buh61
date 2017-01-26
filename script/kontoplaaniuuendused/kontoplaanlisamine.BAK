@@ -1,0 +1,71 @@
+lcFile = 'c:/avpsoft/files/buh61/tmp/ko3.xls'
+
+If !File(lcFile)
+	Messagebox('Viga, failid ei leidnud')
+	lError = .T.
+Endif
+
+
+Import From (lcFile) TYPE XL8
+
+gnHandle = SQLCONNECT('NarvaLvPg')
+IF gnHandle < 0
+	MESSAGEBOX('Viga, uhendus')
+	return
+ENDIF
+* kontoplaan
+lnError = SQLEXEC(gnHandle,"select id,kood  from library where library like 'KONTO%'",'tmpKonto')
+IF lnError < 0
+	SET STEP ON 
+	=SQLDISCONNECT(gnHandle)
+	return
+ENDIF
+
+
+SELECT kp
+* rohkem ei kehti
+SCAN FOR i = 1 AND !EMPTY(kp.a)
+	WAIT WINDOW 'Kehtivus, kood:'+kp.a nowait
+	SELECT tmpKonto
+	LOCATE FOR ALLTRIM(kood) = ALLTRIM(kp.a)
+	IF FOUND()
+		lcString = "update kontoinf set aasta = 20121231 where parentid = "+STR(tmpKonto.id)
+		lnError = SQLEXEC(gnHandle,lcString)
+		IF lnError < 0
+			SET STEP ON 
+			EXIT
+		ENDIF
+	ENDIF	
+ENDSCAN
+IF lnError < 1
+	return
+ENDIF
+
+*klassikikaatorid
+SELECT kp
+SCAN FOR EMPTY(i) AND !EMPTY(a)
+	WAIT WINDOW 'Klassifikaatorid, kood:'+kp.a nowait
+	lnTun1 = IIF(!EMPTY(kp.d),'1','0')
+	lnTun2 = IIF(!EMPTY(kp.e),'1','0')
+	lnTun3 = IIF(!EMPTY(kp.f),'1','0')
+	lnTun4 = IIF(!EMPTY(kp.g),'1','0')
+	SELECT tmpKonto
+	LOCATE FOR ALLTRIM(kood) = ALLTRIM(kp.a)
+	IF FOUND()
+		lcString = "update library set tun1 = "+lnTun1+","+;
+			" tun2 = "+lnTun2+","+;
+			" tun3 = "+lnTun3+","+;
+			" tun4 = "+lnTun4+ " where id = "+STR(tmpKonto.id)
+		lnError = SQLEXEC(gnHandle,lcString)
+		IF lnError < 0
+			SET STEP ON 
+			EXIT
+		ENDIF
+
+	ENDIF
+	
+ENDSCAN
+
+
+
+=SQLDISCONNECT(gnHandle)
