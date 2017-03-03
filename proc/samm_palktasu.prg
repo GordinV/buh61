@@ -86,10 +86,10 @@ Procedure arVutus
 				Locate FOR ValPalkLib.paLklibid=v_Palk_kaart.liBid
 				If FOUND()
 					leRror = edIt_oper(recalc1.id)
-					If leRror=.F.
+					If EMPTY(leRror)
 						Exit
 					Endif
-				Endif
+				ENDIF
 			Endscan
 			If leRror=.T.
 				.coMmit()
@@ -113,16 +113,10 @@ Procedure edIt_oper
 	If EMPTY(gdKpv) .OR. EMPTY(gnKuu) .OR. EMPTY(gnAasta)
 		Do FORM period
 	Endif
-	oDb.opentransaction()
 
 	leRror = odB.Exec("gen_palkoper ",Str(v_Palk_kaart.lepingId)+","+Str(v_Palk_kaart.liBid)+;
 		","+Str(v_dokprop.Id)+", DATE("+;
 		STR(Year(gdKpv),4)+","+Str(Month(gdKpv),2)+","+Str(Day(gdKpv),2)+")"+","+'0','qryOper')
-	IF lError = .t.
-		odb.commit()
-	ELSE
-		odb.rollback()
-	ENDIF
 	
 	Return leRror
 Endproc

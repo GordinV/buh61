@@ -35,8 +35,8 @@ begin
 		from palk_oper left outer join dokvaluuta1 on (palk_oper.id = dokvaluuta1.dokid and dokvaluuta1.dokliik = 12)
 		where palk_oper.id = tnId;
 
-	If v_palk_oper.doklausid = 0 then		
-		raise notice 'Konteerimine ei ole vajalik, dok tyyp ei ole defineeritud';
+	If v_palk_oper.doklausid = 0 or v_palk_oper.summa = 0 then		
+		raise notice 'Konteerimine ei ole vajalik, dok tyyp ei ole defineeritud voi summa = 0 ';
 		Return 0;	
 	End if;	
 
@@ -230,10 +230,9 @@ begin
 end; 
 	
 $BODY$
-  LANGUAGE plpgsql VOLATILE
+  LANGUAGE 'plpgsql' VOLATILE
   COST 100;
-ALTER FUNCTION gen_lausend_palk(integer)
-  OWNER TO vlad;
+ALTER FUNCTION gen_lausend_palk(integer) OWNER TO vlad;
 GRANT EXECUTE ON FUNCTION gen_lausend_palk(integer) TO vlad;
 GRANT EXECUTE ON FUNCTION gen_lausend_palk(integer) TO public;
 GRANT EXECUTE ON FUNCTION gen_lausend_palk(integer) TO dbkasutaja;

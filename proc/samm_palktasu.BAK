@@ -62,6 +62,7 @@ Procedure arVutus
 		Select DISTINCT id FROM curResult WHERE  NOT EMPTY(curResult.id)  ;
 			INTO CURSOR recalc1
 		Select recalc1
+		brow
 		Scan
 			Select coMasutusremote
 			Locate FOR id=recalc1.id
@@ -81,15 +82,16 @@ Procedure arVutus
 			Set ORDER TO liik
 			.opEntransaction()
 			Select v_Palk_kaart
+			BROWSE FOR v_Palk_kaart.stAtus=1
 			Scan FOR v_Palk_kaart.stAtus=1
 				Select ValPalkLib
 				Locate FOR ValPalkLib.paLklibid=v_Palk_kaart.liBid
 				If FOUND()
 					leRror = edIt_oper(recalc1.id)
-					If leRror=.F.
+					If EMPTY(leRror)
 						Exit
 					Endif
-				Endif
+				ENDIF
 			Endscan
 			If leRror=.T.
 				.coMmit()
@@ -113,17 +115,10 @@ Procedure edIt_oper
 	If EMPTY(gdKpv) .OR. EMPTY(gnKuu) .OR. EMPTY(gnAasta)
 		Do FORM period
 	Endif
-	oDb.opentransaction()
-	WAIT WINDOW STR(v_Palk_kaart.lepingId) + '-' + Str(v_Palk_kaart.liBid)+'-' +Str(v_dokprop.Id) TIMEOUT 10
+
 	leRror = odB.Exec("gen_palkoper ",Str(v_Palk_kaart.lepingId)+","+Str(v_Palk_kaart.liBid)+;
 		","+Str(v_dokprop.Id)+", DATE("+;
 		STR(Year(gdKpv),4)+","+Str(Month(gdKpv),2)+","+Str(Day(gdKpv),2)+")"+","+'0','qryOper')
-	IF lError = .t.
-		odb.commit()
-	ELSE
-		SET STEP ON 
-		odb.rollback()
-	ENDIF
 	
 	Return leRror
 Endproc

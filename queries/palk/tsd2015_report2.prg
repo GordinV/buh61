@@ -7,7 +7,7 @@ tdKpv1 = fltrAruanne.kpv1
 tdKpv2 = fltrAruanne.kpv2
 l_parent = Iif(Empty(fltrAruanne.kond),999999,gRekv)
 
-Create Cursor tsd_report (isikukood c(20), nimi c(254), v1020 c(20), v1030 N(14,2) NULL , v1040 N(14,2) NULL,;
+Create cursor tsd_report (isikukood c(20), nimi c(254), v1020 c(20), v1030 N(14,2) NULL , v1040 N(14,2) NULL,;
 	v1050 c(100), v1060 N(14,2) NULL , v1070 N(14,2) NULL , v1080 N(14,2) NULL, v1090 N(14,2) NULL , ;
 	v1100 N(14,2) NULL, v1110 N(14,2) NULL ,	v1120 N(14,2) NULL , v1130 N(14,2) NULL , v1140 N(14,2) NULL , ;
 	v1150 c(20),	v1160 N(14,2) NULL , v1160_610 N(14,2) NULL, v1160_620 N(14,2) NULL, v1160_630 N(14,2) NULL, v1160_640 N(14,2) NULL,;
@@ -67,7 +67,7 @@ SELECT isikukood, isik, tululiik, liik, palk_maar, riik, period,minsots,  sm_arv
 		where lepingid = t.id 
 		and pk_.status = 1 
 		limit 1) * pc.sm / 100)    as minsots, pc.minpalk, sp_puudumise_paevad(?tdKpv2::date, t.id)::numeric as puudumine ,
-		a.id, t.rekvId
+		a.id, t.rekvId, pk.minsots as arvesta_min_sots
 	from tooleping t
 	inner join asutus a on a.id = t.parentid
 	inner join palk_oper po on po.lepingid = t.id
@@ -105,10 +105,6 @@ ELSE
 	Select curTSD
 	l_last_isikukood = ''
 
-SET STEP ON 
-
-
-
 	Scan
 * 1090	if 
 		l_sm = curTSD.sm
@@ -117,16 +113,20 @@ SET STEP ON
 			Where isikukood = curTSD.isikukood ;
 			And Isnull(qryTsd.period) Into Cursor tmpMaksud
 			
-		IF (EMPTY(l_last_isikukood) OR l_last_isikukood <> curTsd.isikukood ) AND tmpMaksud.sm < tmpMaksud.minsots AND tmpMaksud.minsots > 0 OR (tmpMaksud.sm > 0 AND tmpMaksud.summa = 0)
+*!*				IF curTsd.isikukood = '36905123715'
+*!*					SET STEP ON 
+*!*				ENDIF
+		 	
+		 	SELECT arvesta_min_sots FROM qryTsd WHERE qryTsd.isikukood = curTsd.isikukood AND !EMPTY(qryTsd.arvesta_min_sots) INTO CURSOR qryArvestaMinSots
+		 	
+		IF (EMPTY(l_last_isikukood) OR l_last_isikukood <> curTsd.isikukood ) AND (tmpmaksud.sm_alus_summa < tmpMaksud.minpalk) AND tmpMaksud.minsots > 0 AND RECCOUNT('qryArvestaMinSots') > 0 OR (tmpMaksud.sm > 0 AND tmpMaksud.summa = 0)
 			
 			* salvestame isikukood ja kasutatud min.sots
 			l_last_isikukood = curTsd.isikukood
 			l_sm = (tmpMaksud.minpalk / 30 * (lnPaevadKuus - IIF(ISNULL(curTsd.puhkus),0,curTsd.puhkus))) * 0.33
 
 			l_1090 = (tmpMaksud.minpalk / 30 * (lnPaevadKuus - IIF(ISNULL(curTsd.puhkus),0,curTsd.puhkus))) - tmpMaksud.sm_alus_summa
-			IF l_last_isikukood = '49503227057'
-				SET STEP ON 
-			ENDIF
+
 			
 			
 		ELSE 
