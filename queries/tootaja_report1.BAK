@@ -1,0 +1,76 @@
+Parameter cWhere
+If isdigit(alltrim(cWhere))
+	cWhere = val(alltrim(cWhere))
+Endif
+tnId = cWhere
+If vartype(odb) <> 'O'
+	Set classlib to classes\classlib
+	odb = createobject('db')
+Endif
+odb.use('v_asutus','qryAsutus')
+odb.use('v_tooleping','qrytooleping')
+Create cursor tootaja_report1 (isikukood c(20) ,;
+	nimi c(254) , aadress c(254) ,;
+	tel c(120) , faks c(120) ,;
+	email c(120) , muud m ,;
+	amet c(120) , osakond c(120) ,;
+	algab d , lopp d ,;
+	palk y , tasuliik c(20) ,;
+	toopaev int , palgamaar int ,;
+	pohikoht c(20) ,;
+	koormus int , ametnik c(20) ,;
+	kood c(20),nimetus c(120),liik c(20), summa y, percent_ c(20), tulumaks c(20),;
+	tulumaar int, maks c(20))
+
+odb.use('v_palk_kaart','qryPalkKaart')
+Select qrytooleping
+Scan
+*!*		if reccount ('tootaja_report1') < 1
+*!*			append blank
+*!*		endif
+	Select qryPalkKaart
+	Scan
+		Select tootaja_report1
+		Append blank
+		lcLiik = ''
+		Do case
+			Case qryPalkKaart.liik = 1
+				lcLiik = 'Arvestused'
+			Case qryPalkKaart.liik = 2
+				lcLiik = 'Kinnipidamised'
+			Case qryPalkKaart.liik = 3
+				lcLiik = 'Muud'
+			Case qryPalkKaart.liik = 4
+				lcLiik = 'Tulumaks'
+			Case qryPalkKaart.liik = 5
+				lcLiik = 'Sotsialmaks'
+			Case qryPalkKaart.liik = 6
+				lcLiik = 'Väljamaksed'
+		Endcase
+		lcAadress = iif (empty (qryAsutus.aadress),space(1),qryAsutus.aadress)
+		Replace isikukood with qryAsutus.regkood,;
+			nimi with qryAsutus.nimetus, aadress with lcAadress,;
+			tel with qryAsutus.tel, faks with qryAsutus.faks,;
+			email with qryAsutus.email,; 
+			muud with iif (isnull(qryAsutus.muud) or empty(qryAsutus.muud) ,space(1),qryAsutus.muud),;
+			amet with qrytooleping.amet, osakond with qrytooleping.osakond,;
+			algab with qrytooleping.algab, lopp with iif (qrytooleping.lopp < qrytooleping.algab,{},qrytooleping.lopp),;
+			palk with qrytooleping.palk, tasuliik with iif (qrytooleping.tasuliik = 1,'Astmepalk','Tunni alusel'),;
+			toopaev with qrytooleping.toopaev, palgamaar with qrytooleping.palgamaar,;
+			pohikoht with iif (qrytooleping.pohikoht = 1,'Jah','Ei'),;
+			koormus with qrytooleping.koormus, ametnik with iif (qrytooleping.ametnik = 1,'Jah','Ei'),;
+			kood with qryPalkKaart.kood,;
+			nimetus with qryPalkKaart.nimetus,;
+			liik with lcLiik,;
+			summa with  qryPalkKaart.summa,;
+			percent_ with iif (qryPalkKaart.percent_ = 1,'Jah','Ei'),;
+			tulumaks with iif (qryPalkKaart.tulumaks = 1, 'Jah','Ei'),;
+			tulumaar with qryPalkKaart.tulumaar,;
+			maks with iif (qryPalkKaart.liik = 2,iif(qryPalkKaart.maks = 1,'Jah','Ei'),space(1)) in tootaja_report1
+
+	Endscan
+Endscan
+Use in qryPalkKaart
+Use in qryAsutus
+Use in qrytooleping
+Select tootaja_report1

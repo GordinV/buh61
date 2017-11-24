@@ -1,0 +1,114 @@
+Set Multiloc On
+Set Safety Off
+SET STEP ON 
+gVersia = 'PG'
+gnhandle = SQLConnect ('pg60')
+If gnhandle < 0
+	Messagebox('Viga, uhendus')
+	Set Step On
+	Return
+Endif
+Set Classlib To classes\Classlib
+oDb = Createobject('db')
+oDb.login = 'VLAD'
+oDb.Pass = ''
+
+Create Cursor curKey (versia m)
+Append Blank
+Replace versia With 'RAAMA, EELARVE' In curKey
+Create Cursor v_account (admin Int Default 1)
+Append Blank
+
+If !Used('menupohi')
+	Use menupohi In 0
+Endif
+If !Used('menumodul')
+	Use menumodul In 0
+Endif
+oDb.opentransaction()
+Select menupohi
+SCAN
+	WAIT WINDOW [Menu:]+menupohi.pad nowait
+	lcProc = LTRIM(Rtrim(menupohi.proc_))
+	lnQuota1 = ATC("'",lcProc,1)
+	lnQuota2 = ATC("'",lcProc,2)
+	IF lnQuota1 > 0
+		DO WHILE ATC("'",lcProc) > 0
+			lcProc = STUFF(lcproc,ATC("'",lcProc,1),1,'"')
+		ENDDO		
+	ENDIF
+	lcOmandus = IIF(!EMPTY(menupohi.omandus),"'"+LTRIM(Rtrim(menupohi.omandus))+"'",'SPACE(1)')
+	
+	
+	lcString = "insert into menupohi ( omandus, level_, proc_, pad, bar, idx ) values ('"+;
+		LTRIM(Rtrim(menupohi.omandus))+"',"+Alltrim(Str(menupohi.level_))+",'"+;
+		LTRIM(Rtrim(lcproc))+"','"+ Ltrim(Rtrim(menupohi.Pad))+"','"+Ltrim(Rtrim(menupohi.Bar))+"',"+;
+		ALLTRIM(Str(menupohi.idx))+")"
+	_cliptext = lcString
+
+	lError = SQLEXEC(gnhandle,lcString)
+	If lError < 1
+		Messagebox('Viga')
+		Set Step On
+		Exit
+	Endif
+	If lError > 0
+		clastId = 0
+		lcString = "SELECT LASTNUM FROM DBASE WHERE ALIAS = 'MENUPOHI'"
+		lError = SQLEXEC(gnhandle,lcString,'qryAlias')
+		If Used('qryAlias') And Reccount('qryAlias') = 1
+			clastId = qryAlias.lastnum
+		Endif
+		If clastId > 0
+			Select menumodul
+			Scan For menumodul.parentid = menupohi.Id
+				lcString = "insert into menumodul ( parentid, modul) values ("+;
+					STR(clastId)+",'"+Ltrim(Rtrim(menumodul.Modul))+"')"
+				lError = SQLEXEC(gnhandle,lcString)
+				If lError < 1
+					Messagebox('Viga')
+					Set Step On
+					Exit
+				Endif
+			Endscan
+			Select menuisik
+			Scan For menuisik.parentid = menupohi.Id
+				lcString = "insert into menuisik ( parentid, gruppId, jah, ei, proc_, hotkey) values ("+;
+					STR(clastId)+",'"+Ltrim(Rtrim(menuisik.gruppId))+"',"+STR(menuisik.jah,1)+","+;
+					STR(menuisik.ei,1)+",'"+LTRIM(rtrim(menuisik.proc_))+"','"+LTRIM(RTRIM(menuisik.hotkey))+"')"
+				lError = SQLEXEC(gnhandle,lcString)
+				If lError < 1
+					Messagebox('Viga')
+					Set Step On
+					Exit
+				Endif
+			Endscan
+
+
+		Else
+			lError = -1
+			Messagebox('Viga, lastid')
+			Exit
+		Endif
+	Endif
+Endscan
+If lError < 1
+	oDb.Rollback()
+Else
+	oDb.commit()
+Endif
+RELEASE oDb
+=SQLDISCONNECT(gnhandle)
+
+
+
+Function remove_chr13_from_string
+	Parameter tcString
+	If Vartype(tcString)='C' .And. Chr(13)$tcString
+		Do While Atc(Chr(13), tcString)>0
+			tcString = Stuffc(tcString, Atc(Chr(13), tcString), 2, Space(1))
+		Enddo
+	Endif
+	Return tcString
+Endfunc
+*

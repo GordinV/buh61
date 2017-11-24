@@ -1,0 +1,27 @@
+Close data all
+grekv = 1
+gVersia = 'VFP'
+gnhandle = 1
+glError = .f.
+cData = 'c:\buh50\dbavpsoft\buhdata5.dbc'
+open data (cdata)
+Use menuitem IN 0
+Use menubar IN 0
+Use config IN 0
+
+Set classlib to classes\classlib
+oDb = createobject('db')
+oDb.login = 'VLAD'
+oDb.pass = ''
+
+Create cursor curKey (versia m)
+Append blank
+Replace versia with 'RAAMA' in curKey
+Create cursor v_account (admin int default 1)
+
+
+do queries\kbmconfig_report1
+
+if !empty (alias())
+	brow
+endif

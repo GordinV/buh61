@@ -1,0 +1,67 @@
+Local lError
+Clear All
+
+gnHandle = SQLConnect('narvalvpg','vlad','490710')
+If gnHandle < 1
+	Messagebox('Viga, uhendus')
+	Set Step On
+	Return
+Endif
+
+lnSumma = 0
+lnrec = 0
+lnresult = 0
+
+lcString = " select tooleping.parentid as asutusId, palk_oper.journalId "+;
+	" from palk_oper inner join tooleping on palk_oper.lepingId = tooleping.id "+;
+	" where palk_oper.rekvid = 31 and palk_oper.journalId > 0 "+;
+	" and journalId in (select id from journal where rekvid = 31 and asutusId = 0 )"
+
+
+lnResult = SQLEXEC(gnHandle,lcString,'qryTl')
+ 
+IF lnResult > 0
+	
+	lnResult = SQLEXEC(gnHandle,'begin work')
+	SELECT qryTl
+	SCAN
+		WAIT WINDOW STR(lnrec)+'-'+STR(RECCOUNT('qryTl')) nowait
+			lnrec = lnrec + 1
+			lcString = " update journal set asutusId = "+STR(qryTl.asutusid)+ " where rekvid = 31 and id = "+STR(qryTl.journalid) 
+			lnResult = SQLEXEC(gnHandle,lcString)
+
+		IF lnResult < 1
+			SET STEP ON 
+			exit
+		endif
+		
+	ENDSCAN
+	
+endif
+
+
+If lnresult > 0
+	=SQLEXEC(gnHandle,'commit work')
+	Messagebox('Ok, summa:'+Str(lnSumma,12,2)+' kokku read:'+Str(lnrec))
+Else
+	Set Step On
+	=SQLEXEC(gnHandle,'rollback work')
+Endif
+
+
+
+
+=SQLDISCONNECT(gnHandle)
+
+Function transdigit
+	Lparameters tcString
+	lnQuota = At(',',tcString)
+	lcKroon = Left(tcString,lnQuota-1)
+	lcCent = Right(tcString,2)
+	If At(Space(1),lcKroon) > 0
+* on probel
+		lcKroon = Stuff(lcKroon,At(Space(1),lcKroon),1,'')
+	Endif
+	Return lcKroon+'.'+lcCent
+Endfunc
+

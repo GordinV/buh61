@@ -1,0 +1,2 @@
+lcAlgKpv = STR(curTt.p,1)+'.'+STR(curTt.0,2)+'.'+STR(curTt.n,4)
+Error in line 56: Function name is missing ).

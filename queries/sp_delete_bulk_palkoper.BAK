@@ -1,0 +1,35 @@
+local lError, lResult 
+set step on
+gnHandle = sqlconnect ('buhdata5zur','zinaida','159')
+if gnHandle < 1
+	messagebox ('Viga, connection')
+	return
+endif
+cString = "select id from curPalkoper where kpv >= '20020701' and kpv <= '20020731'"
+lError = sqlexec (gnHandle,cString,'qryList')
+if lError < 1
+	messagebox ('Viga, connection')
+	set step on
+&&	return
+endif
+if lError > 0
+	lResult=sqlexec (gnhandle,'begin transaction')
+	select qryList
+	lcPath = curdir()+'proc'
+	set path to (lcPath)
+	scan
+	
+		lresult = sp_delete_palkoper(qryList.id)
+		if lresult = .f.
+			set step on
+			exit
+		endif
+	endscan
+endif
+if lresult = .f.
+	=sqlexec (gnHandle,'rollback transaction')
+	messagebox ('Viga,deleting')
+else
+	=sqlexec (gnHandle,'commit transaction')
+endif
+=sqldisconnect (gnHandle)

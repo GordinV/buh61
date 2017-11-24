@@ -1,0 +1,25 @@
+Parameter cWhere
+tcNumber = '%'+ltrim(rtrim(fltrLepingud.number))+'%'
+tcSelgitus = '%'+ltrim(rtrim(fltrLepingud.selgitus))+'%'
+tcAsutus = '%'+ltrim(rtrim(fltrLepingud.asutus))+'%'
+dKpv1 = iif(empty(fltrLepingud.kpv1),date(year(date()),1,1),fltrLepingud.kpv1)
+dKpv2 = iif(empty(fltrLepingud.kpv2),date(year(date()),12,31),fltrLepingud.kpv2)
+
+lcString = " SELECT leping1.id, leping1.Number, leping1.selgitus::varchar(120), "+;
+ " asutus.nimetus as asutus,  leping1.asutusid, "+;
+ " ifnull(objekt.kood, space(20))::character varying AS objkood, ifnull(objekt.nimetus, space(254))::character varying as  objnimi, "+;
+" ifnull(pakett.kood, space(20))::character varying AS pakett "+;
+     FROM leping1 inner join leping2 on leping1.id = leping2.parentid
+    inner join nomenklatuur nom on leping2.nomid = nom.id
+   JOIN asutus ON leping1.asutusid = asutus.id
+   LEFT JOIN library objekt ON objekt.id = leping1.objektid
+   LEFT JOIN objekt obj ON objekt.id = obj.libid
+   LEFT JOIN library pakett ON pakett.id = leping1.pakettid;
+ WHERE rekvid = ?gRekv   AND number LIKE ?tcNumber  
+  AND kpv >= ?dkpv1   AND kpv <= ?dKpv2   AND upper(asutus) LIKE upper(?tcAsutus)   
+  AND upper(selgitus) LIKE upper(?tcSelgitus) and upper(objkood) like upper(?tcObjKood) 
+  and upper(objnimi) like upper(?tcObjNimi) and upper(pakett) like upper(?tcPakett) 
+  order by left(objnimi,8),maja,korter
+
+
+select Leping_report1

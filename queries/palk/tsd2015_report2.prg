@@ -1,0 +1,206 @@
+Parameter tcWhere
+* TSD 2015 lisa 1
+*SET STEP ON
+Local lcString, tdKpv1, tdKpv2, l_parent, l_sm
+l_sm = 0
+tdKpv1 = fltrAruanne.kpv1
+tdKpv2 = fltrAruanne.kpv2
+l_parent = Iif(Empty(fltrAruanne.kond),999999,gRekv)
+
+Create cursor tsd_report (isikukood c(20), nimi c(254), v1020 c(20), v1030 N(14,2) NULL , v1040 N(14,2) NULL,;
+	v1050 c(100), v1060 N(14,2) NULL , v1070 N(14,2) NULL , v1080 N(14,2) NULL, v1090 N(14,2) NULL , ;
+	v1100 N(14,2) NULL, v1110 N(14,2) NULL ,	v1120 N(14,2) NULL , v1130 N(14,2) NULL , v1140 N(14,2) NULL , ;
+	v1150 c(20),	v1160 N(14,2) NULL , v1160_610 N(14,2) NULL, v1160_620 N(14,2) NULL, v1160_630 N(14,2) NULL, v1160_640 N(14,2) NULL,;
+	v1170 N(14,2) NULL , v1200 N(14,2) NULL , v1210 N(14,2) NULL, v1220 N(14,2) NULL ,;
+	v1230 N(14,2) NULL , v1240 N(14,2) NULL , v1250 N(14,2) NULL )
+
+*arvestame koormus
+
+TEXT TO lcString noshow
+SELECT a.regkood as isikukood, a.nimetus as isik, sum(koormus)::numeric / 100 as koormus ,
+	max(coalesce(qryMinSots.arv_min_sots,0)) as arv_min_sots, max(coalesce(qryMinSots.min_sots_alus,0)) as min_sots_alus
+	from tooleping t
+	inner join asutus a on a.id = t.parentId
+	inner join rekv on rekv.id = t.rekvId
+	left outer join (
+	select lepingid, rekvid, po.summa as arv_min_sots, po.sotsmaks as min_sots_alus 
+			from palk_oper po inner join palk_lib pl on pl.parentid = po.libid and pl.liik = 5 and po.sotsmaks <> 0
+			where po.kpv >= ?tdKpv1 and po.kpv <= ?tdKpv2
+	) qryMinSots on qryMinSots.lepingid = t.id and qryMinSots.rekvid = rekv.id
+	where (rekv.Id = ?gRekv or rekv.parentId = ?l_parent)
+	and algab <= ?tdKpv2 
+	and (lopp is null or lopp >= ?tdKpv1)
+	and t.resident = 1
+	group by a.regkood,  a.nimetus
+ENDTEXT
+
+
+lnError = SQLEXEC(gnhandle, lcString,'qryKoormus')
+If lnError < 0 Then
+	Wait Window 'Viga' Nowait
+	Do err
+	SELECT 0
+	return
+ENDIF
+
+TEXT TO lcString NOSHOW
+	SELECT isikukood, isik, tululiik, liik, palk_maar, riik, period,minsots,  sm_arv, tk_arv, minpalk,
+		sum(summa) as summa, sum(puhkused) as puhkused, sum(haigused) as haigused, sum(tm) as tm, sum(sm) as sm, sum(tki) as tki, sum(pm) as pm, sum(tka) as tka, sum(tulubaas) as tulubaas, 
+		(select sum(sp_puudumise_paevad(?tdKpv2::date, tooleping.id)) from tooleping where tooleping.parentid = qry.id and tooleping.rekvid = qry.rekvid)::numeric as puhkus,
+		(select sum(koormus) from tooleping where parentId = qry.id and rekvId = qry.rekvId and algab <= ?tdKpv2 and (empty(lopp) or lopp >= ?tdKpv1))::numeric / 100 as v1040,
+		MAX(lopp) as lopp,
+		max(arv_min_sots) as arv_min_sots, max(	 min_sots_alus) as  min_sots_alus	
+		from (
+		select a.regkood as isikukood, a.nimetus as isik,
+		po.summa as summa, 
+		(case when pl.liik = 1 and po_kood.kood ilike '%PUHKUS%' then po.summa else 0 end) as puhkused,
+		(case when pl.liik = 1 and po_kood.kood ilike '%HAIGUS%' then po.summa else 0 end) as haigused,
+		(po.tulumaks) as tm, (po.sotsmaks) as sm, (po.tootumaks) as tki, (po.pensmaks) as pm, (po.tka) as tka, (po.tulubaas) as tulubaas,
+		pl.tululiik,pl.liik,
+		coalesce(l.tun1,0) as tm_maar, coalesce(l.tun4,0) as tk_arv, coalesce(l.tun5,0) as pm_arv, coalesce(l.tun1,0) as tm_arv, coalesce(l.tun2,0) as sm_arv,
+		(case when tasuliik = 2 then t.palk else 0 end ) as palk_maar, t.riik, po.period,
+	 	(pc.minpalk * (
+			select minsots 
+			from palk_kaart pk_ 
+			inner join palk_lib pl_ on pl_.parentid = pk_.libid and pl_.liik = 5 
+			where lepingid = t.id 
+			and pk_.status = 1 
+			limit 1) * pc.sm / 100)    as minsots, pc.minpalk,
+			a.id, t.rekvId, ifnull(t.lopp, date(2099,12,31)) as lopp,
+			qryMinSots.arv_min_sots, qryMinSots.min_sots_alus
+		from tooleping t
+		inner join asutus a on a.id = t.parentid
+		inner join palk_oper po on po.lepingid = t.id
+		inner join palk_lib pl on pl.parentid = po.libId
+		inner join library po_kood on po.libid = po_kood.id
+		left outer join palk_kaart pk on pk.lepingId = t.id and pk.libid = po.libid
+		inner join rekv on rekv.id = po.rekvid
+		left outer join library l on l.kood = pl.tululiik and l.library = 'MAKSUKOOD'
+		left outer join palk_config pc on pc.rekvid = rekv.id 
+		left outer join (select lepingid, rekvid, po.summa as arv_min_sots, po.sotsmaks as min_sots_alus 
+			from palk_oper po inner join palk_lib pl on pl.parentid = po.libid and pl.liik = 5 and po.sotsmaks <> 0
+			where po.kpv >= ?tdKpv1 and po.kpv <= ?tdKpv2
+		) qryMinSots on qryMinSots.lepingid = t.id and qryMinSots.rekvid = rekv.id
+		
+		where po.kpv >= ?tdKpv1 and po.kpv <= ?tdKpv2
+		and period is null
+		and pl.liik = 1
+		and t.resident = 1
+		and (rekv.id = ?gRekv or rekv.parentId = ?l_parent)) qry
+	group by id, rekvId, isikukood, isik, tululiik, liik, palk_maar, riik, period, v1040, minsots, sm_arv, tk_arv, minpalk
+
+ENDTEXT
+
+* calender days
+lnPaevadKuus = DAY(GOMONTH(DATE(YEAR(tdKpv2), MONTH(tdKpv2), 1)  ,1) - 1)
+lnError = SQLEXEC(gnhandle, lcString,'qryTSD')
+If lnError < 0 Then
+	Wait Window 'Viga' Nowait
+	Do err
+	SELECT 0
+	return
+ELSE
+
+	l_last_isikukood = ''
+
+	Select qryKoormus.isikukood, qryKoormus.isik, Sum(summa) As Summa, sum(puhkused) as puhkused, sum(haigused) as haigused, Sum(tm) As tm, Sum(sm) As sm, Sum(tki) As tki, Sum(tka) As tka,;
+		sum(pm) As pm, Sum(tulubaas) As tulubaas, tululiik, palk_maar, riik, sm_arv, tk_arv, ;
+		max(qryKoormus.koormus) as v1040, sum(puhkus) as puhkus, MAX(lopp) as lopp, max(qryTsd.arv_min_sots) as arv_min_sots, ; 
+		max(qryTsd.min_sots_alus) as min_sots_alus;
+		FROM qryTsd ;
+		inner join qryKoormus on ALLTRIM(qryKoormus.isikukood) = ALLTRIM(qryTsd.isikukood);
+		WHERE (!Isnull(qryTsd.tululiik) And  qryTsd.tululiik <> '') ;
+		GROUP By qryKoormus.isikukood, qryKoormus.isik, tululiik, palk_maar, riik, sm_arv, tk_arv ;
+		ORDER BY qryKoormus.isikukood, tululiik;
+		INTO Cursor curTSD
+	Select curTSD
+
+
+	Scan
+* 1090	
+			IF curTsd.isikukood = '47705273714'
+				SET STEP ON 
+			ENDIF
+		
+		IF l_last_isikukood <> curTSD.isikukood
+			l_last_isikukood = curTSD.isikukood
+			l_used_1090 = .f.			
+		
+		ENDIF
+		
+		l_sm = curTSD.sm
+		Select Sum(qryTsd.sm) As sm, MAX(minsots)as minsots, MAX(minpalk) as minpalk, sum(qryTsd.summa) as summa, ;
+			sum((qryTsd.summa - qryTsd.puhkused - qryTsd.haigused) * qryTsd.sm_arv) as sm_alus_summa, MAX(lopp) as lopp From qryTsd ;
+			Where isikukood = curTSD.isikukood ;
+			And Isnull(qryTsd.period) Into Cursor tmpMaksud
+			
+		 	
+		l_1090 = 0
+		IF !ISNULL(curTSD.arv_min_sots) AND l_used_1090 = .f.
+			l_1090 = curTSD.min_sots_alus 
+			l_sm = curTSD.sm + curTSD.arv_min_sots
+			l_used_1090 = .t.			
+		ENDIF
+		
+		* Veerg 1040 täidetakse ainult koodidega 10, 11, 12 ja 13 väljamakse juuhul. Meie struktuuris kasutatakse enamasti 10 kood. Väljamaksetel koodidega 16, 17, 24, 33 jne veerg 1040 ei täideta. Näiteks Narva Kultuurimaja Rugodiv Turaeva Liudmila ik 47001043728 – kaks väljamakse koodi 10 ja 24. Mõlemal koodil on täidetud veerg 1040.
+		ln_tululiik = VAL(ALLTRIM(curTSD.tululiik)) 
+		
+		l_v1040 = IIF(curTSD.v1040 > 1, 1, ROUND(curTSD.v1040,2))
+		IF ln_tululiik > 13 
+*			curTSD.v1040 = 0
+			l_v1040 = 0
+		ENDIF
+		   
+
+	* 1200, 1210, 1220
+		Select Sum((curTSD.Summa) *  curTSD.sm_arv) As Summa, Sum(qryTsd.sm) As sm, Sum(qryTsd.tm) As tm, Sum(qryTsd.tki) As tki, ;
+			sum(qryTsd.tka) As tka, Sum(qryTsd.pm) As pm ;
+			FROM qryTsd Where qryTsd.liik = 1 And isikukood = curTSD.isikukood Into Cursor tmpMaksud
+
+		Insert Into tsd_report (isikukood, nimi, v1020, v1030, v1040, v1050, v1060, v1070, v1080, v1090, ;
+			v1100, v1110, v1120, v1130, v1140, v1150, v1160, ;
+			v1160_610, v1160_620, v1160_630,v1160_640,	;
+			v1170 ,v1200, v1210, v1220, v1230, v1240, v1250 ) ;
+			values (curTSD.isikukood, curTSD.isik, curTSD.tululiik, (curTSD.Summa) , l_v1040, curTSD.riik,;
+			(curTSD.Summa) * curTSD.sm_arv, 0,0, l_1090, l_sm, curTSD.pm,; 
+			(curTSD.Summa) * curTSD.tk_arv,;
+			curTSD.tki, curTSD.tka, '610', curTSD.tulubaas, ;
+			curTSD.tulubaas,0,0,0, ;
+			curTSD.tm,tmpMaksud.Summa, tmpMaksud.sm, tmpMaksud.pm, tmpMaksud.tki, tmpMaksud.tka, tmpMaksud.tm)
+
+	ENDSCAN
+	
+	* koormus mitte rohkem kui 1
+	UPDATE tsd_report SET v1040 = 1 WHERE v1040 > 1
+	 
+	* lisame isikud, kellel arvestused puuduvad, aga koormus on
+	SELECT * from qryKoormus WHERE isikukood NOT in ;
+		(select DISTINCT isikukood FROM tsd_report ;
+			WHERE (!EMPTY(v1040) OR ;
+				v1020 in ('10','17'))) ;
+			INTO CURSOR qryKoormusLisa
+
+	SELECT qryKoormusLisa
+	scan
+		Insert Into tsd_report (isikukood, nimi, v1020, v1040, v1090, v1100) ;
+			VALUES (qryKoormusLisa.isikukood,  qryKoormusLisa.isik,'10',qryKoormusLisa.koormus, qryKoormusLisa.min_sots_alus,qryKoormusLisa.arv_min_sots )
+	endscan		
+	
+Endif
+
+
+If Used('qryTSD')
+	Use In qryTsd
+Endif
+
+If Used('qryKoormus')
+	Use In qryKoormus
+Endif
+
+If Used('qryKoormusLisa')
+	Use In qryKoormusLisa
+Endif
+
+Select tsd_report
+*brow
+

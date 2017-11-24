@@ -1,0 +1,7 @@
+lParameter tnId, tnOpt
+set step on
+if !empty (tnId)
+	delete from arv where id = tnid
+	delete from arv1 where parentid = tnId
+	delete from arvtasu where arvid = tnId
+endif

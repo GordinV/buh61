@@ -1,0 +1,75 @@
+Parameter cWhere
+tnTunnus = fltrEelarve.taps
+tcAsutus = Ltrim(Rtrim(fltrEelarve.ASUTUS))+'%'
+tcKood1 = Ltrim(Rtrim(fltrEelarve.kood1))+'%'
+tcKood2 = Ltrim(Rtrim(fltrEelarve.kood2))+'%'
+tcKood3 = Ltrim(Rtrim(fltrEelarve.kood3))+'%'
+tcKood4 = Ltrim(Rtrim(fltrEelarve.kood4))+'%'
+tcKood5 = Ltrim(Rtrim(fltrEelarve.kood5))+'%'
+tnSumma1 = 	fltrEelarve.tsumma1
+tnSumma2 = 	Iif (Empty (fltrEelarve.tsumma2),999999999.99,fltrEelarve.tsumma2)
+tnAasta1 = 	fltrEelarve.taasta1
+tnAasta2 = 	Iif (Empty (fltrEelarve.taasta2),Year(Date()),fltrEelarve.taasta2)
+tcTunnus = Ltrim(Rtrim(fltrEelarve.tunnus))+'%'
+tnKuu1 = 	fltrEelarve.kuu1
+tnKuu2 = 	Iif (Empty (fltrEelarve.kuu2),month(Date()),fltrEelarve.kuu2)
+*ON ERROR
+tcValuuta = Ltrim(Rtrim(fltrEelarve.valuuta))+'%'
+IF !EMPTY(fltrAruanne.kond)
+	tnParent = 3
+ELSE
+	tnParent = 1
+ENDIF
+
+IF tnTunnus > 0 
+	tdKpv = fltrEelarve.kpv
+ELSE
+	tdKpv = DATE(1900,01,01)
+ENDIF
+ 
+With oDb
+	cparing = 'CUREELARVE'
+	.use (cparing, 'eelarve_tulud')
+	cparing = UPPER('cureelarvekulud')
+	.use (cparing, 'eelarve_kulud')
+	Select 'TULUD' AS liik, id, rekvid, aasta, kuu, summa, kood1, kood2, kood3, kood4, kood5,;
+		regkood,asutus, parregkood, parasutus, tunnus, valuuta,kuurs, muud from eelarve_tulud;
+		union all;
+		select 'KULUD' AS LIIK, id, rekvid, aasta, kuu, summa, kood1, kood2, kood3, kood4,kood5,;
+		regkood,asutus, parregkood, parasutus, tunnus, valuuta, kuurs, muud from eelarve_kulud;
+		into cursor eelarve_report
+	Select *, f_nimetus(kood4) as nimetus from eelarve_report order by liik, KOOD5, kood1, kood4;
+		into cursor eelarve_report1
+	Use in eelarve_report
+	Use in eelarve_tulud
+	Use in eelarve_kulud
+Endwith
+If used ('eelarve')
+	Use in eelarve
+Endif
+If used ('curEelarve_')
+	Use in curEelarve_
+Endif
+If used ('curEelarveKulud_')
+	Use in curEelarveKulud_
+ENDIF
+IF !EMPTY(fltrEelarve.tunnus)
+	SELECT comTunnusremote
+	LOCATE FOR ALLTRIM(kood) = ALLTRIM(fltrEelarve.tunnus)
+ENDIF
+
+Select eelarve_report1
+
+
+FUNCTION f_nimetus
+PARAMETERS tcKood
+lcAlias = ALIAS()
+SELECT comEelarveRemote
+LOCATE FOR kood =  tcKood
+IF FOUND()
+	lcNimetus = comEelarveRemote.nimetus
+ELSE
+	lcNimetus = SPACE(254)
+ENDIF
+SELECT (lcAlias)
+RETURN lcNimetus

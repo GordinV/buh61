@@ -1,0 +1,27 @@
+Parameter tKpv1, tKpv2, tIsik1, tIsik2
+oDb.opentransaction()
+If gVersia = 'VFP'
+	cString = "do sp_calc_palgajaak with "+alltrim(str(gRekv))+", '"+;
+		dtoc(tKpv1)+"', '"+dtoc(tKpv2)+"', "+str (tIsik1)+", " + str (tIsik2)
+	&cString
+	lError = 1
+Else
+	cString = "sp_calc_palgajaak @rekvId = "+alltrim(str(gRekv))+", @kpv1	= '"+;
+		dtoc(tKpv1,1)+"', @kpv2 = '"+dtoc(tKpv2,1)+"', @isik1 = "+str (tIsik1)+", @isik2 = " + str (tIsik2)
+	If vartype (gnHandleLong) <> 'N' or empty (gnHandleLong)
+		gnHandleLong = gnHandle
+	Endif
+
+	lError = sqlexec(gnHandleLong,cString)
+Endif
+
+If lError > 0
+	oDb.commit()
+	Messagebox ('Operatsioon on edukalt','Kontrol')
+	If vartype (oPalkJaak) = 'O'
+		oPalkJaak.requery()
+	Endif
+Else
+	oDb.rollback()
+	Messagebox ('Viga','Kontrol')
+Endif

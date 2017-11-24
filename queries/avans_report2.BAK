@@ -1,0 +1,24 @@
+Parameter cWhere
+
+*!*	tcIsik = '%'+rtrim(ltrim(fltrAvans.isik))+'%'
+*!*	tcNumber = ltrim(rtrim(fltrAvans.number))+'%'
+*!*	tdKpv1 = iif(empty(fltrAvans.kpv1),date(year(date()),1,1),fltrAvans.kpv1)
+*!*	tdKpv2 = iif(empty(fltrAvans.kpv2),date(year(date()),12,31),fltrAvans.kpv2)
+*!*	tnSumma1 = fltrAvans.Summa1
+*!*	tnSumma2 = iif(empty(fltrAvans.Summa2),999999999,fltrAvans.Summa2)
+*!*	tcNimetus = '%'+rtrim(ltrim(fltrAvans.nimetus))+'%'
+*!*	tcKonto = ltrim(rtrim(fltrAvans.konto))+'%'
+*!*	tcTunnus = ltrim(rtrim(fltrAvans.tunnus))+'%'
+
+*!*	tcAmetnik = '%'+LTRIM(RTRIM(fltrAvans.ametnik))+'%'
+
+
+*!*	cQuery = 'curAvans'
+
+*!*	oDb.use(cQuery,'avans_report2')
+&&use (cQuery) in 0 alias arve_report2
+SELECT * from curAvans INTO CURSOR avans_report2
+select avans_report2
+*!*	IF RECCOUNT() < 1
+*!*		APPEND blank
+*!*	endif

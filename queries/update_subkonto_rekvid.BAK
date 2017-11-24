@@ -1,0 +1,50 @@
+set step on
+grekv = 1
+cString = ' update subkonto set rekvid = '+str (grekv) 
+if dbused ('buhdata5')
+	if used ('subkonto')
+		use in subkonto
+	endif
+	wait window [Geting table structure ..] nowait
+	use subkonto in 0 excl
+	select subkonto
+	lnFields = aFields (aObjekt)
+	lResult = aScan (aObjekt,'REKVID')
+	if lresult = 0
+		wait window [Update table structure ..] nowait
+		alter table subkonto add column rekvid i not null default 0	
+		&cString
+	endif
+	use in subkonto
+	release aObjekt
+else
+	wait window [Connection to sql server ..] nowait
+	gnHandle = sqlconnect ('narva','jelena','208')
+	if gnhandle < 1
+		return .f.
+	endif
+	wait window [Geting table structure ..] nowait
+	lError=sqlexec (gnHandle,'Select top 1 * from subkonto order by id desc','subkonto')
+	if lError < 1
+			set step on
+			messagebox ('Viga')
+			=sqldisconnect(gnhandle)
+			return .f.
+	endif
+	select subkonto
+	lnFields = aFields (aObjekt)
+	lResult = aScan (aObjekt,'REKVID')
+	if lresult = 0
+		wait window [Update table structure ..] nowait
+		lError =sqlexec (gnhandle,'alter table subkonto add rekvid int not null default 0')	
+		if lError < 0
+			messagebox ('Viga')
+		endif
+	endif
+	use in subkonto
+	release aObjekt
+	wait window [Disconnection ..] nowait
+	lError = sqlexec (gnHandle,cString)
+	
+	=sqldisconnect(gnhandle)
+endif

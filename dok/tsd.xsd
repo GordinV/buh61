@@ -1,0 +1,3634 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="tsd_vorm" type="tsdVorm">
+		<xs:annotation>
+			<xs:documentation>TSD vormi põhitabel, sisaldab üldandmeid isiku TSD vormi kohta</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tsdVorm">
+		<xs:all>
+			<xs:element name="regKood">
+				<xs:annotation>
+					<xs:documentation>Maksukohustuslase registri- või isikukood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c108_Aasta">
+				<xs:annotation>
+					<xs:documentation>Deklaratsiooni maksustamisperioodi aasta</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:long">
+						<xs:totalDigits value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c109_Kuu">
+				<xs:annotation>
+					<xs:documentation>Deklaratsiooni maksustamisperioodi kuu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:long">
+						<xs:totalDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="laadimisViis" type="laadimisViisType">
+				<xs:annotation>
+					<xs:documentation>Laadimise viis: L - uue ettevalmistamisel deklaratsiooni lisamine. Kui samas maksustamisperioodis juba eksisteerib ettevalmistamisel deklaratsioon, siis see tühistatakse. P - Olemasoleva ettevalmistamisel ja sama maksustamisperioodiga deklaratsiooni parandamine XML-s sisalduvate lisade ulatuses. Olemasoleval ettevalmistamisel deklaril kirjutatakse üle ainult need lisad, mis failiga esitatakse. Ülekirjutamine kehtib kõikide lisa kirjete kohta, mitte üksikute ridade/isikute kohta. Need lisad, mis failis puuduvad, jäävad deklarile alles nii nagu need olid (st kui XML-s on lisad 4, 5 ja 6, siis need kirjutatakse üle, kuid lisad 1,2,3, 7, inf1 jäävad alles). Kui ei leidu sellist ettevalmistamisel deklaratsiooni, siis see luuakse.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="vorm" type="vormType">
+				<xs:annotation>
+					<xs:documentation>Deklaratsiooni vorm, kas TSD, ESD, XF11, XF12 või XF13</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element minOccurs="0" name="c110_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaks (kood 1250 - kood 1550 + kood 2250 - kood 2550 + kood 2800)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c114_TmEj">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Erijuhtude tulumaks (kood 3300 + kood 4170 + kood 5160 - kood 5170 + kood 5190 + kood 6160 - kood 6170 + kood 7200)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c115_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaks (kood 1210 - kood 1510 + kood 2210 - kood 2510 + kood 4180)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c116_Tk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Töötuskindlustusmakse (kood 1230 + kood 1240 - kood 1530 - kood 1540 + kood 2220 + kood 2230 - kood 2520 - kood 2530)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c117_Kp">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kohustusliku kogumispensioni makse (kood 1220 - kood 1520)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c118_KohustKokku">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksukohustus kokku (kood 110 + kood 114 + kood 115 + kood 116 + kood 117) suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c119_TagastKokku">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kuulub tagastamisele (kood 110 + kod 114 + kood 115 + kood 116 + kood 117) väiksem kui 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c121_ParPohjusKood">
+				<xs:annotation>
+					<xs:documentation>Parandusdeklaratsiooni loomise põhjuse kood, kui tegemist on parandusdeklaratsiooniga ( VMA - Vead füüsilisele isikule tehtud väljamaksete ja/või maksude ja maksete arvestamisel, VET - Väljamakset tegelikult ei toimunud, VDV - Väljamakse deklareeritud valele isikule, VVK - Sisestatud vale väljamakse kood, TTM - Tagasiulatuvalt töövõimetuspensioni määramine, MTR - Maksukohustus teises riigis, DAM - Deklareeritud andmete muutmine, DVK - Deklareeritud andmed vales kuus, VPV - Vead tulenevad raamatupidamisprogrammide vahetusest, AML - Maksukontrolli tulemusel varem deklareeritud andmete muutmine või andmete lisamine, MUU - Muu)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="10"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="parPohjusTekst">
+				<xs:annotation>
+					<xs:documentation>Kui TSD vormi parandamise põhjuseks on valitud Muu, siis siin on põhjuse kirjeldus</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1000"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_Inf1_0" type="tsdInf10"/>
+			<xs:element minOccurs="0" name="tsd_L1_0" type="tsdL10"/>
+			<xs:element minOccurs="0" name="tsd_L2_0" type="tsdL20"/>
+			<xs:element minOccurs="0" name="tsd_L3_0" type="tsdL30"/>
+			<xs:element minOccurs="0" name="tsd_L4_0" type="tsdL40"/>
+			<xs:element minOccurs="0" name="tsd_L5_0" type="tsdL50"/>
+			<xs:element minOccurs="0" name="tsd_L6_0" type="tsdL60"/>
+			<xs:element minOccurs="0" name="tsd_L7_0" type="tsdL70"/>
+			<xs:element minOccurs="0" name="tsd_Par_Pohj_LisaList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_Par_Pohj_Lisa" type="tsdParPohjLisa"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdInf10">
+		<xs:all>
+			<xs:element minOccurs="0" name="c13080_Osatahtsus">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksustatud omakapitali väljamakse osatähtsus kogu väljamakstud omakapitalis</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="11"/>
+						<xs:fractionDigits value="7"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_Inf1_1List">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_Inf1_1" type="tsdInf11"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdInf11">
+		<xs:all>
+			<xs:element minOccurs="0" name="c13000_EstRegkood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja isiku- või registrikood Eestis</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c13010_ValisRegkood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja mitteresidendi isiku- või registrikood elu- või asukohariigis</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c13020_Nimi">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja ees- ja perekonnanimi või nimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c13030_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja mitteresidendi elu- või asukohariigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c13040_ValisAadress">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja mitteresidendi elu- või asukohariigi aadress</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c13050_VmValiKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse liigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c13060_VmSumma">
+				<xs:annotation>
+					<xs:documentation>Väljamakse summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c13070_VmMaksustSumma">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: sh maksustatud omakapitali väljamaksed</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL10">
+		<xs:all>
+			<xs:element minOccurs="0" name="aIsikList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L1_A_Isik" type="tsdL1AIsik"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="bIsikList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L1_B_Isik" type="tsdL1BIsik"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1200_Smvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaksuga maksustatava väljamakse summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1210_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaksu summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1220_Kp">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud kohustusliku kogumispensioni makse summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1230_Tk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud töötuskindlustusmakse summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1240_Ttk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tööandja töötuskindlustusmakse summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1250_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaksu summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1500_Smvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatud või tasaarveldatud sotsiaalmaksuga maksustatud väljamakse summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1510_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaks tagastatud või tasaarveldatud väljamakselt, summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1520_Kp">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud kohustusliku kogumispensionimakse tagastatud või tasaarveldatud väljamakselt, summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1530_Tk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud töötuskindlustusmakse tagastatud või tasaarveldatud väljamakselt, summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1540_Ttk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tööandja töötuskindlustusmakse tagastatud või tasaarveldatud väljamakselt, summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1550_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaks tagastatud või tasaarveldatud väljamakselt, summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL1AIsik">
+		<xs:all>
+			<xs:element name="c1000_Kood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja isikukood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1010_Nimi">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja ees- ja perekonnanimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="vmList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L1_A_Vm" type="tsdL1AVm"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL1AVm">
+		<xs:all>
+			<xs:element name="c1020_ValiKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse liigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c1030_Summa">
+				<xs:annotation>
+					<xs:documentation>Väljamakse summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1040_OtMaar">
+				<xs:annotation>
+					<xs:documentation>Tööaja määr, tohib olla vahemikus 0-1</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1050_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Millisest riigist on väljastatud A1/ E101 tõend</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1060_Smvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaksuga maksustatav väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1070_TvpVah">
+				<xs:annotation>
+					<xs:documentation>Sotsiaalmaksuga maksustatavalt väljamakselt maha arvatud töövõimetuspensionäri tasu osa, millelt maksab sotsiaalmaksu riik</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1080_KuumVah">
+				<xs:annotation>
+					<xs:documentation>Sotsiaalmaksuga maksustatavalt väljamakselt maha arvatud tasu osa, millelt on sotsiaalmaks deklareeritud eelmistel kuudel sotsiaalmaksu kuumääralt</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1090_KuumSuur">
+				<xs:annotation>
+					<xs:documentation>Sotsiaalmaksuga maksustatava summa suurendus seoses sotsiaalmaksu miinimum kohustusega</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1100_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaks. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1110_Kp">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud kohustusliku kogumispensioni makse. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1120_Tkvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Töötuskindlustusmaksega maksustatav väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1130_Tk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud töötuskindlustusmakse. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1140_Ttk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tööandja töötuskindlustusmakse. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1170_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaks. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="mvtList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L1_A_Mvt" type="tsdL1AMvt"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL1AMvt">
+		<xs:all>
+			<xs:element name="c1150_TuliKood">
+				<xs:annotation>
+					<xs:documentation>Tulumaksu kinnipidamisel maha arvatud maksuvaba tulu liik</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="10"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c1160_Summa">
+				<xs:annotation>
+					<xs:documentation>Tulumaksu kinnipidamisel maha arvatud maksuvaba tulu summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL1BIsik">
+		<xs:all>
+			<xs:element name="c1300_Kood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tagastaja isikukood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1310_Nimi">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tagastaja ees- ja perekonnanimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="vmList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L1_B_Vm" type="tsdL1BVm"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL1BVm">
+		<xs:all>
+			<xs:element name="c1320_ValiKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse liigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c1330_Summa">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud väljamakse summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1340_Aasta">
+				<xs:annotation>
+					<xs:documentation>Tagastatud ja tasaarveldatud väljamakse tegemise aasta</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:long">
+						<xs:totalDigits value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1350_Kuu">
+				<xs:annotation>
+					<xs:documentation>Tagastatud ja tasaarveldatud väljamakse tegemise kuu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:long">
+						<xs:totalDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1360_Pohjus">
+				<xs:annotation>
+					<xs:documentation>Tagastamise või tasaarveldamise põhjus: EV - Ekslik väljamakse, VR - Viga raamatupidamises, VI - Väljamakse valele isikule ja MUU - Muu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="30"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1370_Smvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatud või tasaarveldatud sotsiaalmaksuga maksustatud väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1380_SmvmVah">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud väljamakse maha arvamised väljamakse kuul </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1390_SmvmSuur">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud väljamakse suurendus väljamakse kuul </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1400_SmvmSk">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud sotsiaalmaksuga maksustatava summa vähendus seoses sotsiaalmaksu miinimumkohustuse säilimisega</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1410_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaks tagastatud või tasaarveldatud väljamakselt. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1420_Kp">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud kohustusliku kogumispensionimakse tagastatud või tasaarveldatud väljamakselt. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1430_Tkvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatud või tasaarveldatud töötuskindlustusmaksega maksustatud väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1440_Tk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud töötuskindlustusmakse tagastatud või tasaarveldatud väljamakselt. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1450_Ttk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tööandja töötuskindlustusmakse tagastatud või tasaarveldatud väljamakselt. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c1480_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaks tagastatud või tasaarveldatud väljamakselt. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="mvtList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L1_B_Mvt" type="tsdL1BMvt"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="pohjusSelgitus">
+				<xs:annotation>
+					<xs:documentation>Tagastamise põhjuse selgitus</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="250"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL1BMvt">
+		<xs:all>
+			<xs:element name="c1460_TuliKood">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud väljamakselt tulumaksu kinnipidamisel maha arvatud maksuvaba tulu liik</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c1470_Summa">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud väljamakselt tulumaksu kinnipidamisel maha arvatud maksuvaba tulu summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL20">
+		<xs:all>
+			<xs:element minOccurs="0" name="aIsikList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L2_A_Isik" type="tsdL2AIsik"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="bIsikList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L2_B_Isik" type="tsdL2BIsik"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2200_Smvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaksuga maksustatava väljamakse summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2210_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaksu summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2220_Tk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud töötuskindlustusmakse summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2230_Ttk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tööandja töötuskindlustusmakse summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2240_Tmvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tulumaksuga maksustatava väljamakse summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2250_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaksu summa kogu 1a peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2500_Smvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatud või tasaarveldatud sotsiaalmaksuga maksustatud väljamakse summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2510_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaks tagastatud või tasaarveldatud väljamakselt, summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2520_Tk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud töötuskindlustusmakse tagastatud või tasaarveldatud väljamakselt, summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2530_Ttk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tööandja töötuskindlustusmakse tagastatud või tasaarveldatud väljamakselt, summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2540_Tmvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatud või tasaarveldatud tulumaksuga maksustatud väljamakse summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2550_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaks tagastatud või tasaarveldatud väljamakselt, summa kogu 1b peale</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2800_InvTm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Lepingulistele investeerimisfondidele tehtud väljamaksete tulumaksu summa kogu 2 tabeli peale.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="invFondList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L2_2_Inv_Fond" type="tsdL22InvFond"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL2AIsik">
+		<xs:all>
+			<xs:element name="c2000_Kood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja isiku- või registrikood Eestis</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2010_Nimi">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja nimi või ees- ja perekonnanimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="vmList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L2_A_Vm" type="tsdL2AVm"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL2AVm">
+		<xs:all>
+			<xs:element minOccurs="0" name="c2020_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saaja residendiriik</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c2030_ValiKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse liigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c2040_Summa">
+				<xs:annotation>
+					<xs:documentation>Väljamakse summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2050_OtMaar">
+				<xs:annotation>
+					<xs:documentation>Osalise tööaja määr</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2060_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Millisest riigist on väljastatud A1/E101</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2070_Smvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaksuga maksustatav väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2080_TvpVah">
+				<xs:annotation>
+					<xs:documentation>Sotsiaalmaksuga maksustatavalt väljamakselt maha arvatud töövõimetuspensionäri tasu osa, millelt maksab sotsiaalmaksu riik</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="8"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2090_KuumVah">
+				<xs:annotation>
+					<xs:documentation>Sotsiaalmaksuga maksustatavalt väljamakselt maha arvatud tasu osa, millelt on sotsiaalmaks deklareeritud eelmistel kuudel sotsiaalmaksu kuumääralt</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2100_KuumSuur">
+				<xs:annotation>
+					<xs:documentation>Sotsiaalmaksuga maksustatava summa suurendus seoses sotsiaalmaksu miinimum kohustusega</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2110_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaks. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2120_Tkvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Töötuskindlustusmaksega maksustatav väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2130_Tk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud töötuskindlustusmakse. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2140_Ttk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tööandja töötuskindlustusmakse. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2150_Tmvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tulumaksuga maksustatav väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2160_TmMaar">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaksu määr</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="5"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2170_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaks. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL2BIsik">
+		<xs:all>
+			<xs:element name="c2300_Kood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tagastaja isiku- või registrikood Eestis</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2310_Nimi">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tagastaja nimi või ees- ja perekonnanimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="vmList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L2_B_Vm" type="tsdL2BVm"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL2BVm">
+		<xs:all>
+			<xs:element name="c2320_ValiKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse liigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c2330_Summa">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud väljamakse summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2340_Aasta">
+				<xs:annotation>
+					<xs:documentation>Tagastatud ja tasaarveldatud väljamakse tegemise aasta</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:long">
+						<xs:totalDigits value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2350_Kuu">
+				<xs:annotation>
+					<xs:documentation>Tagastatud ja tasaarveldatud väljamakse tegemise kuu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:long">
+						<xs:totalDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2360_Pohjus">
+				<xs:annotation>
+					<xs:documentation>Tagastamise või tasaarveldamise põhjus: EV - Ekslik väljamakse, VR - Viga raamatupidamises, VI - Väljamakse valele isikule ja MUU - Muu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2370_Smvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatud või tasaarveldatud sotsiaalmaksuga maksustatud väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2380_SmvmVah">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud väljamakse maha arvamised väljamakse kuul </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2390_SmvmSuur">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud väljamakse suurendus väljamakse kuul </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2400_SmvmSk">
+				<xs:annotation>
+					<xs:documentation>Tagastatud või tasaarveldatud sotsiaalmaksuga maksustatava summa vähendus seoses sotsiaalmaksu miinimumkohustuse säilimisega</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2410_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaks tagastatud või tasaarveldatud väljamakselt. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2420_Tkvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatud või tasaarveldatud töötuskindlustusmaksega maksustatud väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2430_Tk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud töötuskindlustusmakse tagastatud või tasaarveldatud väljamakselt. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2440_Ttk">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tööandja töötuskindlustusmakse tagastatud või tasaarveldatud väljamakselt. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2450_Tmvm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatud või tasaarveldatud tulumaksuga maksustatud väljamakse</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2460_TmMaar">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaksu määr</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="5"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2470_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaks tagastatud või tasaarveldatud väljamakselt. Arvutatud summast lubatud teatud väike hälve käsitsi sisestamise puhul. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="pohjusSelgitus">
+				<xs:annotation>
+					<xs:documentation>Tagastamise või tasaarveldamise põhjuse pikem kirjeldus</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="250"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL22InvFond">
+		<xs:all>
+			<xs:element name="c2700_Kood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saanud lepingulise investeerimisfondi registrikood Eestis</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2710_Nimi">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saanud lepingulise investeerimisfondi nimetus</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2720_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saanud lepingulise investeerimisfondi residendiriigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2730_FvKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saanud lepingulise investeerimisfondi fondivalitseja registrikood Eestis</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2740_FvNimi">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saanud lepingulise investeerimisfondi fondivalitseja nimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2750_FvRiikKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse saanud lepingulise investeerimisfondi fondivalitseja residendiriigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c2780_Osalus">
+				<xs:annotation>
+					<xs:documentation>Saaja osalus intressi maksnud fondis (%)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="5"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="vmList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L2_2_Vm" type="tsdL22Vm"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL22Vm">
+		<xs:all>
+			<xs:element name="c2760_ValiKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse liigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c2770_Summa">
+				<xs:annotation>
+					<xs:documentation>Väljamakse summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c2790_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kinnipeetud tulumaks. Arvutatud summast lubatud teatud väike hälve käsitsi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL30">
+		<xs:all>
+			<xs:element minOccurs="0" name="c3000_VKasum">
+				<xs:annotation>
+					<xs:documentation>Püsivast tegevuskohast väljaviidud kasum</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3010_Mv">
+				<xs:annotation>
+					<xs:documentation>sellest maksulepingu alusel maksust vabastatud</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3020_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Riik, kellega sõlmitud maksulepingut kohaldati (Maksu- ja Tolliameti koostatud loetelu alusel)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3200_VKokku">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksuvaba tulu summa: V korral veerud koodiga 3170 kokku </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3210_MKokku">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Mahaarvatava tulumaksu summa: M korral veerud koodil 3160 kokku</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3220_VAlgjaak">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Eelmistest maksustamisperioodidest edasikantud vaba (kasutamata) maksuvaba tulu summa: eelmise esitatud vormi TSD lisa 3 kood 3310</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3230_VabaV">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kokku maksuvaba tulu V: (kood 3200 + kood 3220 – kood 3405) suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3240_MAlgjaak">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Eelmistest maksustamisperioodidest edasikantud vaba (kasutamata) mahaarvatav tulumaks: eelmise esitatud vormi TSD lisa 3 kood 3320 </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3250_VabaM">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Kokku vaba (kasutamata) mahaarvatav tulumaks M: (kood 3210 + kood 3240 – kood 3505) suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3260_MvKasumV">
+				<xs:annotation>
+					<xs:documentation>Püsivast tegevuskohast väljaviidud maksuvaba kasum: maksimaalselt V koodil 3230 summa, kuid mitte rohkem kui kood 3000 – kood 3010</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3270_MKasum">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Püsivast tegevuskohast väljaviidud maksustatav kasum: (kood 3000 – kood 3010 – kood 3260) suurem võrdne 0 </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3280_Tm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tulumaks: kood 3270 x maksumäär</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3290_MaTmM">
+				<xs:annotation>
+					<xs:documentation>Maksustamisperioodil Eesti tulumaksukohustust vähendav tulumaks: maksimaalselt M koodil 3250, kuid mitte rohkem kui kood 3280</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3300_TmEj">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tasutav tulumaks (kantakse vormi TSD koodile 114 - erijuhtude tulumaks): kood 3280 – kood 3290</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3310_VJaak">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Järgmistele maksustamisperioodidele (vormi TSD lisa 3 kood 3220) edasikantav maksuvaba tulu kokku: kood 3230 – kood 3260 </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3320_MJaak">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Järgmistele maksustamisperioodidele (vormi TSD lisa 3 kood 3240) edasikantav mahaarvatav tulumaks: kood 3250 – kood 3290 </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3405_YVKokku">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Erinevatele isikutele üleantud jäägid koodiga 3404 kokku (maksimaalselt: kood 3200 + kood 3220)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3505_YMKokku">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Erinevatele isikutele üleantud jäägid koodiga 3504 kokku (maksimaalselt: kood 3210+ kood 3240)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3605_YVmKokku">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Erinevatele isikutele üleantud jäägid koodiga 3604 kokku</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L3_2_TomavaList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L3_2_Tomava" type="tsdL32Tomava"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L3_4_AList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L3_4_A" type="tsdL34A"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L3_4_BList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L3_4_B" type="tsdL34B"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L3_4_CList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L3_4_C" type="tsdL34C"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL32Tomava">
+		<xs:all>
+			<xs:element minOccurs="0" name="c3030_KoodE">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tegija registrikood Eestis</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3040_KoodR">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tegija registrikood residendiriigis</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3050_Nimi">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tegija nimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3060_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Residendiriigi kood MTA loetelu alusel</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3070_Kpv" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>Tulu saamise kuupäev. Tulu, mille topeltmaksustamist välditakse.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="c3080_TuliKood">
+				<xs:annotation>
+					<xs:documentation>Tulu liigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3090_DSo">
+				<xs:annotation>
+					<xs:documentation>Dividendi saaja osalus väljamaksjas (%)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="5"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3100_OvSo">
+				<xs:annotation>
+					<xs:documentation>Omakapitali väljamakse saaja osalus väljamaksjas (%)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="5"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3110_VM">
+				<xs:annotation>
+					<xs:documentation>Kas vabastusmeetod (V) või tulumaksu mahaarvamine (M)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3120_Tulu">
+				<xs:annotation>
+					<xs:documentation>Saadud tulu brutosumma</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3130_KpTm">
+				<xs:annotation>
+					<xs:documentation>sealhulgas kinni peetud või välisriigis tasutud tulumaks (mille tasumine on välisriigis kohustuslik)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3140_KinnitusTun">
+				<xs:annotation>
+					<xs:documentation>Kinnitus, et välisriigis dividendi maksmise aluseks olev kasumiosa on tulumaksuga maksustatud</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3150_TmMm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tulumaksu maksimaalne mahaarvatav summa (kood 3120 * maksumäär)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3160_Vs">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Väikseim summadest (kood 3130 või 3150)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c3170_Nt">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tulumaksuga vähendatud tulu summa (kood 3120 - kood 3160)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL34A">
+		<xs:all>
+			<xs:element name="c3401_Kood">
+				<xs:annotation>
+					<xs:documentation>Registrikood, kellele antakse äriühingute ühinemisel või jagunemisel topeltmaksustamise vältimiseks maksuvaba tulu jääk</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3402_Nimi">
+				<xs:annotation>
+					<xs:documentation>Nimi, kellele antakse äriühingute ühinemisel või jagunemisel topeltmaksustamise vältimiseks maksuvaba tulu jääk</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3403_Kpv" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>Kuupäev, millal antakse üle äriühingute ühinemisel või jagunemisel topeltmaksustamise vältimiseks maksuvaba tulu jääk</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="c3404_YV">
+				<xs:annotation>
+					<xs:documentation>Üleantud maksuvaba tulu jääk V</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL34B">
+		<xs:all>
+			<xs:element name="c3501_Kood">
+				<xs:annotation>
+					<xs:documentation>Registrikood, kellele antakse äriühingute ühinemisel või jagunemisel topeltmaksustamise vältimiseks mahaarvatav tulumaksu summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3502_Nimi">
+				<xs:annotation>
+					<xs:documentation>Nimi, kellele antakse äriühingute ühinemisel või jagunemisel topeltmaksustamise vältimiseks mahaarvatav tulumaksu summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3503_Kpv" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>Kuupäev, millal antakse üle äriühingute ühinemisel või jagunemisel topeltmaksustamise vältimiseks mahaarvatava tulumaksu summa</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="c3504_YM">
+				<xs:annotation>
+					<xs:documentation>Üleantud mahaarvatav tulumaks M</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL34C">
+		<xs:all>
+			<xs:element name="c3601_Kood">
+				<xs:annotation>
+					<xs:documentation>Registrikood, kellele antakse üle Eestisse toodud vara maksumus</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="20"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3602_Nimi">
+				<xs:annotation>
+					<xs:documentation>Nimi, kellele antakse üle Eestisse toodud vara maksumus</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c3603_Kpv" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>Kuupäev, millal antakse üle Eestisse toodud vara maksumus</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="c3604_YVm">
+				<xs:annotation>
+					<xs:documentation>Üleantud vara maksumus VM</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL40">
+		<xs:all>
+			<xs:element minOccurs="0" name="c4000_ElKulu">
+				<xs:annotation>
+					<xs:documentation>Eluasemekulude täielik või osaline katmine</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4010_KiKulu">
+				<xs:annotation>
+					<xs:documentation>Kindlustusmaksete tasumine, kui selline kohustus ei ole ette nähtud seadusega</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4020_LaKulu">
+				<xs:annotation>
+					<xs:documentation>Lähetuskulude hüvitamine ja välislähetuse päevaraha maksmine üle piirmäära</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4030_Is">
+				<xs:annotation>
+					<xs:documentation>Isikliku sõiduauto töösõitudeks kasutamise eest hüvitise maksmine üle piirmäära</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4040_Ts">
+				<xs:annotation>
+					<xs:documentation>Tööandja sõiduki tasuta või soodushinnaga kasutada andmine töö-, ameti- või teenistusülesannetega või tööandja ettevõtlusega mitteseotud tegevuseks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4050_Mv">
+				<xs:annotation>
+					<xs:documentation>Tööandja muu vara tasuta või soodushinnaga kasutada andmine töö-, ameti- või teenistusülesannetega või tööandaja ettevõtlusega mitteseotud tegevuseks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4060_SoLaen">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Turutingimustest madalama intressmääraga antud laen (4061 - 4062 suurem kui 0)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4061_TuruIntr">
+				<xs:annotation>
+					<xs:documentation>Laenuintress, turutingimuste alusel arvutatud intressi summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4062_LaenIntr">
+				<xs:annotation>
+					<xs:documentation>Laenulepingus ettenähtud intressmäära järgi arvutatud intressi summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4070_AllaTh">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Asja, väärtpaberi, varalise õiguse või teenuse tasuta üleandmine, müük või vahetus turuhinnast madalama hinnaga: (4071 - 4072 suurem kui 0)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4071_Th">
+				<xs:annotation>
+					<xs:documentation>Turuhind</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4072_Rh">
+				<xs:annotation>
+					<xs:documentation>Rakendatud hind</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4080_OoTulu">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tööandja antud osalusoptsiooni võõrandamisel või osalusoptsiooni alusvaraks oleva osaluse omandamisel saadud tulu. Osalusoptsiooni võõrandamisel: 4080 - 4083 suurem kui 0 või osalusoptsiooni realiseerimisel: 4081 - 4082 - 4083 suurem kui 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4081_OoTh">
+				<xs:annotation>
+					<xs:documentation>Osalusoptsiooni turuhind</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4082_ORh">
+				<xs:annotation>
+					<xs:documentation>Osaluse realiseerimishind</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4083_Op">
+				<xs:annotation>
+					<xs:documentation>Optsioonipreemia</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4090_YleTh">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Asja, väärtpaberi, varalise õiguse või teenuse ostmine turuhinnast kõrgema hinnaga: 4091-4092 suurem kui 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4091_Rh">
+				<xs:annotation>
+					<xs:documentation>Rakendatud hind</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4092_Th">
+				<xs:annotation>
+					<xs:documentation>Turuhind</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4100_LoobuRn">
+				<xs:annotation>
+					<xs:documentation>Loobumine rahalise nõude sissenõudmisest</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4110_KoKulu">
+				<xs:annotation>
+					<xs:documentation>Taseme- ja vabaharidusliku koolituse kulude katmine</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4120_TeKulu">
+				<xs:annotation>
+					<xs:documentation>Kulutused töötaja tervise edendamiseks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4130_MEs">
+				<xs:annotation>
+					<xs:documentation>Muud erisoodustused</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4140_EsSumma">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Erisoodustuste summa kokku: koodide 4000 kuni 4130 summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4150_EiTm">
+				<xs:annotation>
+					<xs:documentation>Nendest (erisoodustused) ei maksustata Eestis tulumaksuga</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4160_EiSm">
+				<xs:annotation>
+					<xs:documentation>Nendest (erisoodustused) ei maksutata Eestis sotsiaalmaksuga </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4170_TmEj">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tulumaks: (4140-4150) x tulumaksumäär suurem võrdne 0 Tulumaks kantakse vormi TSD koodile 114</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4180_Sm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaks: 4181 x sotsiaalmaksumäär suurem võrdne 0 Sotsiaalmaks kantakse vormi TSD koodile 115</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c4181_SmEs">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Sotsiaalmaksuga maksustatavad erisoodustused: 4140 - 4160 - 4170 - (4160 x tulumaksumäär)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL50">
+		<xs:all>
+			<xs:element minOccurs="0" name="c5000_Ki">
+				<xs:annotation>
+					<xs:documentation>Tehtud kingitused ja annetused (v.a. koodiga 5010 nimetatud isikutele tehtud kingitused ja annetused)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5010_IKiKuu">
+				<xs:annotation>
+					<xs:documentation>TuMS § 11 lõikes 1 nimetatud nimekirja kantud isikule või § 11 lõikes 10 nimetatud muus Euroopa Majanduspiirkonna lepinguriigis asutatud ühingule kalendrikuul tehtud kingitused ja annetused (TuMS § 49 lõiked 2 ja 3)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5020_IKiAasta">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: TuMS § 11 lõikes 1 nimetatud nimekirja kantud isikule või § 11 lõikes 10 nimetatud muus Euroopa Majanduspiirkonna lepinguriigis asutatud ühingule kalendriaastal tehtud kingitused ja annetused (TuMS § 49 lõiked 2 ja 3)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5030_IIsmv">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Isikustatud sotsiaalmaksuga maksustatavad Väljamaksed vormi TSD [lisalt 1 (1200 - 1500) + lisalt 2 (2200 - 2500) suurem võrdne 0 kalendriaasta kasvavalt summeeritult] x 3%</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5040_IKasSumma">
+				<xs:annotation>
+					<xs:documentation>Maksumaksja 1. jaanuariks lõppenud viimase aasta kasumi summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5050_10Prots">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: 10% KOODIST 5040</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5060_IMs">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksustatav summa: kas (5020- 5030) suurem võrdne 0 või (5020 - 5040) suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5070_ITm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tulumaks: 5060 x maksumäär</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5080_ITasTm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Korrigeeritud tasutud tulumaks: (5070 - sama kalendriaasta eelmise vormi TSD lisa 5 koodiga 5070 arvutatud väärtus) suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5090_ITagTm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Korrigeeritud tagastatav tulumaks: (sama kalendriaasta eelmise vormi TSD lisa 5 koodiga 5070 arvutatud väärtus - 5070) suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5100_KyKuluKuu">
+				<xs:annotation>
+					<xs:documentation>Külaliste või koostööpartnerite toitlustamise, transpordi, majutamise või meelelahutusega seotud kalendrikuu kulud (TuMS § 49 lõiked 4, 5)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5110_KyKuluAasta">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Külaliste või koostööpartnerite toitlustamise, transpordi, majutamise või meelelahutusega seotud kalendriaasta kulud (TuMS § 49 lõiked 4, 5)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5120_KyIsmv">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Isikustatud sotsiaalmaksuga maksustatavad väljamaksed: vormi TSD [lisalt 1 (1200 - 1500) + lisalt 2 (2200 - 2500) suurem võrdne 0 kalendriaasta kasvavalt summeeritult] x 2% + [32 EUR x (kalendrikuu number)]</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5130_KyTm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tulumaks: (5110 - 5120) suurem võrdne 0 x maksumäär tulenevalt TuMS § 4 lõike 1.1 punktist 2</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5140_KyTasTm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Korrigeeritud tasutav tulumaks: (5130 - sama kalendriaasta eelmise vormi TSD lisa 5 koodiga arvutatav väärtus) suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5150_KyTagTm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Korrigeeritud tagastatav tulumaks: (sama kalendriaasta eelmise vormi TSD lisa 5 koodiga 5130 arvutatud väärtus - 5130) suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5160_TasTmEj">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tasutav tulumaks:[(5000 x maksumäär tulenevalt TuMS § 4 lõike 1.1 punktist 2) + 5080 + 5140 - 5090 - 5150] suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5170_TagTmEj">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatav tulumaks:[5090 + 5150 - 5080 - 5140 - (5000 x maksumäär tulenevalt TuMS § 4 lõike 1.1 punktist 2)] suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5180_MaKi">
+				<xs:annotation>
+					<xs:documentation>Maksustatavad kingitused ja annetused (täidab TuMS § 11 lõikes 1 nimetatud nimekirja kantud isik)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c5190_TmEj">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: II osalt vormi TSD koodile 114 kantav tasutav tulumaks:5180 x maksumäär tulenevalt TuMS §4 lõike 1.1 punktist 2</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL60">
+		<xs:all>
+			<xs:element minOccurs="0" name="c6000_TVahe">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Seotud isikute vaheliste tehingute väärtuse vahe (koodi 6230 väärtused summeeritult)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6010_Trsr">
+				<xs:annotation>
+					<xs:documentation>Seaduse alusel määratud trahvid ja sunniraha</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6011_ETrsr">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: sealhulgas Maksu- ja Tolliametile tasutud trahvid ja sunniraha (täidab Maksu- ja Tolliamet)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6020_Intr">
+				<xs:annotation>
+					<xs:documentation>Maksukorralduse seaduse alusel tasutud intressid</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6021_EIntr">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: sealhulgas Maksu- ja Tolliametile tasutud intressid (täidab Maksu- ja Tolliamet)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6030_Kvara">
+				<xs:annotation>
+					<xs:documentation>Maksumaksjalt erikonfiskeeritud vara maksumus</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6040_Kkt">
+				<xs:annotation>
+					<xs:documentation>Kõrgendatud määra järgi tasutud keskkonnatasu või tekitatud kahju hüvitamise tasu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6041_EKkt">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: sealhulgas Maksu- ja Tolliametile tasutud tasud (täidab Maksu- ja Tolliamet)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6050_Pistis">
+				<xs:annotation>
+					<xs:documentation>Pistis ja altkäemaks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6060_Lm">
+				<xs:annotation>
+					<xs:documentation>Mittetulundusühingutele, milles osalemine ei ole ettevõtlusega seotud, tasutud sisseastumis- ja liikmemaksud</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6070_PdokVm">
+				<xs:annotation>
+					<xs:documentation>Puuduva või nõuetele mittevastava algdokumendi alusel tehtud väljamaksed</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6080_KvmMuu">
+				<xs:annotation>
+					<xs:documentation>Kulud või väljamaksed ettevõtlusega mitteseotud kohustuste täitmiseks, vara soetamiseks ja teenuste ostmiseks ning mittetulundusühingu, sihtasutuse ja juriidilisest isikust usulise ühenduse kulud põhikirjalise tegevusega mitteseotud teenuste ja vara ostmiseks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6090_Vpk">
+				<xs:annotation>
+					<xs:documentation>Madala maksumääraga territooriumil asuva juriidilise isiku poolt emiteeritud väärtpaberite soetamise kulud</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6100_Osk">
+				<xs:annotation>
+					<xs:documentation>Madala maksumääraga territooriumil asuvas juriidilises isikus osaluse omandamise kulud</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6110_Kahj">
+				<xs:annotation>
+					<xs:documentation>Madala maksumääraga territooriumil asuvale juriidilisele isikule tasutud viivis või leppetrahv, kohtu- või vahekohtuväliselt hüvitatud kahju</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6120_Laen">
+				<xs:annotation>
+					<xs:documentation>Madala maksumääraga territooriumil asuvale juriidilisele isikule antud laen, tehtud ettemaks või muul viisil omandatud nõudeõigus</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6130_KrKah">
+				<xs:annotation>
+					<xs:documentation>Krediidiasutuse kahju madala maksumääraga territooriumil asuva juriidilise isiku vastu omandatud nõudeõiguse võõrandamisest või sissenõudmise loobumisest</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6140_MsVhnd">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksustatud summa vähendamine (koodi 6143 väärtused summeeritult)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6150_SumKokku">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksustatav summa kokku (Koodid 6000 kuni 6130 (välja arvatud koodid 6011, 6021 ja 6041) – kood 6140 suurem võrdne või väiksem võrdne 0)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6160_Tasutav">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tasutav tulumaks (Kood 6150 x maksumäär (20/80) suurem võrdne 0)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c6170_Tagast">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Tagastatav tulumaks (Kood 6150 x maksumäär (20/80) väiksem võrdne 0 (negatiivne tulem ilma miinusmärgita))</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L6_1List">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L6_1" type="tsdL61"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L6_2List">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L6_2" type="tsdL62"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL61">
+		<xs:all>
+			<xs:element name="c6141_Kuu">
+				<xs:annotation>
+					<xs:documentation>Äralangenud maksustamise aluse kuu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:long">
+						<xs:totalDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c6142_Aasta">
+				<xs:annotation>
+					<xs:documentation>Äralangenud maksustamise aluse aasta</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:long">
+						<xs:totalDigits value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c6143_Summa">
+				<xs:annotation>
+					<xs:documentation>Äralangenud maksustamise aluse summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL62">
+		<xs:all>
+			<xs:element name="c6200_Kood">
+				<xs:annotation>
+					<xs:documentation>Seotud isiku registrikood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c6210_Nimi">
+				<xs:annotation>
+					<xs:documentation>Seotud isiku nimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c6220_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Riigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c6230_MSumma">
+				<xs:annotation>
+					<xs:documentation>Maksustatav summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL70">
+		<xs:all>
+			<xs:element minOccurs="0" name="c7010_VmMaksust">
+				<xs:annotation>
+					<xs:documentation>Väljamakstud dividendide ja muude kasumieraldiste maksustatav summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7020_OmakapSmEnne2015">
+				<xs:annotation>
+					<xs:documentation>Omakapitali tehtud sissemaksete ja sellest tehtud väljamaksete vahe alates äriühingu asutamisest (seisuga 31.12.2014)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7030_OmakapSm">
+				<xs:annotation>
+					<xs:documentation>Maksustamisperioodil omakapitali tehtud sissemaksed</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7040_OmakapSmKokku">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Omakapitali sissemaksed kokku</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7050_OmakapSmKorrig">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Omakapitali sissemaksed pärast õiguste üleandmist: 7040 – SUM7410 – SUM7420 suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7060_OmakapVm">
+				<xs:annotation>
+					<xs:documentation>Omakapitalist tehtud väljamaksete summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7070_OmakapValjamaksmata">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksustamisperioodi lõpuks omakapitalist väljamaksmata sissemaksete summa: (kantakse üle järgmise vormi TSD lisa 7 koodile 7040): 7050 – 7060 suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7080_VmYleSmMaksust">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Omakapitalist väljamakstud sissemakseid ületav maksustatav summa: 7060 – 7050 suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7160_VrTasutudTm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Välisriigis kinnipeetud ja tasutud tulumaksu summa: (eelmise vormi TSD lisa 7 kood 7190) + SUM7150 + SUM7530 + SUM7540 suurem kui 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7170_VrTasutudTmKorrig">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Välisriigis kinnipeetud ja tasutud tulumaksu summa pärast õiguste üleandmist: 7160 – SUM7430 – SUM7440 suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7180_VrVahendus">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksukohustuse vähendamiseks koodil 7200 kasutatav summa, kuid mitte rohkem kui kood 7170</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7190_VrVmTmKasutamata">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksustamisperioodi lõpuks omakapitalist väljamaksmata sissemaksete summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7200_TasutavTm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Vormi TSD koodile 114 kantav tasutav tulumaks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7290_MvVm">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksustamisperioodi maksuvabad väljamaksed: (eelmise vormi TSD lisa 7 kood 7330) + SUM7280 + SUM 7550 + SUM7560 suurem kui 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7300_MvVmKorrig">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksuvabad väljamaksed pärast õiguste üleandmist: 7290 – SUM7450 – SUM7460 suurem võrdne 0 </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7310_MvVmDiv">
+				<xs:annotation>
+					<xs:documentation>Maksuvabalt väljamakstud dividendide summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7320_MvVmOmakap">
+				<xs:annotation>
+					<xs:documentation>Maksuvabade omakapitali väljamaksete summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7330_MvVmKasutamata">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksustamisperioodi lõpuks maksuvabade tulude kasutamata summa (kantakse üle järgmise vormi TSD lisa 7 koodile 7290): 7300 – 7310 – 7320 suurem võrdne 0</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L7_1bList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L7_1b" type="tsdL71B"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L7_2List">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L7_2" type="tsdL72"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L7_3List">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L7_3" type="tsdL73"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="tsd_L7_4List">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="tsd_L7_4" type="tsdL74"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL71B">
+		<xs:all>
+			<xs:element name="c7101_Regkood">
+				<xs:annotation>
+					<xs:documentation>Välisriigi väljamakse tegija registrikood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7102_Nimi">
+				<xs:annotation>
+					<xs:documentation>Välisriigi väljamakse tegija nimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7103_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Välisriigi väljamakse tegija riigi ISO2 kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7110_TuliKood">
+				<xs:annotation>
+					<xs:documentation>Välisriigist saadud tulu liik</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7120_Kpv" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>Välisriigist saadud tulu saamise kpv</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="c7130_VrSumma">
+				<xs:annotation>
+					<xs:documentation>Välisriigist saadud tulu brutosumma (sh C_7140)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7140_VrTasutudTm">
+				<xs:annotation>
+					<xs:documentation>Välisriigis kinnipeetud/tasutud tulumaks (sisaldub C_7110_BRUTO summas)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7150_KohustVahendSumma">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksukohustuse vähendamiseks Eestis arvesse võetav summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL72">
+		<xs:all>
+			<xs:element name="c7201_Regkood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tegija registrikood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7202_Nimi">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tegija nimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7203_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Väljamakse tegija riigi ISO2 kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7210_TuliKood">
+				<xs:annotation>
+					<xs:documentation>Saadud tulu liigi kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7220_Kpv" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>Tulu saamise kpv</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7230_OsalusDiv">
+				<xs:annotation>
+					<xs:documentation>Dividendi saaja osalus väljamaksjas (%)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="3"/>
+						<xs:fractionDigits value="0"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7240_OsalusOmakap">
+				<xs:annotation>
+					<xs:documentation>omakapitali väljamakse saaja osalus väljamaksjas (%)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="3"/>
+						<xs:fractionDigits value="0"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7250_Summa">
+				<xs:annotation>
+					<xs:documentation>Saadud tulu summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7260_VrTasutudTm">
+				<xs:annotation>
+					<xs:documentation>sh välisriigis kinnipeetud või tasutud TM</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7270_VrMaksustKasum">
+				<xs:annotation>
+					<xs:documentation>välisriigis TM-ga maksustatud kasumiosa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7280_Mvt">
+				<xs:annotation>
+					<xs:documentation>Arvutatav: Maksuvabade väljamaksete tegemiseks saadud tulu summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL73">
+		<xs:all>
+			<xs:element name="c7401_Regkood">
+				<xs:annotation>
+					<xs:documentation>Õiguse saaja registrikood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7402_Nimi">
+				<xs:annotation>
+					<xs:documentation>Õiguse saaja nimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7403_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Õiguse saaja riigi ISO2 kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7410_AyhSmYleVm">
+				<xs:annotation>
+					<xs:documentation>Äriühingule üleantud omakapitalist tehtud väljamakseid ületav sissemaksete summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7420_PtkSmYleVm">
+				<xs:annotation>
+					<xs:documentation>Püsivale tegevuskohale üleantud omakapitalist tehtud väljamakseid ületav sissemaksete summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7430_AyhVrTasutudTm">
+				<xs:annotation>
+					<xs:documentation>Äriühingule üleantud Eestis arvesse võetav välisriigis tasutud või kinnipeetud tulumaks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7440_PtkVrTasutudTm">
+				<xs:annotation>
+					<xs:documentation>Püsivale tegevuskohale üleantud Eestis arvesse võetav välisriigis tasutud või kinnipeetud tulumaks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7450_AyhVmt">
+				<xs:annotation>
+					<xs:documentation>Äriühingule üleantud väljamaksmata maksuvaba tulu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7460_PtkVmt">
+				<xs:annotation>
+					<xs:documentation>Püsivale tegevuskohale üleantud väljamaksmata maksuvaba tulu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdL74">
+		<xs:all>
+			<xs:element name="c7501_Regkood">
+				<xs:annotation>
+					<xs:documentation>Õiguse andja registrikood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7502_Nimi">
+				<xs:annotation>
+					<xs:documentation>Õiguse andja nimi</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="500"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="c7503_RiikKood">
+				<xs:annotation>
+					<xs:documentation>Õiguse andja riigi ISO2 kood</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7510_AyhSm">
+				<xs:annotation>
+					<xs:documentation>Äriühingult saadud omakapitali sissemaksete summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7520_PtkSm">
+				<xs:annotation>
+					<xs:documentation>Püsiva tegevuskoha jaoks Eestisse toodud ja üleantud vara summa</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7530_AyhVrTasutudTm">
+				<xs:annotation>
+					<xs:documentation>Äriühingult saadud Eestis arvesse võetav välisriigis tasutud või kinnipeetud tulumaks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7540_PtkVrTasutudTm">
+				<xs:annotation>
+					<xs:documentation>Püsivalt tegevuskohalt saadud Eestis arvesse võetav välisriigis tasutud või kinnipeetud tulumaks</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7550_AyhVmt">
+				<xs:annotation>
+					<xs:documentation>Äriühingult saadud väljamaksmata maksuvaba tulu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="0" name="c7560_PtkVmt">
+				<xs:annotation>
+					<xs:documentation>Püsivalt tegevuskohalt saadud väljamaksmata maksuvaba tulu</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:totalDigits value="22"/>
+						<xs:fractionDigits value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="tsdParPohjLisa">
+		<xs:all>
+			<xs:element minOccurs="0" name="lisaKood">
+				<xs:annotation>
+					<xs:documentation>L1 -Lisa 1, L2 - Lisa 2, L3 - Lisa 3, L4 - Lisa 4, L5 - Lisa 5, L6 - Lisa 6, L7 - Lisa 7, INF1 - Inf1</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="10"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:simpleType name="laadimisViisType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="L"/>
+			<xs:enumeration value="P"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="vormType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="TSD"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

@@ -1,0 +1,116 @@
+*	Parameter tnRekvid, tnNomid, tnArveId
+	tnRekvId = 1
+	tnNomId = 0
+	tnArveId = 0
+	
+	lcString = "SELECT   arv.id, arv1.id as arv1id, arv1.nomid, arv1.kogus, arv.operId, arv.liik, "+;
+		" arv.kpv, arv1.hind "+;
+		" from buhdata5!arv inner join buhdata5!arv1 on arv.id = arv1.parentid "+;
+		" where rekvid = " +Str(tnRekvid) +;
+		" and arv.liik = 1 and arv.operId > 0 "
+	If !Empty (tnNomid)
+		lcString = lcString + " and arv1.nomid = "+Str (tnNomid)
+	Endif
+	If !Empty (tnArveId)
+		lcString = lcString + " and arv.id = "+Str (tnArveId)
+	Endif
+	lcString = lcString + " order by kpv into cursor cur_ladusisearved"
+	&lcString
+	If !Used ('cur_ladusisearved')
+		Return .F.
+	Endif
+	lcString = " Delete from buhdata5!ladu_jaak where rekvid = " +Str (tnRekvid)
+	If !Empty (tnNomid)
+		lcString = lcString + " and ladu_jaak.nomid = "+Str (tnNomid)
+	Endif
+	If !Empty (tnArveId)
+		lcString = lcString + " and ladu_jaak.dokItemId in "+;
+			"(select Id from buhdata5!arv1 where parentId = "+Str (tnArveId)+")"
+	Endif
+	&lcString
+
+	Select cur_ladusisearved
+	Scan
+
+		Insert Into buhdata5!ladu_jaak (rekvid, dokItemid, nomid, Userid, kpv, hind, kogus, jaak);
+			values (tnRekvId, cur_ladusisearved.arv1id, cur_ladusisearved.nomid, 0, ;
+			cur_ladusisearved.kpv, cur_ladusisearved.hind, cur_ladusisearved.kogus, cur_ladusisearved.kogus)
+		Update buhdata5!arv1 Set maha = 0 Where Id = cur_ladusisearved.arv1id
+	Endscan
+	Use In cur_ladusisearved
+
+*!*	vara valjaminek */
+
+	lcString = " SELECT  arv.id, arv1.id as arv1id, arv1.nomid, arv1.kogus, arv.operId, arv.liik, arv.kpv, arv1.hind "+;
+		" FROM buhdata5!arv inner join buhdata5!arv1 on arv.id = arv1.parentid "+;
+		" WHERE rekvid = "+Str (tnRekvid)+;
+		" AND arv.liik = 0 and arv.operId > 0 "
+
+	If !Empty (tnNomid)
+		lcString = lcString + " and arv1.nomid = "+Str (tnNomid)
+	Endif
+	If !Empty (tnArveId)
+		lcString = lcString + " and arv.id = "+Str (tnArveId)
+	Endif
+	lcString = lcString + "	ORDER by kpv into cursor cur_laduvaljaarved"
+	&lcString
+	If !Used ('ladu_config')
+		Use ladu_config In 0
+	Endif
+	Select ladu_config
+	Locate For rekvid = tnRekvid
+	If !Found ()
+		lnLifo = 1
+	Else
+		lnLifo = ladu_config.liik
+	Endif
+
+	Select cur_laduvaljaarved
+	Scan
+		lnKogus = cur_laduvaljaarved.kogus
+		If lnLifo = 1
+*!*		/* Lifo */
+			Select   Id, jaak, maha, kpv, dokItemid;
+				FROM buhdata5!ladu_jaak;
+				WHERE rekvid = tnRekvid;
+				AND jaak > 0;
+				AND nomid = cur_laduvaljaarved.nomid;
+				AND kpv <= cur_laduvaljaarved.kpv;
+				ORDER By kpv;
+				into Cursor cur_ladujaak
+
+		Else
+*!*			/* FiFo*/
+			Select   Id, jaak, maha, kpv, dokItemid;
+				FROM buhdata5!ladu_jaak;
+				WHERE rekvid = tnRekvid;
+				AND jaak > 0;
+				AND nomid = cur_laduvaljaarved.nomid;
+				AND kpv <= cur_laduvaljaarved.kpv;
+				ORDER By kpv Desc;
+				into Cursor cur_ladujaak
+
+		Endif
+		Select cur_ladujaak
+		Scan
+			If cur_ladujaak.jaak >= lnkogus And lnKogus > 0
+				Update buhdata5!arv1 Set maha = 1 Where Id = cur_ladujaak.dokItemid
+				Update buhdata5!ladu_jaak Set ;
+					jaak = cur_ladujaak.jaak - lnKogus, ;
+					maha = cur_ladujaak.maha + lnKogus ;
+					where Id = cur_ladujaak.Id
+					lnKogus = 0
+*!*					SET @kogus = 0
+			Endif
+			If cur_ladujaak.jaak < lnkogus And lnKogus >= 0
+				Update buhdata5!arv1 Set maha = 1 Where Id = cur_ladujaak.dokItemid
+				Update buhdata5!ladu_jaak Set jaak = 0,;
+					maha = (lnKogus - cur_ladujaak.jaak) ;
+					where Id = cur_ladujaak.Id
+				lnKogus = lnKogus - cur_ladujaak.jaak
+			Endif
+			Delete From buhdata5!ladu_jaak Where jaak = 0
+		Endscan
+		Use In cur_ladujaak
+	Endscan
+	Use In cur_laduvaljaarved

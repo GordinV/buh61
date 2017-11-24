@@ -1,0 +1,17 @@
+PARAMETERS tnAsutusId, tdKpv, tnHind
+*SET STEP ON 
+LOCAL lcSumma, oFormula
+lcSumma = 0
+Set Classlib To Classlib
+oFormula = Createobj('classlib.formula')
+WITH oFormula
+	.hind = tnHind
+	.asutusId = tnAsutusId
+	.kpv = tdKpv
+	.Valuuta = fnc_currentvaluuta('VAL',.kpv)
+	.Kuurs = fnc_currentvaluuta('KUURS',.kpv)
+	lcSumma =.fncViivis(3)
+ENDWITH
+RETURN lcSumma
+
+

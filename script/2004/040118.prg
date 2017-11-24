@@ -1,0 +1,37 @@
+gnHandle = SQLConnect('narvalvpg','vlad', '490710')
+
+If gnHandle < 1
+	Messagebox('Viga, ühendus')
+	Return
+Endif
+TEXT 
+lcString = "select kontod.kood as konto, asutus.regkood, asutus.nimetus, asutus.tp, subkonto.algsaldo "+;
+	" from library kontod inner join subkonto on subkonto.kontoid = kontod.id "+;
+	" inner join asutus on asutus.id = subkonto.asutusId "+;
+	" where subkonto.rekvid = 11 and algsaldo <> 0 order by kood, asutus.nimetus "
+
+lError = SQLEXEC(gnHandle,lcString,'qryAlgSubkonto')
+IF lError > 0
+	lcFile = GETFILE('XLS')
+	EXPORT TO (lcFile) TYPE XLS
+ELSE
+	SET STEP ON on
+ENDIF
+ENDTEXT
+
+
+lcString = "select kontod.kood as konto, kontoinf.algsaldo "+;
+	" from library kontod inner join kontoinf on kontoinf.parentid = kontod.id "+;
+	" where kontoinf.rekvid = 11 and algsaldo <> 0 order by kood "
+
+lError = SQLEXEC(gnHandle,lcString,'qryAlgSubkonto')
+IF lError > 0
+	lcFile = GETFILE('XLS')
+	EXPORT TO (lcFile) TYPE XLS
+ELSE
+	SET STEP ON on
+ENDIF
+
+
+=SQLDISCONNECT(gnhandle)
+

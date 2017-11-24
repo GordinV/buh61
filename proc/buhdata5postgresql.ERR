@@ -1,0 +1,16 @@
+cString = 'Create TABLE sorder1(ID SERIAL  NOT NULL    ,REKVID INT4  NOT NULL ,'+ "USERID INT4  NOT NULL ,JOURNALID INT4  NOT NULL     ,KASSAID INT4  NOT NULL     ,"+ "DOKLAUSID INT4  NOT NULL     ,NUMBER VARCHAR (20)  NOT NULL ,KPV DATE  NOT NULL   ,'+		"ASUTUSID INT4  NOT NULL     ,NIMI TEXT  NULL ,AADRESS TEXT  NULL ,DOKUMENT TEXT  NULL ,"+"ALUS TEXT  NULL ,SUMMA MONEY  NOT NULL     ,MUUD TEXT  NULL )"
+Error in line 230: Syntax error.
+NULLNULLlError = sqlexec(gnHandle,cString)"
+Error in line 231: Syntax error.
+lError = sqlexec(gnHandle,cString)
+Error in line 338: Statement is not in a procedure.
+If lError < 1
+Error in line 339: Statement is not in a procedure.
+Messagebox('Viga','Kontrol')
+Error in line 340: Statement is not in a procedure.
+Set step on
+Error in line 341: Statement is not in a procedure.
+Endif
+Error in line 342: Statement is not in a procedure.
+Endproc
+Error in line 343: Nesting error.

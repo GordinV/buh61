@@ -1,0 +1,242 @@
+Parameter cWhere
+If isdigit(alltrim(cWhere))
+	cWhere = val(alltrim(cWhere))
+Endif
+If vartype(odb) <> 'O'
+	Set classlib to classes\classlib
+	odb = createobject('db')
+Endif
+Local lnDeebet, lnKreedit
+lnDeebet = 0
+lnKreedit = 0
+dKpv1 = iif(!empty(fltrAruanne.kpv1), fltrAruanne.kpv1,date(year(date()),1,1))
+dKpv2 = iif(!empty(fltrAruanne.kpv2), fltrAruanne.kpv2,date())
+&& loading algsaldo tableid
+lnYear = year (dkpv1)
+lnMonth = month (dkpv1)
+If lnMonth > 12
+	lnMonth = 1
+	lnYear = lnYear + 1
+Endif
+lError = odb.exec ("sp_saldo ",str(grekv)+", "+str(lnMonth,2)+","+str(lnYear,4)+",'%'", 'cursorAlgSaldo' )
+lnYear = year (dkpv2)
+lnMonth = month (dkpv2)
+If lnMonth > 12
+	lnMonth = 1
+	lnYear = lnYear + 1
+Endif
+lError = odb.exec ("sp_saldo ",str(grekv)+", "+str(lnMonth,2)+","+str(lnYear,4)+",'%'", 'cursorLoppSaldo' )
+Replace fltrAruanne.kpv1 with dKpv1,;
+	fltrAruanne.kpv2 with dKpv2 in fltrAruanne
+odb.use('v_bilanss')
+&&Use v_bilanss in 0
+If reccount('v_bilanss') = 0
+	Messagebox(iif(config.keel = 2,'Bilanssi read ei leidnud','Строк баланса не найдено'),'Kontrol')
+	Use in v_bilanss
+	Select 0
+	Return .f.
+Endif
+Create cursor bilanssandmik_report (Nimetus c(120), regkood c(11), aadress c(120), kbmkood c(11),;
+	tel c(60), email c(120), raama c(120), konto c(20), parentrea c(20),;
+	parentnimi c(120), reanr c(20),KirjeNimetus c(120), loppperiod y,;
+	algperiod y, pLopp y, pAlg y,aktiva n(1) default 1)
+Index on val(alltrim(parentrea)) tag parentrea
+Set order to parentrea
+tnid = grekv
+&&Use v_rekv in 0
+odb.use('v_rekv')
+Select v_rekv
+cAadress = ''
+For i = 1 to memlines(v_rekv.aadress)
+	cAadress = rtrim(cAadress) + space(1)+rtrim(mline(v_rekv.aadress,1))
+Endfor
+odb.use('v_passiva')
+&&Use v_passiva in 0
+lnRea = val(alltrim(v_passiva.kood))
+Use in v_passiva
+Select v_bilanss
+Scan
+	lcParentNimi = ''
+	lcReanr = substr(v_bilanss.library, 8,6)
+	lnStart = at('.',lcReanr)-1
+	If lnStart > 0
+		lcparentRea = left(lcReanr,lnStart)
+		lcParentNimi = v_bilanss.Nimetus		
+	Else
+		lcparentRea = lcReanr
+		lcParentNimi = v_bilanss.Nimetus
+	Endif
+	lnAktiva = iif(val(alltrim(lcparentRea)) < lnRea,1,2)
+	Wait window [Arvestan konto bilanssi rea ]+lcReanr nowait
+	Insert into bilanssandmik_report (Nimetus, regkood, kbmkood, aadress, tel,;
+		email, raama,konto, parentrea, parentnimi, reanr, KirjeNimetus,aktiva);
+		values (v_rekv.Nimetus, v_rekv.regkood, v_rekv.kbmkood,cAadress,v_rekv.tel,;
+		v_rekv.email,v_rekv.raama, v_bilanss.kood, lcparentRea, lcParentNimi, lcReanr,;
+		v_bilanss.Nimetus,lnAktiva)
+Endscan
+Select parentrea, parentnimi from bilanssandmik_report;
+	order by parentrea ;
+	group by parentrea ;
+	into cursor cursorParent1
+Select  cursorParent1
+Scan
+	Wait window [Arvestan konto bilanssi rea ]+cursorParent1.parentrea nowait
+	Select bilanssandmik_report
+	lnrecno = recno()
+	Count for parentrea = cursorParent1.parentrea to lnCount
+	Go lnrecno
+	If lnCount > 1
+		Scan for parentrea = cursorParent1.parentrea and;
+				bilanssandmik_report.parentrea <> bilanssandmik_report.reanr
+			lnAlg = kontosaldo(alltrim(bilanssandmik_report.konto),fltrAruanne.kpv1)
+			lnLopp = kontoloppsaldo(alltrim(bilanssandmik_report.konto),fltrAruanne.kpv2)
+			Replace loppperiod with lnLopp,;
+				algperiod with  lnAlg in bilanssandmik_report
+		Endscan
+	Else
+		lnAlg = kontosaldo(alltrim(bilanssandmik_report.konto),fltrAruanne.kpv1)
+		lnLopp = kontoloppsaldo(alltrim(bilanssandmik_report.konto),fltrAruanne.kpv2)
+		Replace loppperiod with lnLopp,;
+			algperiod with  lnAlg in bilanssandmik_report
+	Endif
+	Select bilanssandmik_report
+	Sum algperiod for bilanssandmik_report.parentrea = cursorParent1.parentrea to lnAlg
+	Sum loppperiod for bilanssandmik_report.parentrea = cursorParent1.parentrea to lnLopp
+	Update bilanssandmik_report set;
+		parentnimi = cursorParent1.parentnimi,;
+		pAlg =  lnAlg,;
+		pLopp = lnLopp;
+		where parentrea = cursorParent1.parentrea
+	Go lnrecno
+Endscan
+Use in cursorParent1
+
+Clear
+Use in v_bilanss
+Use in v_rekv
+
+select Nimetus, regkood, aadress, kbmkood, tel, email, raama, konto, parentrea,;
+	parentnimi, reanr,KirjeNimetus, loppperiod, algperiod, sum(pLopp) as pLopp, sum(pAlg) as pAlg,aktiva ;
+	from bilanssandmik_report ;
+	order by parentrea, reanr;
+	group by parentrea, reanr;
+	into cursor bilanssandmik_report1
+use in bilanssandmik_report
+Select bilanssandmik_report1
+
+
+
+
+Function kontosaldo
+	Parameter cKontogrupp, tdKpv
+	Local lnSaldo, lnDeebet, lnKreedit
+	if empty (cKontogrupp)
+		return 0
+	endif
+	lnSaldo = 0
+	lnDeebet = 0
+	lnKreedit = 0
+	dKpv1 = tdKpv
+	dKpv2 = tdKpv
+	dKpv = date(year(tdKpv), month(tdKpv),1)
+	nAasta = year(tdKpv)
+	nKuu =  month(tdKpv)
+	cKonto = alltrim(cKontogrupp)+'%'
+	lnYear = year (Tdkpv)
+	lnMonth = month (Tdkpv)
+	If lnMonth > 12
+		lnMonth = 1
+		lnYear = lnYear + 1
+	Endif
+	If dKpv < dKpv1
+		dKpv1 = dKpv
+		cDeebet = cKonto
+		cKreedit = '%%'
+		cAsutus = '%%'
+		cDok = '%%'
+		cSelg = '%%'
+		nSumma1 = -99999999
+		nSumma2 = 999999999
+		odb.use('curJournal','query1')
+		Select query1
+		Sum summa to lnDeebet
+		cDeebet = '%%'
+		cKreedit = cKonto
+		odb.dbreq('query1',gnHandle,'curJournal')
+		Sum summa to lnKreedit
+	Endif
+	Select cursorAlgsaldo
+	select iif (type = 1 or type = 3,deebet-kreedit,kreedit-deebet) as nSaldo ;
+		from cursorAlgSaldo inner join comKontodRemote on comKontodRemote.kood = cursorAlgSaldo.konto;
+		where left (alltrim(cursorAlgSaldo.konto),len(cKontogrupp))= cKontogrupp;		
+		into cursor tmpSaldo
+&&	Sum (cursorAlgsaldo.deebet - cursorAlgsaldo.kreedit) for left (alltrim(konto),len(cKontogrupp))= cKontogrupp to lnSaldo
+	if val(alltrim(cursorParent1.parentrea)) < lnRea
+		lnSaldo = tmpSaldo.nSaldo + lnDeebet - lnKreedit
+	else
+		lnSaldo = tmpSaldo.nSaldo - lnDeebet + lnKreedit
+	endif
+	If used('query1')
+		Use in query1
+	Endif
+	use in tmpSaldo
+	Return lnSaldo
+
+
+Function kontoLoppsaldo
+	Parameter cKontogrupp, tdKpv
+	Local lnSaldo, lnDeebet, lnKreedit
+	if empty (cKontogrupp)
+		return 0
+	endif
+	lnSaldo = 0
+	lnDeebet = 0
+	lnKreedit = 0
+	dKpv1 = tdKpv
+	dKpv2 = tdKpv
+	dKpv = date(year(tdKpv), month(tdKpv),1)
+	nAasta = year(tdKpv)
+	nKuu =  month(tdKpv)
+	cKonto = alltrim(cKontogrupp)+'%'
+	lnYear = year (Tdkpv)
+	lnMonth = month (Tdkpv)
+	If lnMonth > 12
+		lnMonth = 1
+		lnYear = lnYear + 1
+	Endif
+	If dKpv < dKpv1
+		dKpv1 = dKpv
+		cDeebet = cKonto
+		cKreedit = '%%'
+		cAsutus = '%%'
+		cDok = '%%'
+		cSelg = '%%'
+		nSumma1 = -99999999
+		nSumma2 = 999999999
+		odb.use('curJournal','query1')
+		Select query1
+		Sum summa to lnDeebet
+		cDeebet = '%%'
+		cKreedit = cKonto
+		odb.dbreq('query1',gnHandle,'curJournal')
+		Sum summa to lnKreedit
+	Endif
+	select iif (type = 1 or type = 3,deebet-kreedit,kreedit-deebet) as nSaldo ;
+		from cursorLoppSaldo inner join comKontodRemote on comKontodRemote.kood = cursorLoppSaldo.konto;
+		where left (alltrim(cursorLoppSaldo.konto),len(cKontogrupp))= cKontogrupp;		
+		into cursor tmpSaldo
+	Select cursorLoppsaldo
+&&	Sum (cursorAlgsaldo.deebet - cursorAlgsaldo.kreedit) for left (alltrim(konto),len(cKontogrupp))= cKontogrupp to lnSaldo
+&&	lnSaldo = lnSaldo + lnDeebet - lnKreedit
+	if val(alltrim(cursorParent1.parentrea)) < lnRea
+		lnSaldo = tmpSaldo.nSaldo + lnDeebet - lnKreedit
+	else
+		lnSaldo = tmpSaldo.nSaldo - lnDeebet + lnKreedit
+	endif
+	If used('query1')
+		Use in query1
+	Endif
+	use in tmpSaldo
+	Return lnSaldo
+
+

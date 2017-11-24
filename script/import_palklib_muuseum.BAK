@@ -1,0 +1,108 @@
+* import palk kood sprodikeskus -> energia, paemurru
+
+WAIT WINDOW 'Connect...' nowait
+gnHandle = SQLCONNECT('narvalvpg')
+IF gnHandle < 1 
+	MESSAGEBOX('Viga, uhendus')
+	return
+ELSE
+	WAIT WINDOW 'Connect...onnestus' nowait
+ENDIF
+SET STEP ON 
+IF gnHandle > 0
+	* library palk
+	WAIT WINDOW 'Lib laadimine...' nowait
+	
+	lcString = "select * from library where rekvid = 15 and library = 'PALK'"
+	lError = SQLEXEC(gnHandle,lcString,'tmpLib')
+	WAIT WINDOW 'Lib laadimine...tehtud' nowait
+	
+	IF lError < 0 OR !USED('tmpLib')
+		MESSAGEBOX('Viga')
+		SET STEP ON 
+		return
+	ENDIF
+	SELECT tmpLib
+	SCAN
+		* import
+		WAIT WINDOW 'Importeerimine, kood = '+ALLTRIM(tmpLib.kood)+ALLTRIM(STR(RECNO('tmpLib')))+'/'+ALLTRIM(STR(RECCOUNT('tmpLib'))) nowait
+		* kontrollime kas kood juba salvestatud
+		lcString = "select id from library where LTRIM(RTRIM(kood)) = '"+alLTRIM(tmpLib.kood)+"' and rekvid = 126 and library = 'PALK'"
+		LeRROR = SQLEXEC(gnHandle,lcString,'tmpId')
+		IF lError < 0 OR !USED('tmpId')
+			MESSAGEBOX('Viga')
+			SET STEP ON 
+			exit
+		ENDIF
+		IF RECCOUNT('tmpId') = 0 
+			* puudub, lisame
+			WAIT WINDOW 'Importeerimine, kood = '+ALLTRIM(tmpLib.kood)+ALLTRIM(STR(RECNO('tmpLib')))+' puudub, lisame/'+ALLTRIM(STR(RECCOUNT('tmpLib'))) nowait
+			lcString = "insert into library (rekvid, kood, nimetus, library, tun1, tun2, tun3, tun4) values (126,'"+;
+						ALLTRIM(tmpLib.kood)+"','"+ALLTRIM(tmpLib.nimetus)+"','PALK',"+STR(tmpLib.tun1)+","+STR(tmpLib.tun2)+","+STR(tmpLib.tun3)+;
+						","+STR(tmpLib.tun4)+")"
+
+			LeRROR = SQLEXEC(gnHandle,lcString)
+			IF lError < 0 
+				MESSAGEBOX('Viga')
+				SET STEP ON 
+				exit
+			ENDIF
+			lcString = "select id, library, rekvid from library order by id desc limit 1"
+			LeRROR = SQLEXEC(gnHandle,lcString,'tmpId')
+			IF lError < 0 OR !USED('tmpId') 
+				MESSAGEBOX('Viga')
+				SET STEP ON 
+				exit
+			ENDIF
+			WAIT WINDOW 'Importeerimine, kood = '+ALLTRIM(tmpLib.kood)+ALLTRIM(STR(RECNO('tmpLib')))+' lisatud, importeerime palk_lib ../'+ALLTRIM(STR(RECCOUNT('tmpLib'))) nowait
+			lcString = "select * from palk_lib where parentid = "+STR(tmpLib.id)
+			LeRROR = SQLEXEC(gnHandle,lcString,'tmpPalkLib')
+			IF lError < 0 OR !USED('tmpPalkLib') 
+				MESSAGEBOX('Viga')
+				SET STEP ON 
+				exit
+			ENDIF
+			lcString = "insert into palk_lib (parentid, liik, tund, maks, palgafond, asutusest, lausendid, algoritm, round, sots, konto, elatis, tululiik) values("+;
+				STR(tmpId.id)+","+STR(tmpPalkLib.liik)+","+STR(tmpPalkLib.TUND)+","+STR(tmpPalkLib.maks)+","+STR(tmpPalkLib.palgafond)+","+;
+				STR(tmpPalkLib.asutusest)+","+STR(tmpPalkLib.lausendid)+",'"+tmpPalkLib.algoritm+"',"+STR(tmpPalkLib.round,12,4)+","+;
+				STR(tmpPalkLib.sots)+",'"+tmpPalkLib.konto+"',"+STR(tmpPalkLib.elatis)+",'"+tmpPalkLib.tululiik+"')"
+
+			LeRROR = SQLEXEC(gnHandle,lcString)
+			IF lError < 0 
+				MESSAGEBOX('Viga')
+				SET STEP ON 
+				exit
+			ENDIF
+			WAIT WINDOW 'Importeerimine, kood = '+ALLTRIM(tmpLib.kood)+ALLTRIM(STR(RECNO('tmpLib')))+' lisatud, importeerime palk_lib ..tehtud/'+ALLTRIM(STR(RECCOUNT('tmpLib'))) nowait				 								
+		ENDIF
+		* KONTROLLIme klassiflib
+		WAIT WINDOW 'Importeerimine, kood = '+ALLTRIM(tmpLib.kood)+ALLTRIM(STR(RECNO('tmpLib')))+' klassiflib ..'+ALLTRIM(STR(RECno('tmpLib'))) nowait				 								
+		
+		lcString = "select id from klassiflib where libid = "+STR(tmpId.id)
+		LeRROR = SQLEXEC(gnHandle,lcString, 'tmpKlassifLib')		
+		IF lError < 0 OR !USED('tmpKlassifLib') 
+			MESSAGEBOX('Viga')
+			SET STEP ON 
+			exit
+		ENDIF
+		IF RECCOUNT('tmpKlassifLib') = 0 
+			WAIT WINDOW 'Importeerimine, kood = '+ALLTRIM(tmpLib.kood)+ALLTRIM(STR(RECNO('tmpLib')))+' klassiflib ..lisame '+ALLTRIM(STR(RECno('tmpLib'))) nowait				 								
+			lcString = "insert into klassiflib (libid,tyyp,tunnusid,kood1,kood2,kood3,kood4,kood5,konto, proj ) "+;
+			" select "+STR(tmpid.id)+",tyyp,tunnusid,kood1,kood2,kood3,kood4,kood5,konto, proj from klassiflib where libid = " + STR(tmpLib.id)
+
+			LeRROR = SQLEXEC(gnHandle,lcString)		
+			IF lError < 0 
+				MESSAGEBOX('Viga')
+				SET STEP ON 
+				exit
+			ENDIF
+
+		
+		ENDIF
+		 
+		
+	ENDSCAN
+ENDIF
+
+
+=SQLDISCONNECT(gnHandle)

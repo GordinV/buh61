@@ -1,0 +1,29 @@
+Parameter cWhere
+If isdigit(alltrim(cWhere))
+	cWhere = val(alltrim(cWhere))
+Endif
+if vartype(odb) <> 'O'
+	set classlib to classes\classlib
+	oDb = createobject('db')
+endif
+create cursor koormus_report1 (kpv d, asutus c(254), regnum c(40), ;
+	mark c(120), kogus y, summa y, isikId int, ;
+	kood c(20), teenus c(254), nomid int, number c(20))
+index on str(isikid ,9)+dtoc(kpv,1) tag vastisik
+set order to vastisik
+dKpv1 = fltrAruanne.kpv1
+dKpv2 = fltrAruanne.kpv2
+tnAsutus1 = fltrAruanne.asutusId
+tnAsutus2 = iif (empty (fltrAruanne.asutusId),999999999, fltrAruanne.asutusId)
+tnisik1 = fltrAruanne.kood1
+tnisik2 = iif (empty (fltrAruanne.kood1),999999999, fltrAruanne.kood1)
+tnNom1 = fltrAruanne.kood2
+tnNom2 = iif (empty (fltrAruanne.kood2),999999999, fltrAruanne.kood2)
+lError = oDb.USE ('curKoormus')
+select koormus_report1
+if used ('curKoormus') and reccount ('curKoormus') > 0
+	append from dbf ('curKoormus')
+else
+	append blank
+endif
+use in curKoormus

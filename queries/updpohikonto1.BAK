@@ -1,0 +1,3 @@
+Parameter tcAasta, tcKuu, tcPohikonto
+cString = "sp_update_pohikonto_saldo1 "+alltrim(str(gRekv))+","+ tcAasta +","+ tcKuu + ",'%%'"
+lError = sqlexec ( gnHandle, cString )

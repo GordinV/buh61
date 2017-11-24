@@ -1,0 +1,48 @@
+Parameter cWhere
+
+* maja nimikiri
+
+lcString = "select library.id, library.kood from library inner join objekt on library.id = objekt.libid where objekt.parentid = 0 "
+
+IF fltrAruanne.majaId > 0 
+	lcString = lcString + " and library.id = "+ STR(fltrAruanne.majaId,9)
+ENDIF
+WAIT WINDOW "Koostamine majade nimikiri.. " nowait
+lnReturn = SQLEXEC(gnHandle,lcString,'tmpMajad')
+
+IF lnReturn < 0 or !USED('tmpMajad')
+	WAIT WINDOW "Koostamine majade nimikiri.. viga " TIMEOUT 5
+	SET STEP ON 
+	SELECT 0
+	RETURN .f.
+ENDIF
+lnreturn = 0
+lcKood = SYS(2015)
+lcDate = "date("+STR(YEAR(fltrAruanne.kpv2),4)+","+STR(MONTH(fltrAruanne.kpv2),2)+","+STR(day(fltrAruanne.kpv2),2)+")"
+SELECT tmpMajad
+SCAN
+	WAIT WINDOW "Arvestan: " + tmpMajad.kood nowait
+	lcString = "select sp_arvesta_kutte("+STR(gRekv,9)+",'"+lcKood+"',"+STR(tmpMajad.id,9)+","+lcDate+")"
+	lnReturn = SQLEXEC(gnHandle,lcString)
+	IF lnReturn < 0 
+		WAIT WINDOW "Arvestan: viga.." + tmpMajad.kood TIMEOUT 5
+		SET STEP ON 
+		exit
+	ELSE
+		WAIT WINDOW "Arvestan: Ok.." + tmpMajad.kood nowait
+	ENDIF	
+ENDSCAN
+	
+IF lnReturn > 0 
+	WAIT WINDOW "Salvestan aruanne... " nowait
+	lcString = "select * from tmp_kutte1 where timestamp = '" + lcKood + "'"
+	lnResult = SQLEXEC(gnHandle,lcString,'arvestus_report1') 
+ELSE
+	SET STEP ON 
+
+	SELECT 0
+	RETURN .f.
+ENDIF
+
+SELECT arvestus_report1
+brow

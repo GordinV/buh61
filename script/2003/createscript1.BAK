@@ -1,0 +1,53 @@
+*lcFile = 'e:\files\buh60\dok\eelarve2003\Yldeeskirja lisa 1 Kontoplaan.xls'
+lcFile = 'e:\files\buh60\dok\eelarve2003\Kontoplaan95.xls'
+Import from  (lcFile) type XL5 sheet kontoplaan as 1252
+lnEsimine = 7
+* íà÷àëüíàÿ ñòðîêà
+*1- konto liik, 2 - kontoklass, 3 - kontorühm, 4 - kontogrupp, 5- kontogrupi alamgrupp, 6- konto
+lcAlias = alias()
+Create cursor tmpKontoplaan (script m)
+Append blank
+Replace script with '* kontoplaan'+chr(13) in tmpKontoplaan
+Select (lcAlias)
+Scan for recno(lcAlias) > lnEsimine
+	Select (lcAlias)
+	Wait window str (recno(lcAlias))+'/'+str (reccount(lcAlias)) nowait
+	Do case
+		Case !empty (a)
+			lcKood = evaluate (lcAlias+'.a')
+			lcKood = IIF(VARTYPE(lcKood) = 'N',ltrim(rtrim(STR(lcKood))),ltrim(rtrim(lcKood)))
+		Case !empty (b)
+			lcKood = evaluate (lcAlias+'.b')
+			lcKood = IIF(VARTYPE(lcKood) = 'N',ltrim(rtrim(STR(lcKood))),ltrim(rtrim(lcKood)))
+		Case !empty (c)
+			lcKood = evaluate (lcAlias+'.b')
+			lcKood = IIF(VARTYPE(lcKood) = 'N',ltrim(rtrim(STR(lcKood))),ltrim(rtrim(lcKood)))
+		Case !empty (d)
+			lcKood = evaluate (lcAlias+'.d')
+			lcKood = IIF(VARTYPE(lcKood) = 'N',ltrim(rtrim(STR(lcKood))),ltrim(rtrim(lcKood)))
+		Case !empty (e)
+			lcKood = evaluate (lcAlias+'.e')
+			lcKood = IIF(VARTYPE(lcKood) = 'N',ltrim(rtrim(STR(lcKood))),ltrim(rtrim(lcKood)))
+		Case !empty (f)
+			lcKood = evaluate (lcAlias+'.f')
+			lcKood = IIF(VARTYPE(lcKood) = 'N',ltrim(rtrim(STR(lcKood))),ltrim(rtrim(lcKood)))
+	Endcase
+	lcNimetus = ltrim(rtrim(evaluate (lcAlias+'.i')))
+	lcTun1 = iif (!empty (j),'1','0') && TP
+	lcTun2 = iif (!empty (k),'1','0') && TT
+	lcTun3 = iif (!empty (l),'1','0') && A
+	lcTun4 = iif (!empty (m),'1','0') && R
+	lcTun5 = '0' && Reserv
+	lcRekv = '1'
+	If !empty (lcKood) and !empty (lcNimetus)
+		lcString = "insert into library (kood, nimetus, library, rekvId,tun1,tun2,tun3,tun4,tun5) values ('"+;
+			lcKood+"','"+lcNimetus+"','KONTOD',"+lcRekv+","+lcTun1+","+lcTun2+","+lcTun3+","+lcTun4+","+lcTun5+")"+chr(13)
+		Replace script with lcString additive in tmpKontoplaan
+	Endif
+Endscan
+Select tmpKontoplaan
+if file('scriptLib.prn')
+	copy memo tmpKontoplaan.script to scriptLib.prn additive as 1252
+else
+	copy memo tmpKontoplaan.script to scriptLib.prn  as 1252
+endif

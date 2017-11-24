@@ -1,0 +1,644 @@
+**
+** print2pdf.fxp
+**
+SET STEP on
+
+ PARAMETER pcFilename, pcReport, tnPage1, tnPage2
+ IF EMPTY(tnPage1)
+ 	tnPage1 = 1
+ endif
+ IF EMPTY(tnPage2)
+ 	tnPage2 = 999
+ endif
+ IF VARTYPE(pcFilename)<>"C" .OR. VARTYPE(pcReport)<>"C" .OR.  ;
+    EMPTY(pcFilename) .OR. EMPTY(pcReport)
+      = MESSAGEBOX("No Parms passed to Print2PDF", 48, "Error")
+      RETURN .F.
+ ENDIF
+ LOCAL loPdf
+ loPdf = .NULL.
+ loPdf = CREATEOBJECT("Print2PDF")
+ IF ISNULL(loPdf)
+      = MESSAGEBOX("Could not setup PDF class!", 48, "Error")
+      RETURN .F.
+ ENDIF
+ WITH loPdf
+      .coUtputfile = pcFilename
+      .crEport = pcReport
+      llResult = .maIn()
+ ENDWITH
+ IF  .NOT. llResult .OR. loPdf.leRror
+      = MESSAGEBOX("This error ocurred creating the PDF:"+CHR(13)+ ;
+        ALLTRIM(loPdf.ceRror), 48, "Error Message")
+ ENDIF
+ loPdf = .NULL.
+ RELEASE loPdf
+ RETURN .T.
+ENDFUNC
+*
+DEFINE CLASS Print2PDF AS relation
+ crEport = SPACE(0)
+ coUtputfile = SPACE(0)
+ csTartfolder = JUSTPATH(SYS(16))+IIF(RIGHT(JUSTPATH(SYS(16)), 1)="\", "", "\")
+ ctEmppath = SPACE(0)
+ ceXtrarptclauses = SPACE(0)
+ lrEadini = .T.
+ ciNifile = thIs.csTartfolder+"Print2PDF.ini"
+ lfOundprinter = .F.
+ lfOundgs = .F.
+ cpSprinter = SPACE(0)
+ cpScolorprinter = SPACE(0)
+ luSecolor = .F.
+ cpRintresolution = SPACE(0)
+ cpSfile = SPACE(0)
+ leRasepsfile = .T.
+ cpDffile = SPACE(0)
+ cgSfolder = SPACE(0)
+ leRror = .F.
+ ceRror = ""
+ coRigsafety = SPACE(0)
+ coRigprinter = SPACE(0)
+ iiNstallcount = 1
+ DIMENSION aiNstall[1, 7]
+ aiNstall[1, 1] = SPACE(0)
+ aiNstall[1, 2] = .T.
+ aiNstall[1, 3] = SPACE(0)
+ aiNstall[1, 4] = SPACE(0)
+ aiNstall[1, 5] = SPACE(0)
+ aiNstall[1, 6] = SPACE(0)
+ aiNstall[1, 7] = SPACE(0)
+*
+     FUNCTION init
+      LPARAMETER pcFilename, pcReport, plRunnow
+      WITH thIs
+           .coRigsafety = SET("safety")
+           .coRigprinter = SET("Printer", 3)
+           .leRror = .F.
+           .ceRror = ""
+           IF TYPE("pcFileName")="C" .AND.  .NOT. EMPTY(pcFilename)
+                .coUtputfile = ALLTRIM(pcFilename)
+           ENDIF
+           IF TYPE("pcReport")="C" .AND.  .NOT. EMPTY(pcReport)
+                .crEport = ALLTRIM(pcReport)
+           ENDIF
+*!*	           SET STEP ON 
+*!*	           .upd_report_prop() 
+      ENDWITH
+      SET STEP ON 
+      SET SAFETY OFF
+      IF TYPE("plRunNow")="L" .AND. plRunnow=.T.
+           RETURN thIs.maIn()
+      ENDIF
+     ENDFUNC
+*
+
+	FUNCTION upd_report_prop
+	tcReport = pcReport
+	IF !FILE(tcReport)
+		RETURN .f.
+	ENDIF
+	set STEP on 
+	USE (tcReport) IN 0 ALIAS tmpReport
+	GO top
+	lcString = tmpReport.expr
+	lnStart =  ATC('DEVICE',tmpReport.expr)
+	lnLopp = ATC('OUTPUT',tmpReport.expr)-1
+*	lcString = SUBSTR(lcString,lnStart,lnLopp-lnStart)
+	lcString = STUFFC(lcString,lnStart,lnLopp-lnStart,'DEVICE=HP DeskJet 510')
+	replace tmpReport.expr WITH lcString IN tmpReport
+	USE IN tmpReport
+	COMPILE report (tcReport)
+	RETURN .t.
+	ENDFUNC
+	
+
+     PROCEDURE CleanUp
+      LOCAL lcOrigprinter, lcOrigsafety
+      WITH thIs
+           lcOrigsafety = .coRigsafety
+           lcOrigprinter = .coRigprinter
+      ENDWITH
+      IF  .NOT. EMPTY(lcOrigsafety)
+           set safety &lcOrigSafety
+      ENDIF
+      IF  .NOT. EMPTY(lcOrigprinter)
+           SET PRINTER TO
+           set printer to name "&lcOrigPrinter"
+      ENDIF
+      RETURN
+     ENDPROC
+*
+     FUNCTION ResetError
+      WITH thIs
+           .leRror = .F.
+           .ieRror = 0
+           .ceRror = ""
+      ENDWITH
+      RETURN .T.
+     ENDFUNC
+*
+     FUNCTION main
+      LPARAMETER pcFilename, pcReport
+      LOCAL x
+      STORE 0 TO x
+      WITH thIs
+           IF TYPE("pcFileName")="C" .AND.  .NOT. EMPTY(pcFilename)
+                .coUtputfile = ALLTRIM(pcFilename)
+           ENDIF
+           IF TYPE("pcReport")="C" .AND.  .NOT. EMPTY(pcReport)
+                .crEport = ALLTRIM(pcReport)
+           ENDIF
+           IF EMPTY(.crEport) .OR. EMPTY(.coUtputfile)
+                .leRror = .T.
+                .ceRror(".cReport and/or .cOutputFile empty",48,"Error")
+                RETURN .F.
+           ENDIF
+           IF  .NOT. .leRror
+                = .reAdini()
+           ENDIF
+           IF  .NOT. .leRror
+                = .seTprinter()
+           ENDIF
+           IF  .NOT. .leRror
+                = .maKeps()
+           ENDIF
+           IF  .NOT. .leRror
+                = .gsFind()
+           ENDIF
+           IF  .NOT. .leRror
+                = .maKepdf()
+           ENDIF
+           IF  .NOT. .leRror
+                = .inStpdfreader()
+           ENDIF
+           .clEanup()
+      ENDWITH
+      RETURN  .NOT. thIs.leRror
+     ENDFUNC
+*
+     FUNCTION ReadINI
+      LOCAL lcTmp
+      STORE "" TO lcTmp
+      IF thIs.lrEadini=.T.
+           DECLARE INTEGER GetPrivateProfileString IN WIN32API STRING,  ;
+                   STRING, STRING, STRING @, INTEGER, STRING
+           WITH thIs
+                IF EMPTY(.cpSprinter)
+                     .cpSprinter = .reAdinisetting("PostScript","cPSPrinter")
+                ENDIF
+                IF EMPTY(.cpScolorprinter)
+                     .cpScolorprinter = .reAdinisetting("PostScript", ;
+                                        "cPSColorPrinter")
+                ENDIF
+                IF EMPTY(.cpSfile)
+                     .cpSfile = .reAdinisetting("PostScript","cPSFile")
+                ENDIF
+                IF EMPTY(.ctEmppath)
+                     .ctEmppath = .reAdinisetting("PostScript","cTempPath")
+                ENDIF
+                IF EMPTY(.cpDffile)
+                     .cpDffile = .reAdinisetting("GhostScript","cPDFFile")
+                ENDIF
+                IF EMPTY(.cgSfolder)
+                     .cgSfolder = .reAdinisetting("GhostScript","cGSFolder")
+                ENDIF
+                IF EMPTY(.cpRintresolution)
+                     .cpRintresolution = .reAdinisetting("PostScript", ;
+                      "cPrintResolution")
+                ENDIF
+                lcTmp = .reAdinisetting("Install","iInstallCount")
+                IF  .NOT. EMPTY(lcTmp)
+                     .iiNstallcount = VAL(lcTmp)
+                     IF .iiNstallcount>1
+                          DIMENSION .aiNstall[.iiNstallcount, 7]
+                     ENDIF
+                     FOR x = 1 TO .iiNstallcount
+                          .aiNstall[x, 1] =  ;
+                                   UPPER(.reAdinisetting("Install", ;
+                                   "cInstID"+TRANSFORM(x)))
+                          lcTmp = UPPER(.reAdinisetting("Install", ;
+                                  "lAllowInst"+TRANSFORM(x)))
+                          .aiNstall[x, 2] = IIF("T"$lcTmp .OR. "Y"$lcTmp,  ;
+                                   .T., .F.)
+                          .aiNstall[x, 3] = .reAdinisetting("Install", ;
+                                   "cInstProduct"+TRANSFORM(x))
+                          .aiNstall[x, 4] = .reAdinisetting("Install", ;
+                                   "cInstUserDescr"+TRANSFORM(x))
+                          .aiNstall[x, 5] = .reAdinisetting("Install", ;
+                                   "cInstFolder"+TRANSFORM(x))
+                          .aiNstall[x, 6] = .reAdinisetting("Install", ;
+                                   "cInstExe"+TRANSFORM(x))
+                          .aiNstall[x, 7] = .reAdinisetting("Install", ;
+                                   "cInstInstr"+TRANSFORM(x))
+                     ENDFOR
+                ENDIF
+           ENDWITH
+      ENDIF
+      IF EMPTY(.cpSprinter)
+           .cpSprinter = "GENERIC POSTSCRIPT PRINTER"
+      ENDIF
+      IF EMPTY(.cpScolorprinter)
+           .cpScolorprinter = "GENERIC COLOR POSTSCRIPT"
+      ENDIF
+      IF EMPTY(.ctEmppath)
+           .ctEmppath = SYS(2023)+IIF(RIGHT(SYS(2023), 1)="\", "", "\")
+      ENDIF
+      IF EMPTY(.cpRintresolution)
+           .cpRintresolution = "300"
+      ENDIF
+      RETURN .T.
+     ENDFUNC
+*
+     FUNCTION ReadIniSetting
+      LPARAMETER pcSection, pcSetting
+      LOCAL lcRetvalue, lnNumret, lcFile
+      lcFile = ALLTRIM(thIs.ciNifile)
+      lcRetvalue = SPACE(8196)
+      lnNumret = geTprivateprofilestring(pcSection,pcSetting,"[MISSING]", ;
+                 @lcRetvalue,8196,lcFile)
+      lcRetvalue = ALLTRIM(SUBSTR(lcRetvalue, 1, lnNumret))
+      IF lcRetvalue=="[MISSING]"
+           lcRetvalue = ""
+      ENDIF
+      RETURN lcRetvalue
+     ENDFUNC
+*
+     FUNCTION SetPrinter
+      LOCAL x, lcPrinter
+      x = 0
+      lcPrinter = ""
+      WITH thIs
+           IF EMPTY(.cpSprinter)
+                .cpSprinter = "GENERIC POSTSCRIPT PRINTER"
+           ENDIF
+           IF EMPTY(.cpScolorprinter)
+                .cpSprinter = "GENERIC COLOR POSTSCRIPT"
+           ENDIF
+           IF .luSecolor=.T.
+                lcPrinter = .cpScolorprinter
+           ELSE
+                lcPrinter = .cpSprinter
+           ENDIF
+           .lfOundprinter = .F.
+           IF APRINTERS(laPrinters)>0
+                FOR x = 1 TO ALEN(laPrinters)
+                     IF ALLTRIM(UPPER(laPrinters(x)))==lcPrinter
+                          .lfOundprinter = .T.
+                     ENDIF
+                ENDFOR
+                IF  .NOT. .lfOundprinter
+                     .ceRror = lcPrinter+" is not installed!!"
+                     .leRror = .T.
+                ENDIF
+           ELSE
+                .ceRror = "NO printer drivers are installed!!"
+                .leRror = .T.
+           ENDIF
+           IF .lfOundprinter
+                lcEval = "SET PRINTER TO NAME '"+lcPrinter+"'"
+                &lcEval
+                IF ALLTRIM(UPPER(SET("PRINTER", 3)))==ALLTRIM(UPPER(lcPrinter))
+                ELSE
+                     .ceRror = "Could not set printer to: "+ALLTRIM(lcPrinter)
+                     .leRror = .T.
+                     .lfOundprinter = .F.
+                ENDIF
+           ENDIF
+           IF  .NOT. .lfOundprinter
+                IF thIs.inStall("POSTSCRIPT")
+                     RETURN thIs.seTprinter()
+                ENDIF
+           ENDIF
+      ENDWITH
+      RETURN .lfOundprinter
+     ENDFUNC
+*
+     FUNCTION MakePS
+      LOCAL lcReport, lcExtra, lcPsfile
+      SET SAFETY OFF
+      WITH thIs
+           IF  .NOT. .lfOundprinter
+                IF  .NOT. .seTprinter()
+                     RETURN .F.
+                ENDIF
+           ENDIF
+           lcReport = .crEport
+           lcExtra = .ceXtrarptclauses
+           IF EMPTY(lcReport)
+                .ceRror = "No Report File was specified."
+                .leRror = .T.
+                RETURN .F.
+           ENDIF
+           IF EMPTY(.cpSfile)
+                .cpSfile = .ctEmppath+SYS(2015)+".ps"
+           ENDIF
+           lcPsfile = .cpSfile
+           ERASE (lcPsfile)
+           report form (lcReport) &lcExtra noconsole RANGE tnPage1,tnPage2 to file &lcPSFile
+           IF  .NOT. FILE(lcPsfile)
+                .ceRror = "Could create PDF file"
+                .leRror = .T.
+                RETURN .F.
+           ENDIF
+      ENDWITH
+      RETURN .T.
+     ENDFUNC
+*
+     FUNCTION GSFind
+      LOCAL x, lcPath
+      STORE "" TO lcPath
+      STORE 0 TO x
+      WITH thIs
+           .lfOundgs = .F.
+           IF FILE("gsdll32.dll")
+                .lfOundgs = .T.
+                RETURN .T.
+           ENDIF
+           IF  .NOT. EMPTY(.cgSfolder)
+                lcTmp = .cgSfolder+"gsdll32.dll"
+                IF  .NOT. FILE(lcTmp)
+                     .cgSfolder = ""
+                ENDIF
+           ENDIF
+           IF EMPTY(.cgSfolder)
+                IF  .NOT. DIRECTORY("C:\gs")
+                     RETURN .F.
+                ENDIF
+                liGs = ADIR(laGsfolders, "C:\gs\*.*", "D")
+                IF liGs<1
+                     RETURN .F.
+                ENDIF
+                FOR x = 1 TO ALEN(laGsfolders, 1)
+                     lcTmp = ALLTRIM(UPPER(laGsfolders(x,1)))
+                     IF "GS"=LEFT(lcTmp, 2) .AND. "D"$laGsfolders(x,5)
+                          .cgSfolder = lcTmp
+                          EXIT
+                     ENDIF
+                ENDFOR
+                IF EMPTY(.cgSfolder)
+                     RETURN .F.
+                ENDIF
+                .cgSfolder = "c:\gs\"+ALLTRIM(.cgSfolder)+"\bin\"
+           ENDIF
+           IF  .NOT. EMPTY(.cgSfolder)
+                lcTmp = .cgSfolder+"gsdll32.dll"
+                IF  .NOT. FILE(lcTmp)
+                     .cgSfolder = ""
+                ENDIF
+           ENDIF
+           IF EMPTY(.cgSfolder)
+                RETURN .F.
+           ELSE
+                .lfOundgs = .T.
+           ENDIF
+      ENDWITH
+      lcPath = ALLTRIM(SET("Path"))
+      SET PATH TO lcPath+";"+.cgSfolder
+      RETURN .T.
+     ENDFUNC
+*
+     FUNCTION MakePDF
+      LOCAL lcPdffile, lcOutputfile, lcPsfile
+      SET SAFETY OFF
+      WITH thIs
+           IF  .NOT. .lfOundgs
+                IF  .NOT. .gsFind()
+                     IF .inStall("GHOSTSCRIPT")
+                          IF  .NOT. .gsFind()
+                               .ceRror = "Could not Install Ghostscript!"
+                               .leRror = .T.
+                               RETURN .F.
+                          ENDIF
+                     ENDIF
+                ENDIF
+           ENDIF
+           lcOutputfile = .coUtputfile
+           lcPsfile = .cpSfile
+           IF EMPTY(.cpDffile)
+                .cpDffile = JUSTSTEM(lcPsfile)+".pdf"
+           ENDIF
+           lcPdffile = .cpDffile
+           ERASE (lcPdffile)
+           IF  .NOT. .gsConvertfile(lcPsfile,lcPdffile)
+                .ceRror = "Could not create: "+lcPdffile
+                .leRror = .T.
+           ENDIF
+           IF  .NOT. FILE(lcPdffile)
+                .ceRror = "Could not create: "+lcPdffile
+                .leRror = .T.
+           ENDIF
+           IF .leRasepsfile
+                ERASE (lcPsfile)
+           ENDIF
+
+           ERASE (lcOutputfile)
+           RENAME (lcPdffile) TO (lcOutputfile)
+           IF  .NOT. FILE(lcOutputfile)
+*!*	           		_cliptext = lcPdfFile
+*!*					WAIT WINDOW "Could not rename file to "+lcOutputfile timeout 3
+	        	 RENAME (lcPdffile) TO (lcOutputfile)
+    		     IF  .NOT. FILE(lcOutputfile)
+    		     		WAIT WINDOW "NOT success"
+				 ENDIF
+
+                .ceRror = "Could not rename file to "+lcOutputfile
+                .leRror = .T.
+           ENDIF
+      ENDWITH
+      RETURN  .NOT. thIs.leRror
+     ENDFUNC
+*
+     FUNCTION GSConvertFile
+      LPARAMETER tcFilein, tcFileout
+      LOCAL lnGsinstancehandle, lnCallerhandle, loHeap, lnElementcount,  ;
+            lcPtrargs, lnCounter, lnReturn
+      DIMENSION laArgs[11]
+      STORE 0 TO lnGsinstancehandle, lnCallerhandle, lnElementcount,  ;
+            lnCounter, lnReturn
+      STORE .NULL. TO loHeap
+      STORE "" TO lcPtrargs
+      SET SAFETY OFF
+      SET PROCEDURE TO proc\clsheap ADDITIVE
+      loHeap = CREATEOBJECT('Heap')
+      CLEAR DLLS
+      DECLARE LONG gsapi_new_instance IN gsdll32.dll LONG @, LONG
+      DECLARE LONG gsapi_delete_instance IN gsdll32.dll LONG
+      DECLARE LONG gsapi_init_with_args IN gsdll32.dll LONG, LONG, LONG
+      DECLARE LONG gsapi_exit IN gsdll32.dll LONG
+      laArgs[1] = "dummy"
+      laArgs[2] = "-dNOPAUSE"
+      laArgs[3] = "-dBATCH"
+      laArgs[4] = "-dSAFER"
+      laArgs[5] = "-r"+thIs.cpRintresolution
+      laArgs[6] = "-sDEVICE=pdfwrite"
+      laArgs[7] = "-sOutputFile="+tcFileout
+      laArgs[8] = "-c"
+      laArgs[9] = ".setpdfwrite"
+      laArgs[10] = "-f"
+      laArgs[11] = tcFilein
+      lnReturn = gsApi_new_instance(@lnGsinstancehandle,@lnCallerhandle)
+      IF (lnReturn<0)
+           loHeap = .NULL.
+           RELEASE loHeap
+           thIs.leRror = .T.
+           thIs.ceRror = "Could not start Ghostscript."
+           RETURN .F.
+      ENDIF
+      lnElementcount = ALEN(laArgs)
+      lcPtrargs = ""
+      FOR lnCounter = 1 TO lnElementcount
+           lcPtrargs = lcPtrargs+ ;
+                       nuMtolong(loHeap.alLocstring(laArgs(lnCounter)))
+      ENDFOR
+      lnPtr = loHeap.alLocblob(lcPtrargs)
+      lnReturn = gsApi_init_with_args(lnGsinstancehandle,lnElementcount,lnPtr)
+      IF (lnReturn<0)
+           loHeap = .NULL.
+           RELEASE loHeap
+           thIs.leRror = .T.
+           thIs.ceRror = "Could not Initilize Ghostscript."
+           RETURN .F.
+      ENDIF
+      lnReturn = gsApi_exit(lnGsinstancehandle)
+      IF (lnReturn<0)
+           loHeap = .NULL.
+           RELEASE loHeap
+           thIs.leRror = .T.
+           thIs.ceRror = "Could not Exit Ghostscript."
+           RETURN .F.
+      ENDIF
+      = gsApi_delete_instance(lnGsinstancehandle)
+      loHeap = .NULL.
+      RELEASE loHeap
+      IF  .NOT. FILE(tcFileout)
+           thIs.leRror = .T.
+           thIs.ceRror = "Ghostscript could not create the PDF."
+           RETURN .F.
+      ENDIF
+      RETURN .T.
+     ENDFUNC
+*
+     FUNCTION InstPDFReader
+      IF  .NOT. FILE(.coUtputfile)
+           RETURN .F.
+      ENDIF
+      lcExe = .asSocexe(.coUtputfile)
+      IF EMPTY(lcExe)
+           RETURN .inStall("PDFREADER")
+      ELSE
+           RETURN .T.
+      ENDIF
+     ENDFUNC
+*
+     FUNCTION AssocExe
+      LPARAMETER pcFile
+      LOCAL lcExefile
+      STORE "" TO lcExefile
+      DECLARE INTEGER FindExecutable IN shell32 STRING, STRING, STRING @
+      lcExefile = SPACE(250)
+      IF fiNdexecutable(pcFile,"",@lcExefile)>32
+           lcExefile = LEFT(lcExefile, AT(CHR(0), lcExefile)-1)
+      ELSE
+           lcExefile = ""
+      ENDIF
+      RETURN lcExefile
+     ENDFUNC
+*
+     FUNCTION Install
+      LPARAMETER pcId
+      LOCAL llFound, x, lcEval, lcProduct, lcDesc, lcTmp, lcFolder,  ;
+            lcInstexe, lcInstruct, llDynapath
+      STORE "" TO lcEval, lcProduct, lcAbbr, lcDesc, lcTmp, lcFolder,  ;
+            lcInstexe, lcInstruct
+      STORE .F. TO llFound, llDynapath
+      WITH thIs
+           pcId = ALLTRIM(UPPER(pcId))
+           FOR x = 1 TO ALEN(.aiNstall, 1)
+                IF ALLTRIM(UPPER(.aiNstall(x,1)))==pcId
+                     llFound = .T.
+                     EXIT
+                ENDIF
+           ENDFOR
+           IF  .NOT. llFound
+                .leRror = .T.
+                .ceRror = "Installation parms do not exist for ID: "+pcId
+                RETURN .F.
+           ENDIF
+           llDoinst = .aiNstall(x,2)
+           lcProduct = .aiNstall(x,3)
+           lcDesc = .aiNstall(x,4)
+           lcFolder = .aiNstall(x,5)
+           lcInstexe = .aiNstall(x,6)
+           IF  .NOT. EMPTY(.aiNstall(x,7))
+                lcInstruct = ALLTRIM(.aiNstall(x,7))
+                IF "+"$lcInstruct
+                     lcInstruct = &lcInstruct
+                ENDIF
+           ELSE
+                lcInstruct = "Please accept the 'Default Values'"+CHR(13)+ ;
+                             "during the installation."
+           ENDIF
+           IF "+"$lcFolder
+                llDynapath = .T.
+           ELSE
+                llDynapath = .F.
+           ENDIF
+           IF llDoinst=.T.
+                IF  .NOT. EMPTY(lcFolder) .AND.  .NOT. EMPTY(lcInstexe)
+                     IF llDynapath
+                          lcFolder = ALLTRIM(lcFolder)
+                          lcEval = &lcFolder
+                          lcEval = lcEval+ALLTRIM(lcInstexe)
+                     ELSE
+                          IF RIGHT(lcFolder, 1)<>"\"
+                               lcFolder = lcFolder+"\"
+                          ENDIF
+                          lcEval = ALLTRIM(lcFolder)+ALLTRIM(lcInstexe)
+                     ENDIF
+                     IF  .NOT. llDynapath .AND.  .NOT. FILE(lcEval)
+                          .ceRror = "Could not find installer for "+ ;
+                                    lcProduct+" in:"+CHR(13)+ALLTRIM(lcEval)
+                          .leRror = .T.
+                     ELSE
+                          IF 7=MESSAGEBOX(lcProduct+ ;
+                             " needs to be installed on your computer."+ ;
+                             CHR(13)+lcDesc+CHR(13)+ ;
+                             "Is it OK to install now?", 36, "Confirmation")
+                               .leRror = .T.
+                               .ceRror = "User cancelled "+lcProduct+ ;
+                                " Installation."
+                               RETURN .F.
+                          ENDIF
+                          = MESSAGEBOX(lcInstruct, 64, "Instructions")
+                          .aiNstall[x, 2] = .F.
+                          lcEval = "run /n "+lcEval
+                          &lcEval
+                          = MESSAGEBOX( ;
+                            "When the Installation has finished"+CHR(13)+ ;
+                            "COMPLETELY, please click OK...", 64,  ;
+                            "Waiting for Installation...")
+                          IF 7=MESSAGEBOX( ;
+                             "Was the installation successfull?"+CHR(13)+ ;
+                             CHR(13)+ ;
+                             "If no errors ocurred during the Installation"+ ;
+                             CHR(13)+ ;
+                             "and everything went OK, please click 'Yes'...",  ;
+                             36, "Everything OK?")
+                               .leRror = .T.
+                               .ceRror = "Errors ocurred during "+ ;
+                                lcProduct+" Installation."
+                               RETURN .F.
+                          ELSE
+                               .leRror = .F.
+                               .ceRror = ""
+                               RETURN .T.
+                          ENDIF
+                     ENDIF
+                ENDIF
+           ENDIF
+      ENDWITH
+      RETURN .F.
+     ENDFUNC
+*
+ENDDEFINE
+*

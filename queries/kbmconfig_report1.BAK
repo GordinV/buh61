@@ -1,0 +1,4 @@
+Parameter cWhere
+select * from v_kbm into cursor kbmconfig_report1
+select kbmconfig_report1
+

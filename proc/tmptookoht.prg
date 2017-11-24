@@ -1,0 +1,81 @@
+IF !USED('tmpObjList')
+		CREATE CURSOR tmpObjList (objekt c(120), height int, left int, top int, width int, windowstate int)
+	INSERT INTO tmpObjList (objekt, height, left, top) VALUES ('Arved',10,10,10)
+	INSERT INTO tmpObjList (objekt, height, left, top) VALUES ('Korderid',20,20,20)
+	INSERT INTO tmpObjList (objekt, height, left, top) VALUES ('MK',30,30,30)
+	INSERT INTO tmpObjList (objekt, height, left, top) VALUES ('Journal',40,40,40)
+	INSERT INTO tmpObjList (objekt, height, left, top) VALUES ('Ladu',50,50,50)
+	
+ENDIF
+
+IF !USED('tmpFail')
+	CREATE CURSOR tmpFail (cFail m)
+	APPEND BLANK
+ENDIF
+
+IF !USED('v_account')
+	CREATE CURSOR v_account (muud m)
+	APPEND BLANK
+	replace muud WITH 'eelkasutaja' IN v_account	
+ENDIF
+SET STEP ON 
+* Kustuta klasside info
+SELECT v_account
+lcMemo = v_account.muud
+lnKlassInfo = ATC('KLASSID',lcMemo)
+IF lnKlassInfo > 0
+	lcIlmaKlassMemo = LEFT(lcMemo,lnKlassInfo-1)
+	replace v_account.muud WITH lcIlmaKlassMemo IN v_account
+	MODIFY MEMO v_account.muud
+	
+ENDIF
+return
+
+*otsime klassid
+lLeitud = .f.
+lcLine = ''
+SELECT v_account
+FOR i = 1 TO MEMLINES(v_account.muud)
+	IF lLeitud = .t.
+		lcLine = MLINE(v_account.muud,i)
+		SELECT tmpFail
+		replace tmpFail.cFail WITH lcLine +IIF(i<MEMLINES(v_account.muud),CHR(13),'') ADDITIVE 
+	ENDIF
+	
+	IF ATC('KLASSID',MLINE(v_account.muud,i)) > 0
+		* leitud
+		lLeitud = .t.
+	ENDIF
+	
+ENDFOR
+IF lLeitud = .f.
+	* ei leitud, salvestame
+	WAIT WINDOW ' Salvestamine'
+	SELECT tmpObjList
+	COPY TO txtObj.csv TYPE CSV
+	SELECT v_account
+	replace v_account.muud WITH CHR(13)+'KLASSID'+CHR(13) ADDITIVE IN v_account
+	APPEND MEMO v_account.muud FROM txtObj.csv
+	ERASE txtObj.csv 
+	MODIFY MEMO v_account.muud
+	
+ENDIF
+
+
+* salvestame obj. nimekiri failis
+IF MEMLINES(tmpFail.cfail) > 0
+	WAIT WINDOW ' Loe'
+
+	COPY MEMO tmpFail.cfail TO txtObjL.csv 
+	MODIFY FILE txtObjL.csv
+	SELECT tmpObjList
+	zap
+	APPEND FROM txtObjL.csv TYPE CSV
+	BROWSE 
+	ERASE txtObjL.csv
+ENDIF
+
+
+
+
+

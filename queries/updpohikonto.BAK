@@ -1,0 +1,4 @@
+Parameter tcAasta, tcKuu, tcPohikonto
+lError = odb.exec ("sp_update_pohikonto_saldo ",alltrim(str(gRekv))+","+ tcAasta +","+ tcKuu + ",'%%'" )
+*!*	cString = "sp_update_pohikonto_saldo "+alltrim(str(gRekv))+","+ tcAasta +","+ tcKuu + ",'%%'"
+*!*	lError = sqlexec ( gnHandle, cString )

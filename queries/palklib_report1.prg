@@ -1,0 +1,8 @@
+Parameter cWhere
+tcKood = '%'+ltrim(rtrim(fltrPalklib.kood))+'%'
+tcNimetus = '%'+ltrim(rtrim(fltrPalklib.nimetus))+'%'
+tcTululiik = '%'
+tnStatus = fltrPalkLib.tun5
+
+oDb.use('curPalklib','Palklib_report1')
+select palklib_report1

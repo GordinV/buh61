@@ -1,0 +1,156 @@
+Parameters tnOpt
+*On Error
+
+gcCurrentValuuta = fnc_currentValuuta('VAL',DATE())
+
+If gvErsia='VFP'
+	Set Database To buhdata5
+	lnViews = Adbobject (laView,'VIEW')
+	For i = 1 To lnViews
+		lError = DBSetProp(laView(i),'View','FetchAsNeeded',.T.)
+	Endfor
+Endif
+tnUserId = 0
+= OpenView('v_config_')
+
+If Empty(tnOpt)
+	= OpenView('comTpremote',Iif ('EELARVE' $ curkey.versia,.F.,.T.))
+	Select coMTpremote
+	Index On Id Tag Id
+	Index On koOd Tag koOd
+	Set Order To Id
+
+	= OpenView('comEelarveremote',Iif ('EELARVE' $ curkey.versia,.F.,.T.))
+	Select comEelarveremote
+	Index On Id Tag Id
+	Index On koOd Tag koOd Additive
+	Set Order To Id
+	= OpenView('comallikadremote',Iif ('EELARVE' $ curkey.versia,.F.,.T.))
+	Select coMallikadremote
+	Index On Id Tag Id
+	Index On koOd Tag koOd
+	Set Order To Id
+	= OpenView('comRaharemote',Iif ('EELARVE' $ curkey.versia,.F.,.T.))
+	Select coMRaharemote
+	Index On Id Tag Id
+	Index On koOd Tag koOd
+	Set Order To Id
+
+	= OpenView('comtegevremote',Iif ('EELARVE' $ curkey.versia,.F.,.T.))
+	Select coMtegevremote
+	Index On Id Tag Id
+	Index On koOd Tag koOd
+	Set Order To Id
+
+
+Endif
+
+= OpenView('comaaRemote')
+Index On Id Tag Id
+Set Order To Id
+
+
+= OpenView('comProjremote')
+Select comProjremote
+Index On Id Tag Id
+Index On koOd Tag koOd Additive
+Set Order To Id
+
+= OpenView('comUritusremote')
+Select comUritusremote
+Index On Id Tag Id
+Index On koOd Tag koOd Additive
+Set Order To Id
+
+
+= OpenView('comasutusRemote')
+Select coMasutusremote
+Index On Id Tag Id
+Index On reGkood Tag reGkood
+Index On Left(Upper(niMetus), 40) Tag niMetus
+Set Order To Id
+= OpenView('comdokRemote')
+SELECT comDokremote
+Index On koOd Tag koOd
+Index On Id Tag Id
+Set Order To Id
+
+= OpenView('comkassaRemote')
+SELECT comkassaRemote
+Index On Id Tag Id
+Set Order To Id
+
+= OpenView('comkontodRemote',Iif ('RAAMA' $ curkey.versia ,.F.,.T.))
+Select coMkontodremote
+Index On Id Tag Id
+Index On koOd Tag koOd
+Set Order To Id
+
+= OpenView('comnomRemote')
+Select coMnomremote
+Index On Id Tag Id
+Index On koOd Tag koOd
+Set Order To Id
+
+
+= OpenView('comrekvRemote')
+SELECT comrekvRemote
+Index On Id Tag Id
+Set Order To Id
+= OpenView('comtunnusRemote', Iif ('RAAMA' $ curkey.versia ,.F.,.T.))
+SELECT comtunnusRemote
+Index On Id Tag Id
+Index On koOd Tag koOd
+Set Order To Id
+*= OpenView('comAUTO')
+= OpenView('comArvRemote',.T.)
+Select coMarvremote
+Index On Id Tag Id
+Index On Number Tag Number
+Set Order To Number
+
+= OpenView('comValuutaRemote')
+IF USED('comValuutaRemote')
+	Select coMValuutaRemote
+	Index On Id Tag Id
+	Index On kood Tag kood
+	Set Order To kood
+ENDIF
+
+
+* arveldused
+
+= OpenView('comPakettRemote')
+Select comPakettRemote
+Index On Id Tag Id
+Index On koOd Tag koOd
+Set Order To Id
+
+= OpenView('comObjektRemote')
+Select comObjektRemote
+Index On Id Tag Id
+Index On koOd Tag koOd
+Set Order To Id
+
+Return
+Endproc
+
+
+
+*
+Procedure OpenView
+	Lparameter tcView, tlopt, tcCursor
+	If Empty(tcCursor)
+		tcCursor = tcView
+	Endif
+	With odB
+		If  .Not. Used(tcView)
+			.Use(tcView,tcCursor,Iif (tlopt = .F.,.F.,.T.),gnHandleAsync)
+		Else
+			If tlopt = .F.
+				.dbReq(tcCursor,gnHandle,tcView)
+			Endif
+		Endif
+	Endwith
+Endproc
+*

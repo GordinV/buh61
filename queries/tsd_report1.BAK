@@ -1,0 +1,42 @@
+Parameter tcWhere
+If !empty (fltrAruanne.asutusId)
+	Select comAsutusRemote
+	Locate for id = fltrAruanne.asutusId
+	tcIsik = rtrim(comAsutusRemote.nimetus)+'%'
+Else
+	tcIsik = '%%'
+Endif
+tdKpv1 = fltrAruanne.kpv1
+tdKpv2 = fltrAruanne.kpv2
+tnOsakondId1 = fltrAruanne.osakondId
+tnOsakondId2 = iif (empty (fltrAruanne.osakondId),999999999,fltrAruanne.osakondId)
+
+IF EMPTY(fltrAruanne.kond)
+	tnParent = 9
+ELSE
+	tnParent = 3
+ENDIF
+
+
+oDb.use ('printTSD')
+*!*	brow
+*!*	SET STEP ON 
+tnId = gRekv
+Create cursor ftsd_report (asutus c(254) default qryrekv.nimetus, regnum c(20) default qryrekv.regkood,;
+	aadress c(254) default qryrekv.aadress, AASTA int default year(fltrAruanne.kpv1),;
+	kuu int default month (fltrAruanne.kpv1),;
+	juhataja c(120) default qryrekv.juht, pearaama c(120) default qryrekv.raama, tel c(40) default qryrekv.tel,;
+	k_sots y, k_tulu y, k_palk y, k_tm y, k_atm y, k_pm y, k_palksots y)
+Append BLANK
+If RECCOUNT ('PRINTTSD') > 0
+	Replace k_sots with ROUND(printTsd.sotsmaks/fltrPrinter.kuurs,2) ,;
+		k_tulu with ROUND(printTsd.tulumaks/fltrPrinter.kuurs,2),;
+		k_palk with ROUND(printTsd.palk/fltrPrinter.kuurs,2),;
+		k_tm with ROUND(printTsd.tm/fltrPrinter.kuurs,2),;
+		k_atm with ROUND(printTsd.atm/fltrPrinter.kuurs,2),;
+		k_palksots WITH ROUND(printtsd.palksots/fltrPrinter.kuurs,2),;
+		k_pm with ROUND(printTsd.pm/fltrPrinter.kuurs,2) in ftsd_report
+Endif
+Use in printTsd
+Select ftsd_report
+*brow

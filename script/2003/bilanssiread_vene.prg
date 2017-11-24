@@ -1,0 +1,439 @@
+Set step on
+Create cursor curKey (versia m)
+Append blank
+Replace versia with 'EELARVE' in curKey
+Create cursor v_account (admin int default 1)
+Append blank
+*!*	gnhandle = sqlconnect ('narva','jelena','208')
+*!*	&&,'zinaida','159')
+*!*	gversia = 'MSSQL'
+*!*	grekv = 2
+cdata = 'c:\buh50\dbase\buhdata5.dbc'
+gnHandle = 1
+gversia = 'VFP'
+Open data (cdata)
+grekv = 1
+Local lError
+If v_account.admin < 1
+	Return .t.
+Endif
+CREATE cursor scrBilanss (nimetus c(254), rea c(20), konto c(20))
+insert into scrBilanss (nimetus, rea, konto) values ('ÄÅÍÜÃÈ È ÁÀÍÊÎÂÑÊÈÅ Ñ×ÅÒÀ','1','' )
+insert into scrBilanss (nimetus, rea, konto) values ('Äåíüãè â êàññå','1.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Äåíüãè íà ñ÷åòàõ EEK','1.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Âàëþòíûå ñ÷åòà','1.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('ÀÊÖÈÈ È ÏÐÎ×ÈÅ ÖÅÍÍÛÅ ÁÓÌÀÃÈ','2','')
+insert into scrBilanss (nimetus, rea, konto) values ('ÇÀÄÎËÆÅÍÍÎÑÒÜ ÏÎÊÓÏÀÒÅËÅÉ','3','')
+insert into scrBilanss (nimetus, rea, konto) values ('Íåîïëà÷åííûå ïîêóïàòåëÿìè ñ÷åòà','3.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Âåêñåëÿ ïîêóïàòåëåé','3.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ñ÷åòà, ïîñòóïëåíèå ñóìì ïî êîòîðûì íåâåðîÿòíî (ìèíóñ)','3.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('ÐÀÇËÈ×ÍÀß ÄÅÁÈÒÎÐÑÊÀß ÇÀÄÎËÆÅÍÍÎÑÒÜ','4','')
+insert into scrBilanss (nimetus, rea, konto) values ('Òðåáîâàíèÿ äî÷åðíèõ ïðåäïðèÿòèé','4.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Òðåáîâàíèÿ ñâÿçàííûõ ','4.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ðàñ÷åòû ñ àêöèîíåðàìè','4.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðî÷èå êðàòêîñðî÷íûå çàäîëæåííîñòè','5','')
+insert into scrBilanss (nimetus, rea, konto) values ('Èíòðåññû','5.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Äèâèäåíòû','5.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðî÷èå ïðîñðî÷åííûå ïîñòóïëåíèÿ','5.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('ÏÐÅÄÎÏËÀ×ÅÍÍÛÅ ÐÀÑÕÎÄÛ ÁÓÄÓÙÈÕ ÏÅÐÈÎÄÎÂ','6','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðåäîïëàòû íàëîãîâ è âîçâðàò íàëîãîâ','6.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðî÷èå ïðåäîïëà÷åííûå ðàñõîäû áóäóùèõ ïåðèîäîâ','6.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('3ÀÏÀÑÛ','7','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ñûðüå è ìàòåðèàë','7.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Íåçàâåðøåííàÿ ïðîäóêöèÿ','7.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ãîòîâàÿ ïðîäóêöèÿ','7.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('Òîâàðû, ïðèîáðåòåííûå äëÿ ïðîäàæè','7.4','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðåäîïëàòû ïîñòàâùèêàì','7.5','')
+insert into scrBilanss (nimetus, rea, konto) values ('ÄÎËÃÎÑÐÎ×ÍÛÅ ÔÈÍÀÍÑÎÂÛÅ ÈÍÂÅÑÒÈÖÈÈ','8','')
+insert into scrBilanss (nimetus, rea, konto) values ('Àêöèè è âêëàäû â äî÷åðíèå ïðåäïðèÿòèÿ','8.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðî÷èå àêöèè, âêëàäû è çàåìíûå îáÿçàòåëüñòâà','8.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Äîëãîñðî÷íûå íåîïëà÷åííûå ïîêóïàòåëÿìè ñ÷åòà','8.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('ÌÀÒÅÐÈÀËÜÍÎÅ ÎÑÍÎÂÍÎÅ ÈÌÓÙÅÑÒÂÎ','9','')
+insert into scrBilanss (nimetus, rea, konto) values ('Çåìëÿ è ñîîðóæåíèÿ (ïî ñòîèìîñòè ïðèîáðåòåíèÿ)','9.1','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ìàøèíû è îáîðóäîâàíèÿ (ïî ñòîèìîñòè ïðèîáðåòåíèÿ)','9.2','')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðî÷èé èíâåíòàðü, îðóäèÿ òðóäà, óñòðîéñòâà è ïðî÷åå (ïî öåíå ïðèîáðåòåðèÿ)','9.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('Àêêóìóëèðîâàííûé èçíîñ îñíîâíîãî èìóùåñòâà (ìèíóñ)','9.3','')
+insert into scrBilanss (nimetus, rea, konto) values ('Íåçàâåðøåííîå ñòðîèòåëüñòâî','9.4', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðåäîïëàòû çà ìàòåðèàëüíîå èìóùåñòâî','9.5', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÍÅÌÀÒÅÐÈÀËÜÍÎÅ ÎÑÍÎÂÍÎÅ ÈÌÓÙÅÑÒÂÎ','10', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ëèöåíçèè','10.1', '')
+insert into scrBilanss (nimetus, rea, konto) values ('','10.2', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Êóïëåííûå ïàòåíòû è òîðãîâûå ìàðêè','10.3', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÊÐÀÒÊÎÑÐÎ×ÍÛÅ ÎÁßÇÀÒÅËÜÑÒÂÀ','11', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Êðàòêîñðî÷íûå çàéìû îò êðåäèòíûõ ó÷ðåæäåíèé','11.1', '')
+insert into scrBilanss (nimetus, rea, konto) values (' ','11.2', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Âûïëàòû çà ñëåäóþùèé ïåðèîä ïî äîëã.áàíê. ññóäàì','11.3', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Íåîïëà÷åííûå ñ÷åòà ïîñòàâùèêàì','11.5', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Muud lühiajalised kohustused','11.6', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðåäîïëàòû','12', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðåäîïëàòû íàëîãîâ','13', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ñîöèàëüíûé íàëîã','13.1', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïîäîõîäíûé íàëîã','13.2', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ñòðàõîâàíèå îò áåçðàáîòèöû','13.4', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Íàëîã ñ îáîðîòà','13.5', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðî÷åå','13.6', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÎÒÑÐÎ×ÅÍÍÛÅ ÇÀÄÎËÆÅÍÍÎÑÒÈ (ðàñõ.íåîïë.â îò÷.ïåðèîäå)','14', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Çàäîëæåííîñòü ðàáîòîïîëó÷àòåëÿìè','14.2', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÄÎËÃÎÑÐÎ×ÍÛÅ ÎÁßÇÀÒÅËÜÑÒÂÀ','15', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Áàíêîâñêèå ññóäû','15.1', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ëèçèíã','15.2', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðî÷èå äîëãîñðî÷íûå îáÿçàòåëüñòâà','15.6', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÑÎÁÑÒÂÅÍÍÛÉ ÊÀÏÈÒÀË','16', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÀÊÖÈÎÍÅÐÍÛÉ ÊÀÏÈÒÀË ÏÎ ÍÎÌÈÍÀËÜÍÎÉ ÑÒÎÈÌÎÑÒÈ','17', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Âåëè÷èíà àêöèîíåðíîãî êàïèòàëà, óêàçàííîãî â óñòàâå','17.1', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Êîëè÷åñòâî âûïóùåííûõ ïðåèìóùåñòâåííûõ àêöèé','17.2', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Êîëè÷åñòâî âûïóùåííûõ ïðîñòûõ àêöèé','17.3', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÀÆÈÎ (ïðåâûøåíèå íîìèíàëüíîé ñòîèìîñòè)','17.4', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÏÎÄÀÐÅÍÍÛÉ ÊÀÏÈÒÀË','18', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÐÅÇÅÐÂ ÏÅÐÅÎÖÅÍÊÈ','19', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÐÅÇÅÐÂÛ','20', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Îáÿçàòåëüíûé ðåçåðâíûé êàïèòàë','20.1', '')
+insert into scrBilanss (nimetus, rea, konto) values ('Ïðî÷èå ðåçåðâû','20.2', '')
+insert into scrBilanss (nimetus, rea, konto) values (' â òîì ÷èñëå Èíâåñòèöèîííûé ôîíä','20.3', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÍÅÐÀÑÏÐÅÄÅËÅÍÍÀß ÏÐÈÁÛËÜ ÏÐÅÄÛÄÓÙÈÕ ÏÅÐÈÎÄÎÂ','21', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÏÐÈÁÛËÜ (-ÓÁÛÒÎÊ) ÎÒ×ÅÒÍÎÃÎ ÃÎÄÀ','22', '')
+insert into scrBilanss (nimetus, rea, konto) values ('ÒÐÅÇÎÐÍÛÅ ÀÊÖÈÈ (ìèíóñ)','23', '')
+*!*	If !used ('key')
+*!*		Use key in 0
+*!*	Endif
+*!*	Select key
+*!*	lnFields = afields (aObjekt)
+*!*	Create cursor qryKey from array aObjekt
+*!*	Select qryKey
+*!*	Append from dbf ('key')
+*!*	Use in key
+*!*	=secure('OFF')
+lError =  _alter_vfp()
+
+
+*!*	Do case
+*!*		Case gversia = 'VFP'
+*!*			Select qryKey
+*!*			Scan for mline(qryKey.connect,1) = 'FOX'
+*!*				lcdata = mline(qryKey.vfp,1)
+*!*				If file (lcdata)
+*!*					Open data (lcdata)
+*!*					lcdefault = sys(5)+sys(2003)
+*!*					Set DEFAULT TO justpath (lcdata)
+*!*					lError =  _alter_vfp()
+*!*					Close data
+*!*					Set default to (lcdefault)
+*!*				Endif
+*!*			Endscan
+*!*			Use in qryKey
+*!*		Case gversia = 'MSSQL'
+*!*			=sqlexec (gnhandle,'begin transaction')
+*!*			lError = _alter_mssql ()
+*!*			If vartype (lError ) = 'N'
+*!*				lError = iif( lError = 1,.t.,.f.)
+*!*			Endif
+*!*			If lError = .f.
+*!*				=sqlexec (gnhandle,'rollback')
+*!*			Else
+*!*				=sqlexec (gnhandle,'commit')
+*!*			Endif
+*!*	Endcase
+
+*!*	If lError = .f.
+*!*		Messagebox ('Viga')
+*!*	Endif
+If gversia <> 'VFP'
+	=sqldisconnect (gnhandle)
+Endif
+Return lError
+
+Function _alter_vfp
+&& âûáîðêà èìåþùèõñÿ ðåêâ.
+select id from rekv into cursor qry_Rekv
+&& âûáîðêà èìåþùèõñÿ ñòðîê áàëàíñà
+SELECT Library.kood, Library.nimetus, Library.library, Library.id,  Library.rekvid ;
+ FROM Library WHERE Library.library LIKE 'BILANSS%' into cursor qry_bilanss
+
+select qry_rekv
+scan
+	select scrBilanss
+	scan
+		select qry_bilanss
+		locate for alltrim(kood) = alltrim(qry_bilanss.kood) and;
+			alltrim(upper(nimetus)) = alltrim(upper(qry_bilanss.nimetus))
+		if !found ()
+			lcString = " insert into library (rekvid, kood, nimetus, library 0 values ("+;
+				str (qry_rekv.id)+",'"+ ltrim(rtrim(scrBilanss.kood))+"','"+;
+				ltrim(rtrim(scrBilanss.nimetus))+"','"+;
+				"BILANSS"+LTRIM(RTRIM(scrBilanss.rea))+"')"
+			&lcString
+		endif 
+	endscan
+endscan
+use in qry_rekv
+use in qry_bilanss
+if used ('library')
+	use in library
+endif
+	Return
+
+Function setpropview
+	lnViews = adbobject (laView,'VIEW')
+	For i = 1 to lnViews
+		lError = dbsetprop(laView(i),'View','FetchAsNeeded',.t.)
+	Endfor
+	Return
+
+
+Function _alter_mssql
+	cString = "sp_help "
+	lError = sqlexec (gnhandle,cString)
+	If lError > 0
+		If used ('sqlresult')
+			Select sqlresult
+			Locate for upper(name) = 'CURTOOD' and object_type = 'view'
+			If !found ()
+				cString = 'create view curtood as '+;
+					'SELECT teenused.id, teenused.asutusid, left(ltrim(rtrim(asutus.nimetus))+space(1)+ltrim(rtrim(asutus.omvorm)),254) as asutus,'+;
+					'asutus.regkood, teenused.rekvid, teenused.kpv,'+;
+					'teenused.isikId, teenused.nomid, isikud.regkood AS isikukood, isikud.nimetus AS isik, nomenklatuur.kood, '+;
+					'nomenklatuur.nimetus AS teenus, nomenklatuur.uhik, teenused.tundA, teenused.tundL, teenused.minA, teenused.minL,'+;
+					'teenused.hind, teenused.kogus, teenused.kokku, teenused.arvid '+;
+					'FROM  dbo.teenused INNER JOIN dbo.asutus ON teenused.asutusid = dbo.asutus.id '+;
+					'INNER JOIN dbo.asutus isikud ON teenused.isikId = isikud.id '+;
+					'INNER JOIN dbo.nomenklatuur ON teenused.nomid = dbo.nomenklatuur.id '
+
+				lError = sqlexec(gnhandle, cString)
+				If lError < 0
+					Return .f.
+				Endif
+
+
+				cString = 'GRANT  SELECT  ON curtood  TO dbkasutaja'
+				lError = sqlexec(gnhandle, cString)
+				cString = 'GRANT  SELECT   ON curTood  TO dbpeakasutaja'
+				lError = sqlexec(gnhandle, cString)
+				lError = iif(lError > 0,.t.,.f.)
+			Endif
+		Endif
+	Endif
+	If used ('curKey') and 'EELARVE' $ curKey.versia
+		cString = "SELECT id,kood from library where library = 'KONTOD' "
+		lError = sqlexec (gnhandle,cString,'qryKnt')
+		If lError < 0 or !used ('qryKnt')
+			Return .f.
+		Endif
+&&		lError = sqlsetprop(gnhandle,'BatchMode',.f.)
+		Select qryKnt
+		Locate for kood = '1115'
+		If !found ()
+			cString = "insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1115','Elumajade osad (korterid)','KONTOD',"+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1117'
+		If !found ()
+			cString = "insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1117','Pikaajaliselt renditud maarajatised ja hooned – kapitalirent','KONTOD', "+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1240'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1240','Pikaajalised nouded asutustele','KONTOD', "+str(grekv)+")"
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1290'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1290','Finantspõhivarade ettemaksed','KONTOD', "+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1519'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1519','Muud nõuded töötajate vastu','KONTOD', "+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1521'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				" values ('1519','Nõuded riigieelarvele liigendamata tulude osas ','KONTOD',"+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1522'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1522','Nõuded riigieelarvele majandustegevusest teenitud tulude (omatulud) osas ','KONTOD',"+;
+				str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1523'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1523','Nõuded riigieelarvele sihtfinantseerimise osas  ','KONTOD', "+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1528'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1528','Laekumised riigieelarvesse (majandustegevusest, sihtfinantseerimisest)','KONTOD', "+;
+				str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1529'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1529','Tasumised riigieelarvest (majandustegevusest, sihtfinantseerimisest)','KONTOD',"+;
+				str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '1653'
+		If found ()
+			cString = "Update library set nimetus = 'Ettemakstud tootuskindlustuse maks' where id = "+str(qryKnt.id)
+		Else
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('1653','Ettemakstud töötuskindlustuse maks','KONTOD', "+str(grekv)+")"
+		Endif
+&&		lError = sqlsetprop(gnhandle,'BatchMode',.t.)
+		lError = sqlexec (gnhandle,cString)
+		If lError < 0
+			Return .f.
+		Endif
+&&		lError = sqlsetprop(gnhandle,'BatchMode',.t.)
+		Select qryKnt
+		Locate for kood = '599'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('599','Siirded eelarvesse ','KONTOD', "+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '5991'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				" values ('5991','Kulud siiretest eelarvesse','KONTOD', "+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '6062'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('6062','Valitavate ja nimetatavate ametnike lisatasu','KONTOD', "+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '6063'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('6063','Valitavate ja nimetatavate ametnike esindustasu','KONTOD', "+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '7286'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('7286','Väärtpaberituru kutseliste osaliste, krediidiasutuste, kindlustusandjate ja "+;
+				"-vahendajate, fondivalitsejate ja investeerimisfondidega seotud toimingute riigilõiv','KONTOD',"+;
+				str( grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '7287'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				" values ('7287','Valla- ja linnaeelarvesse kauplemisloa väljastamise eest laekuv riigilõiv ','KONTOD', "+;
+				str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+		Select qryKnt
+		Locate for kood = '7288'
+		If !found ()
+			cString = "Insert into library (kood, nimetus, library, rekvid) "+;
+				"values ('7288','Valla- ja linnaeelarvesse ehituslubade, kasutuslubade ja riikliku "+;
+				"ehitusregistri andmete kinnitatud väljavotete eest laekuv riigilõiv','KONTOD', "+str(grekv)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 0
+				Return .f.
+			Endif
+		Endif
+&&		lError = sqlsetprop(gnhandle,'BatchMode',.t.)
+		cString = "select rekv.id as rekvid, library.kood, library.id from rekv,library "+;
+			"where library.id not in (select distinct parentid from kontoinf  )" +;
+			" and library.library = 'KONTOD' "+;
+			" order by rekv.id"
+		lError = sqlexec (gnhandle,cString,'qryKontoinf')
+		If lError < 0
+			Return .f.
+		Endif
+&&		lError = sqlsetprop(gnhandle,'BatchMode',.f.)
+		Select qryKontoinf
+		Scan
+			cString = " insert into kontoinf (parentid, type, formula, aasta, algsaldo, liik, rekvid) values ("+;
+				str(qryKontoinf.id)+",1,0,2003,0,1,"+str(qryKontoinf.rekvid)+")"
+			lError = sqlexec (gnhandle,cString)
+			If lError < 1
+				Exit
+			Endif
+		Endscan
+		If lError < 1
+&&			lError = sqlsetprop(gnhandle,'BatchMode',.t.)
+			Return .f.
+		Endif
+	Endif
+
+
+	Return lError
+Endproc

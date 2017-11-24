@@ -1,0 +1,32 @@
+Parameter tcWhere
+
+If gVersia = 'PG'
+	lcString = "select count(*) as count from pg_proc where proname = 'sp_saldoandmik_report'"
+	lError = oDb.execsql(lcString, 'tmpProc')
+	If !Empty (lError) And Used('tmpProc') And !empty(tmpProc.Count)
+	*		wait window 'Serveri poolt funktsioon ...' nowait
+		lError = oDb.Exec("sp_saldoandmik_report ", Str(grekv)+", DATE("+Str(Year(fltrAruanne.kpv2),4)+","+;
+			STR(Month(fltrAruanne.kpv2),2)+","+Str(Day(fltrAruanne.kpv2),2)+"),"+Str(fltrAruanne.kond,9)+",1","qrySaldoandmik")
+
+		If Used('qrySaldoandmik')
+			tcTimestamp = Alltrim(qrySaldoandmik.sp_saldoandmik_report)
+			lcString = "select konto, tp, sum(db) as db, sum(kr) as kr from tmp_saldoandmik where rekvid = "+str(gRekv)+;
+			" and timestamp = '"+tcTimestamp +"' group by konto, tp order by konto, tp  "
+			lError = oDb.Execsql(lcString, 'meetmeandmik_report1')
+
+			If !Empty (lError) And Used('meetmeandmik_report1')
+				Select meetmeandmik_report1
+				brow
+				Return
+			Endif
+
+		Else
+			Select 0
+			Return .F.
+		Endif
+	Endif
+
+
+Endif
+
+Return .F.

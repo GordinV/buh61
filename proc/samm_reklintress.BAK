@@ -1,0 +1,118 @@
+Parameter tnLepingId, tdKpv, tnPreliminary
+If !Empty(tdKpv)
+	ldArvKpv = tdKpv
+Else
+*	ldArvKpv = Gomonth(Date(Year(Date()),Month(Date()),1),1)-1
+	ldArvKpv = date()
+Endif
+Local lnResult
+With odB
+
+	If Empty(tnLepingId)
+		tnLepingId = 0
+	Endif
+
+	If  .Not. Used('curSource')
+		Create Cursor curSource (Id Int, koOd C (20), niMetus C (120))
+	Endif
+	If  .Not. Used('curValitud')
+		Create Cursor curValitud (Id Int, koOd C (20), niMetus C (120))
+	Endif
+	Create Cursor curResult (Id Int, asutused N(1))
+
+
+	lnStep = 1
+	Do While lnStep>0
+		Do Case
+			Case lnStep=1
+				Do geT_asutused_list
+			Case lnStep>2
+				Do arVutus
+		Endcase
+	Enddo
+	If Used('curSource')
+		Use In curSource
+	Endif
+	If Used('curvalitud')
+		Use In curValitud
+	Endif
+	If Used('curResult')
+		Use In curResult
+	Endif
+Endwith
+Endproc
+*
+Procedure arVutus
+	Local leRror, lcDate, lResult
+	lcdate = "date("+Str(Year(tdKpv),4)+","+Str(Month(tdKpv),2)+","+Str(Day(tdKpv),2)+")"
+	
+	Select Distinct Id From curResult Where asutused = 1 Into Cursor recalc1
+	Select recalc1
+	SCAN
+		lcString = 'select l.id, l.number, a.nimetus from luba l inner join asutus a on a.id = l.parentid where and l.staatus > 0 and l.volg > 0  and l.parentId = ' + STR(recalc1.id)
+		lError = sqlexec(gnhandle, lcString, 'qryLuba')
+		SELECT qryLuba
+		SCAN
+			WAIT WINDOW 'Arvestan ' + ALLTRIM(qryLuba.nimetus) + ' Luba nr.:' + qryLuba.number nowait
+			lResult = odb.Exec('sp_calc_intress',Str(tnLubaid)+","+lcdate,'tmpId')							
+			If Empty(lResult)
+				Exit
+			Endif
+		ENDSCAN
+		If Empty(lResult)
+			Exit
+		Endif
+	ENDSCAN
+	If Empty(lResult)
+		Messagebox('Viga', 'Kontrol')
+	Endif
+	lnStep = 0
+Endproc
+
+Procedure geT_asutused_list
+	If Used('query1')
+		Use In query1
+	Endif
+	lcString = 'select id, nimetus, regkood as kood from asutus where id in (select parentId from luba where volg > 0 and staatus > 0)'
+	lnError = sqlexec(gnhandle, lcString, 'query1')
+	IF EMPTY(lnError) then
+		MESSAGEBOX('Viga','Intress')
+		SET STEP ON 
+		RETURN .f.
+	ENDIF
+	
+	Select curSource
+	If Reccount('curSource')>0
+		Zap
+	Endif
+	Append From Dbf('query1')
+	Use In query1
+	Select curValitud
+	If Reccount('curvalitud')>0
+		Zap
+	Endif
+	If Empty(ldArvKpv)
+		ldArvKpv = Date()
+	Endif
+	Do Form Forms\samm  To nrEsult With '1', Iif(coNfig.keEl=2, 'Asutused',  ;
+		'Рекламодатели'), Iif(coNfig.keEl=2, 'Valitud asutused', 'Выбранные организации'), ldArvKpv
+	If nrEsult=1
+		ldArvKpv = gdKpv
+
+
+		Select Distinct Id From curValitud Where  Not Id In (Select Id From  curResult) Into Cursor query1
+		Select query1
+		Scan
+			Insert Into curResult (Id, asutused) Values (query1.Id, 1)
+		Endscan
+		Use In query1
+		Select curValitud
+		Zap
+	Endif
+	If nrEsult=0
+		lnStep = 0
+	Else
+		lnStep = lnStep+nrEsult
+	Endif
+Endproc
+*

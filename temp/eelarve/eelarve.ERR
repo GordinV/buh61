@@ -1,0 +1,10 @@
+Form c:\avpsoft\files\buh60\forms\pv_kaart.scx has the following errors:
+    Proc./Func. SP_DEL_PV_OPER - Undefined
+
+Form c:\avpsoft\files\buh60\forms\period.scx has the following errors:
+    Unknown SP_WORKDAYS - Undefined
+
+Form c:\avpsoft\files\buh60\forms\vanemtasu_kassa.scx has the following errors:
+    Unknown SP_LUGEDA_HANSA_VALJAVOTE - Undefined
+    Unknown SP_LUGEDA_EYP_VALJAVOTE_7 - Undefined
+

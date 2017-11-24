@@ -1,0 +1,250 @@
+**
+** samm_palktasu.fxp
+**
+Parameter tnIsikid
+Local lnResult, leRror
+leRror = .T.
+If EMPTY(tnIsikid)
+	tnIsikid = 0
+Endif
+If  .NOT. USED('curSource')
+	Create CURSOR curSource (id INT, koOd C (20), niMetus C (120))
+Endif
+If  .NOT. USED('curValitud')
+	Create CURSOR curValitud (id INT, koOd C (20), niMetus C (120))
+Endif
+Create CURSOR curResult (id INT, osAkonnaid INT, paLklibid INT)
+lnStep = 1
+If USED('v_dokprop')
+	Use IN v_Dokprop
+Endif
+tnId = geTdokpropid('PALK')
+If  .NOT. USED('v_dokprop')
+	odB.usE('v_dokprop','v_dokprop')
+ENDIF
+Do WHILE lnStep>0
+	IF !EMPTY(fltrPalkOper.osakondId)
+		Insert INTO curResult (osAkonnaid) VALUES (fltrPalkOper.osakondId)		
+	endif
+	If  .NOT. EMPTY(tnIsikid)
+		Insert INTO curResult (id) VALUES (tnIsikid)
+		lnStep = 3
+		tnIsikid = 0
+	Endif
+	Do CASE
+		Case lnStep=1
+			Do geT_osakonna_list
+		Case lnStep=2
+			Do geT_isiku_list
+		Case lnStep=3
+			Do geT_kood_list
+		Case lnStep>3
+			Do arVutus
+	Endcase
+Enddo
+If USED('curSource')
+	Use IN curSource
+Endif
+If USED('curvalitud')
+	Use IN curValitud
+Endif
+If USED('curResult')
+	Use IN curResult
+ENDIF
+IF USED('tmpArvestaMinSots')
+	USE IN tmpArvestaMinSots
+ENDIF
+
+Endproc
+*
+Procedure arVutus
+	Local leRror
+	leRror = .T.
+	With odB
+		Select DISTINCT paLklibid FROM curResult WHERE  NOT  ;
+			EMPTY(curResult.paLklibid) INTO CURSOR ValPalkLib
+		Select DISTINCT id FROM curResult WHERE  NOT EMPTY(curResult.id)  ;
+			INTO CURSOR recalc1
+		Select recalc1
+		Scan
+			Select coMasutusremote
+			Locate FOR id=recalc1.id
+			If FOUND()
+				cnImi = RTRIM(coMasutusremote.niMetus)
+			Else
+				cnImi = ''
+			Endif
+			tnId = recalc1.id
+			If  .NOT. USED('v_palk_kaart')
+				.usE('v_palk_kaart')
+			Else
+				.dbReq('v_palk_kaart',gnHandle,'v_palk_kaart')
+			Endif
+			Select v_Palk_kaart
+			Index ON (liIk*IIF(v_Palk_kaart.liIk=2 .AND. v_Palk_kaart.maKs=1, 10, 1)) TAG liIk FOR stAtus=1 and liik = 6
+			Set ORDER TO liik
+			.opEntransaction()
+			Select v_Palk_kaart
+			Scan FOR v_Palk_kaart.stAtus=1
+				Select ValPalkLib
+				Locate FOR ValPalkLib.paLklibid=v_Palk_kaart.liBid
+				If FOUND()
+					leRror = edIt_oper(recalc1.id)
+					If EMPTY(leRror)
+						Exit
+					Endif
+				ENDIF
+			Endscan
+			If leRror=.T.
+				.coMmit()
+			Else
+				.roLlback()
+				Messagebox('Viga', 'Kontrol')
+			Endif
+			If leRror=.F.
+				Exit
+			Endif
+
+		Endscan
+		lnStep = 0
+	Endwith
+Endproc
+*
+Procedure edIt_oper
+	Parameter tnId
+	tnId = recalc1.id
+	tnId = v_Palk_kaart.liBid
+	If EMPTY(gdKpv) .OR. EMPTY(gnKuu) .OR. EMPTY(gnAasta)
+		Do FORM period
+	Endif
+
+	leRror = odB.Exec("gen_palkoper ",Str(v_Palk_kaart.lepingId)+","+Str(v_Palk_kaart.liBid)+;
+		","+Str(v_dokprop.Id)+", DATE("+;
+		STR(Year(gdKpv),4)+","+Str(Month(gdKpv),2)+","+Str(Day(gdKpv),2)+")"+","+'0','qryOper')
+	
+	Return leRror
+Endproc
+*
+
+Procedure geT_osakonna_list
+	If USED('query1')
+		Use IN query1
+	Endif
+	tcKood = '%%'
+	tcNimetus = '%%'
+	odB.usE('curOsakonnad','qryOsakonnad')
+	Select curSource
+	If RECCOUNT('curSource')>0
+		Zap
+	Endif
+	Append FROM DBF('qryOsakonnad')
+	Use IN qrYosakonnad
+	Select curValitud
+	If RECCOUNT('curvalitud')>0
+		Zap
+	Endif
+	Do FORM forms\samm TO nrEsult WITH '1', IIF(coNfig.keEl=2, 'Osakonnad',  ;
+		'Отделы'), IIF(coNfig.keEl=2, 'Valitud osakonnad', 'Выбранные отделы')
+	If nrEsult=1
+		Select DISTINCT id FROM curValitud INTO CURSOR query1
+		Select query1
+		Scan
+			Insert INTO curResult (osAkonnaid) VALUES (query1.id)
+		Endscan
+		Use IN query1
+		Select curValitud
+		Zap
+	Endif
+	If nrEsult=0
+		lnStep = 0
+	Else
+		lnStep = lnStep+nrEsult
+	Endif
+Endproc
+*
+Procedure geT_isiku_list
+	If USED('query1')
+		Use IN query1
+	Endif
+	If USED('qryTootajad')
+		Use IN qryTootajad
+	Endif
+	If USED('tooleping')
+		Use IN toOleping
+	Endif
+	If USED('asutus')
+		Use IN asUtus
+	Endif
+	tcIsik = '%%'
+	odB.usE('comTootajad','qryTootajad')
+	Select curSource
+	If RECCOUNT('curSource')>0
+		Zap
+	Endif
+	Select koOd, niMetus, id FROM qryTootajad WHERE osAkondid IN(SELECT  ;
+		osAkonnaid FROM curResult) INTO CURSOR query1
+	Select curSource
+	Append FROM DBF('query1')
+	Use IN query1
+	Select curValitud
+	If RECCOUNT('curvalitud')>0
+		Zap
+	Endif
+	Do FORM forms\samm TO nrEsult WITH '2', IIF(coNfig.keEl=2, 'Isikud',  ;
+		'Работники'), IIF(coNfig.keEl=2, 'Valitud isikud', 'Выбранные работники')
+	If nrEsult=1
+		Select DISTINCT id FROM curValitud INTO CURSOR query1
+		Select query1
+		Scan
+			Insert INTO curResult (id) VALUES (query1.id)
+		Endscan
+		Use IN query1
+	Endif
+	If nrEsult=0
+		lnStep = 0
+	Else
+		lnStep = lnStep+nrEsult
+	Endif
+	Return
+Endproc
+*
+Procedure geT_kood_list
+	If USED('query1')
+		Use IN query1
+	Endif
+	tcKood = '%%'
+	tcNimetus = '%%'
+	TCTULULIIK = '%%'
+	tnStatus = 0
+	odB.usE('curPalkLib','qryPalkLib')
+	Delete FROM qrYpalklib WHERE liIk<>6
+	Select curSource
+	If RECCOUNT('curSource')>0
+		Zap
+	Endif
+	Append FROM DBF('qryPalkLib')
+	Use IN qrYpalklib
+	Select curValitud
+	If RECCOUNT('curvalitud')>0
+		Zap
+	Endif
+	Do FORM forms\samm TO nrEsult WITH '3', IIF(coNfig.keEl=2,  ;
+		'Palgastruktuur', 'Начисления и удержания'), IIF(coNfig.keEl=2,  ;
+		'Valitud ', 'Выбранно ')
+	If nrEsult=1
+		Select DISTINCT id FROM curValitud INTO CURSOR query1
+		Select query1
+		Scan
+			Insert INTO curResult (paLklibid) VALUES (query1.id)
+		Endscan
+		Use IN query1
+		Select curValitud
+		Zap
+	Endif
+	If nrEsult=0
+		lnStep = 0
+	Else
+		lnStep = lnStep+nrEsult
+	Endif
+Endproc
+*

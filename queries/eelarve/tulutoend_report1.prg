@@ -1,0 +1,47 @@
+Parameter cWhere
+tdKpv1 = fltrAruanne.kpv1
+tdKpv2 = fltrAruanne.kpv2
+
+Create cursor tulutoend_report1 (kood c(20),nimetus c(254) , summa y, kuu y)
+
+TEXT TO lcString noshow
+ SELECT month(journal.kpv) AS kuu, year(journal.kpv) AS aasta, journal.rekvid, rekv.nimetus, rekv.nimetus AS asutus, journal1.tunnus AS tun, 
+ 	sum(journal1.summa * ifnull(dokvaluuta1.kuurs, 1::numeric)) AS summa, 
+ 	journal1.kood5 AS kood, space(1) AS eelarve, journal1.kood1 AS tegev, journal1.kood2   
+ 	FROM journal   JOIN journal1 ON journal.id = journal1.parentid   
+ 	LEFT JOIN dokvaluuta1 ON dokvaluuta1.dokid = journal1.id AND dokvaluuta1.dokliik = 1   
+ 	JOIN kassatulud ON ltrim(rtrim(journal1.kreedit::text)) ~~ ltrim(rtrim(kassatulud.kood::text))   
+ 	JOIN kassakontod ON ltrim(rtrim(journal1.deebet::text)) ~~ ltrim(rtrim(kassakontod.kood::text))   
+ 	JOIN rekv ON journal.rekvid = rekv.id  
+ 	where  journal.kpv >= ?tdKpv1
+	and journal.kpv <= ?tdKpv2
+	and journal.rekvId = ?gRekv
+ 	GROUP BY year(journal.kpv), month(journal.kpv), journal.rekvid, rekv.nimetus, journal1.kreedit, journal1.kood1, journal1.kood5, journal1.kood2, journal1.tunnus  ORDER BY year(journal.kpv), month(journal.kpv), journal.rekvid, rekv.nimetus, journal1.kreedit, journal1.kood1, journal1.kood5, journal1.kood2, journal1.tunnus;
+ENDTEXT
+
+lError = SQLEXEC(gnHandle, lcString, 'qryTuludTmp')
+
+If lError < 0
+	SELECT 0
+	glError = .t.
+	Return .f.
+Endif
+
+Select qryTuludTmp.kood as kood,  sum (summa) as summa ;
+	from qryTuludTmp ;
+	order by qryTuludTmp.kood ;
+	group by qryTuludTmp.kood;
+	into cursor qry2
+SELECT QRY2
+SCAN
+	SELECT comEelarveRemote
+	LOCATE FOR kood = qry2.kood
+	INSERT INTO tulutoend_report1 (kood, nimetus, summa) VALUES ;
+		(qry2.kood, comEelarveRemote.nimetus,qry2.summa) 
+endscan
+USE IN qry2
+
+Select tulutoend_report1
+IF RECCOUNT() < 1
+	APPEND blank
+ENDIF
