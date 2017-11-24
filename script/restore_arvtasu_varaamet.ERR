@@ -1,2 +1,0 @@
-lcString = " insert into arvtasu (id, rekvid, arvid, kpv, summa, dok, nomid, pankkassa, journalid, sorderid, doklausid) values ("+ STR(tmpArvTasu.id)+","+STR(tmpArvTasu.rekvid)+","+STR(tmpArvTasu.arvid)+",DATE("+ STR(YEAR(tmpArvTasu.kpv),4)+","+STR(MONTH(tmpArvTasu.kpv),2)+","+STR(DAY(tmpArvTasu.kpv),2)+"),"+ STR(tmpArvTasu.summa,14,2)+", SPACE(1),"+STR(tmpArvTasu.nomid)+","+STR(tmpArvTasu.pankkassa)+",0,"+ STR(tmpArvTasu.sorderid)+","+STR(tmpArvTasu.doklausId)+")	
-Error in line 32: Command contains unrecognized phrase/keyword.

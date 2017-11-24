@@ -1,2 +1,0 @@
-CREATE CURSOR reklmaksu_arvestus (luba_nr c(20), period c(100), dekl_nr c(20), dekl_period c(20), ;
-	summa n(14,2), tahtaeg d, staatus c(20), lausend_nr integer, maksepaev d, makse_summa n(14,2), makse_lausend integer, volg n(14,2) )

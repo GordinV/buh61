@@ -1,9 +1,0 @@
-parameter tcOldKonto, tcUusKonto
-if empty (tcOldKonto)
-	tcOldKonto = ''
-endif
-if empty (tcUusKonto)
-	tcUusKonto = ''
-endif
-lError = odb.exec ("sp_change_konto ","'"+tcOldKonto+"','"+tcUusKonto+"'")
-return lError

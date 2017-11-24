@@ -1,2 +1,0 @@
-﻿ALTER TABLE pv_kaart ADD COLUMN jaak numeric(14,2);
-ALTER TABLE pv_kaart ALTER COLUMN jaak SET DEFAULT 0;

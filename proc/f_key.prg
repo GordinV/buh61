@@ -1,7 +1,0 @@
- LOCAL csTring
- csTring = CHR(107)+CHR(97)+CHR(116)+CHR(97)+CHR(109)+CHR(97)+CHR(114)+ ;
-           CHR(97)+CHR(110)+CHR(32)+CHR(116)+CHR(105)+CHR(107)+CHR(105)+ ;
-           CHR(50)+CHR(54)
- RETURN csTring
-ENDFUNC
-*
