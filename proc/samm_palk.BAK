@@ -123,13 +123,13 @@ Procedure arVutus
 					DELETE FROM palk_oper WHERE lepingid in (select id FROM tooleping WHERE rekvid = ?gRekv AND parentid = ?qryPalkKaart.parentid) AND kpv = <<lcDate>>
 				ENDTEXT
 				lError = odB.execsql(lcString)
-				IF !lError 
+				IF EMPTY(lError) 
 					set STEP on 
 				ENDIF
 				
 			ENDIF
 			
-
+set STEP on 
 
 			Select qryPalkKaart
 			Scan

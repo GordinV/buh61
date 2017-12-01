@@ -44,7 +44,7 @@ If lnError < 0 Then
 ENDIF
 
 TEXT TO lcString NOSHOW
-	SELECT isikukood, isik, tululiik, liik, palk_maar, riik, period,minsots,  sm_arv, tk_arv, minpalk,
+	SELECT isikukood, isik, tululiik, liik,  riik, period,minsots,  sm_arv, tk_arv, minpalk,
 		sum(summa) as summa, sum(puhkused) as puhkused, sum(haigused) as haigused, sum(tm) as tm, sum(sm) as sm, sum(tki) as tki, sum(pm) as pm, sum(tka) as tka, sum(tulubaas) as tulubaas, 
 		(select sum(sp_puudumise_paevad(?tdKpv2::date, tooleping.id)) from tooleping where tooleping.parentid = qry.id and tooleping.rekvid = qry.rekvid)::numeric as puhkus,
 		(select sum(koormus) from tooleping where parentId = qry.id and rekvId = qry.rekvId and algab <= ?tdKpv2 and (empty(lopp) or lopp >= ?tdKpv1))::numeric / 100 as v1040,
@@ -58,7 +58,7 @@ TEXT TO lcString NOSHOW
 		(po.tulumaks) as tm, (po.sotsmaks) as sm, (po.tootumaks) as tki, (po.pensmaks) as pm, (po.tka) as tka, (po.tulubaas) as tulubaas,
 		pl.tululiik,pl.liik,
 		coalesce(l.tun1,0) as tm_maar, coalesce(l.tun4,0) as tk_arv, coalesce(l.tun5,0) as pm_arv, coalesce(l.tun1,0) as tm_arv, coalesce(l.tun2,0) as sm_arv,
-		(case when tasuliik = 2 then t.palk else 0 end ) as palk_maar, t.riik, po.period,
+		 t.riik, po.period,
 	 	(pc.minpalk * (
 			select minsots 
 			from palk_kaart pk_ 
@@ -87,7 +87,7 @@ TEXT TO lcString NOSHOW
 		and pl.liik = 1
 		and t.resident = 1
 		and (rekv.id = ?gRekv or rekv.parentId = ?l_parent)) qry
-	group by id, rekvId, isikukood, isik, tululiik, liik, palk_maar, riik, period, v1040, minsots, sm_arv, tk_arv, minpalk
+	group by id, rekvId, isikukood, isik, tululiik, liik, riik, period, v1040, minsots, sm_arv, tk_arv, minpalk
 
 ENDTEXT
 
@@ -104,13 +104,13 @@ ELSE
 	l_last_isikukood = ''
 
 	Select qryKoormus.isikukood, qryKoormus.isik, Sum(summa) As Summa, sum(puhkused) as puhkused, sum(haigused) as haigused, Sum(tm) As tm, Sum(sm) As sm, Sum(tki) As tki, Sum(tka) As tka,;
-		sum(pm) As pm, Sum(tulubaas) As tulubaas, tululiik, palk_maar, riik, sm_arv, tk_arv, ;
+		sum(pm) As pm, Sum(tulubaas) As tulubaas, tululiik, riik, sm_arv, tk_arv, ;
 		max(qryKoormus.koormus) as v1040, sum(puhkus) as puhkus, MAX(lopp) as lopp, max(qryTsd.arv_min_sots) as arv_min_sots, ; 
 		max(qryTsd.min_sots_alus) as min_sots_alus;
 		FROM qryTsd ;
 		inner join qryKoormus on ALLTRIM(qryKoormus.isikukood) = ALLTRIM(qryTsd.isikukood);
 		WHERE (!Isnull(qryTsd.tululiik) And  qryTsd.tululiik <> '') ;
-		GROUP By qryKoormus.isikukood, qryKoormus.isik, tululiik, palk_maar, riik, sm_arv, tk_arv ;
+		GROUP By qryKoormus.isikukood, qryKoormus.isik, tululiik, riik, sm_arv, tk_arv ;
 		ORDER BY qryKoormus.isikukood, tululiik;
 		INTO Cursor curTSD
 	Select curTSD

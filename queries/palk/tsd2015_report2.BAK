@@ -30,7 +30,7 @@ SELECT a.regkood as isikukood, a.nimetus as isik, sum(koormus)::numeric / 100 as
 	where (rekv.Id = ?gRekv or rekv.parentId = ?l_parent)
 	and algab <= ?tdKpv2 
 	and (lopp is null or lopp >= ?tdKpv1)
-	t.resident = 1
+	and t.resident = 1
 	group by a.regkood,  a.nimetus
 ENDTEXT
 

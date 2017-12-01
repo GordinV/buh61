@@ -1,221 +1,336 @@
-﻿DROP FUNCTION if exists gen_palkoper(integer, integer, integer, date, integer, integer);
+﻿-- Function: gen_palkoper(integer, integer, integer, date, integer, integer)
 
-CREATE OR REPLACE FUNCTION gen_palkoper(tnLepingId integer, tnLibId integer, tnDokLausId integer, tdKpv date, tnAvans integer, tnMinPalk integer)
-  RETURNS integer AS
+DROP FUNCTION if exists gen_palkoper(integer, integer, integer, date, integer, integer);
+
+CREATE OR REPLACE FUNCTION gen_palkoper(tnlepingid INTEGER, tnlibid INTEGER, tndoklausid INTEGER, tdkpv DATE,
+                                        tnavans    INTEGER, tnminpalk INTEGER)
+  RETURNS INTEGER AS
 $BODY$
-declare
-	l_sotsmaks_min_palk numeric[];
-	lnLiik int;
-	qrypalklib record;
-	v_klassiflib record;
-	v_palk_kaart record;
-	v_dokprop record;
-	lnAsutusest int;
-	lnSumma numeric(12,4);
-	lcTunnus varchar;
-	lnPalkOperId int;
-	lnJournalId int;
-	lcTp varchar;
-	v_valuuta record;
-	lnRekvId integer;
-	lnParentId integer;
-	l_pohikoht integer = 0;
+DECLARE
+  l_sotsmaks_min_palk NUMERIC [];
+  qrypalklib          RECORD;
+  v_klassiflib        RECORD;
+  v_palk_kaart        RECORD;
+  v_dokprop           RECORD;
+  lnAsutusest         INT;
+  lnSumma             NUMERIC(12, 4);
+  lcTunnus            VARCHAR;
+  lnPalkOperId        INT;
+  lcTp                VARCHAR;
+  v_valuuta           RECORD;
+  lnRekvId            INTEGER;
+  lnParentId          INTEGER;
+  l_pohikoht          INTEGER = 0;
 
-	lcPref varchar;
-	lcTimestamp varchar;
-	v_palk_selg record;
-	l_last_paev date = (date(year(tdKpv), month(tdKpv),1) + interval '1 month')::date  - 1;
+  lcPref              VARCHAR;
+  lcTimestamp         VARCHAR;
+  v_palk_selg         RECORD;
+  l_last_paev         DATE = (date(year(tdKpv), month(tdKpv), 1) + INTERVAL '1 month') :: DATE - 1;
 
-	l_sotsmaks_min_id integer = 0;
-	l_lepingId_min_sots integer;
-	l_min_sots_id integer;
-	l_libId_min_sots integer;
+  l_sotsmaks_min_id   INTEGER = 0;
+  l_lepingId_min_sots INTEGER;
+  l_libId_min_sots    INTEGER;
 
 
-begin
-	lcPref = '';
-	select rekvid, parentId, pohikoht into lnrekvid, lnParentId, l_pohikoht from tooleping where id = tnLepingId;
+BEGIN
+  lcPref = '';
+  SELECT
+    rekvid,
+    parentId,
+    pohikoht
+  INTO lnrekvid, lnParentId, l_pohikoht
+  FROM tooleping
+  WHERE id = tnLepingId;
 
-	SELECT Library.kood, ifnull((select valuuta1.kuurs from valuuta1 
-		where parentid = library.id order by Library.id desc limit 1),0) as kuurs into v_valuuta
-		FROM Library WHERE  library = 'VALUUTA' and library.tun1 = 1;
+  SELECT
+    Library.kood,
+    ifnull((SELECT valuuta1.kuurs
+            FROM valuuta1
+            WHERE parentid = library.id
+            ORDER BY Library.id DESC
+            LIMIT 1), 0) AS kuurs
+  INTO v_valuuta
+  FROM Library
+  WHERE library = 'VALUUTA' AND library.tun1 = 1;
 
-	lcTp := '800699';
-	lcTunnus := space(1);
-	lnSumma := 0;
-	select * into v_klassiflib from klassiflib where libId = tnLibId order by id desc limit 1;
-	select * into v_palk_kaart from palk_kaart where libId = tnLibId and lepingId = tnLepingId;
-	select palk_lib.*, library.rekvId into qrypalklib from palk_lib inner join library on library.id = palk_lib.parentid 
-		where palk_lib.parentid = tnLibId;
-	select * into v_dokprop from dokprop where id = tnDokLausId;
-	
-	if qryPalkLib.liik = 1 and (select count(id) from palk_oper where kpv = tdKpv and lepingId = tnLepingid and libId = tnLibId and period is not null and period <> tdKpv) > 0 then
-		--ei saa arvestada sest on parandusi
-		return 0;
-	else
-		delete from journal where id in (select journalId from palk_oper where lepingid = tnLepingId and libId = tnLibId and kpv = tdKpv);
-		delete from palk_oper where lepingid = tnLepingId and libId = tnLibId and kpv = tdKpv and summa <> 0;
-	
-	end if;
+  lcTp := '800699';
+  lcTunnus := space(1);
+  lnSumma := 0;
+  SELECT *
+  INTO v_klassiflib
+  FROM klassiflib
+  WHERE libId = tnLibId
+  ORDER BY id DESC
+  LIMIT 1;
+  SELECT *
+  INTO v_palk_kaart
+  FROM palk_kaart
+  WHERE libId = tnLibId AND lepingId = tnLepingId;
+  SELECT
+    palk_lib.*,
+    library.rekvId
+  INTO qrypalklib
+  FROM palk_lib
+    INNER JOIN library ON library.id = palk_lib.parentid
+  WHERE palk_lib.parentid = tnLibId;
+  SELECT *
+  INTO v_dokprop
+  FROM dokprop
+  WHERE id = tnDokLausId;
 
-	if qryPalkLib.liik = 1 then
-		lnSumma = sp_calc_arv(tnLepingId, tnLibId, tdKpv, null, null, 0);
-		lcPref = 'ARV';
-	end if;		
-	if qryPalkLib.liik = 2 then
-		lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
-	end if;		
-	if qryPalkLib.liik = 3 then
-		lnSumma := sp_calc_muuda(tnLepingId, tnLibId, tdKpv);
-	end if;		
-	if qryPalkLib.liik = 4 then
-		lnSumma := sp_calc_tulumaks(tnLepingId, tnLibId, tdKpv);
-		lcTp := '014001';
-		if v_dokprop.asutusid > 0 then
-			select tp into lcTp from asutus where id = v_dokprop.asutusId;
-		end if;
-		lcPref = 'TM';
+  IF qryPalkLib.liik = 1 AND (SELECT count(id)
+                              FROM palk_oper
+                              WHERE kpv = tdKpv AND lepingId = tnLepingid AND libId = tnLibId AND period IS NOT NULL AND
+                                    period <> tdKpv) > 0
+  THEN
+    --ei saa arvestada sest on parandusi
+    RETURN 0;
+  ELSE
+    DELETE FROM journal
+    WHERE id IN (SELECT journalId
+                 FROM palk_oper
+                 WHERE lepingid = tnLepingId AND libId = tnLibId AND kpv = tdKpv);
+    DELETE FROM palk_oper
+    WHERE lepingid = tnLepingId AND libId = tnLibId AND kpv = tdKpv AND summa <> 0;
 
-	end if;		
-	if qryPalkLib.liik = 5 then
-		lcPref = 'SOTS';
-		lnSumma := sp_calc_sots(tnLepingId, tnLibId, tdKpv);
-		lcTp := '014001';
-		if v_dokprop.asutusid > 0 then
-			select tp into lcTp from asutus where id = v_dokprop.asutusId;
-		end if;
+  END IF;
 
-	end if;		
-	if qryPalkLib.liik = 6 then
-		lnSumma := sp_calc_tasu(tnLepingId, tnLibId, tdKpv);
-	end if;		
-	if qryPalkLib.liik = 7 then
-		lcPref = 'TK';
-		if lnAsutusest < 1 then
-			lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
-		else
-			lnSumma := sp_calc_muuda(tnLepingId, tnLibId, tdKpv);
-		end if;
-		lcTp := '014001';
-		if v_dokprop.asutusid > 0 then
-			select tp into lcTp from asutus where id = v_dokprop.asutusId;
-		end if;
-	end if;		
-	if qryPalkLib.liik = 8 then
-		lcPref = 'PM';
-		lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
-	end if;	
+  IF qryPalkLib.liik = 1
+  THEN
+    lnSumma = sp_calc_arv(tnLepingId, tnLibId, tdKpv, NULL, NULL, 0);
+    lcPref = 'ARV';
+  END IF;
+  IF qryPalkLib.liik = 2
+  THEN
+    lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
+  END IF;
+  IF qryPalkLib.liik = 3
+  THEN
+    lnSumma := sp_calc_muuda(tnLepingId, tnLibId, tdKpv);
+  END IF;
+  IF qryPalkLib.liik = 4
+  THEN
+    lnSumma := sp_calc_tulumaks(tnLepingId, tnLibId, tdKpv);
+    lcTp := '014001';
+    IF v_dokprop.asutusid > 0
+    THEN
+      SELECT tp
+      INTO lcTp
+      FROM asutus
+      WHERE id = v_dokprop.asutusId;
+    END IF;
+    lcPref = 'TM';
 
-	raise notice 'lnSumma %, qryPalkLib.liik % lnSumma <> 0 %', lnSumma, qryPalkLib.liik, lnSumma <> 0;
-	if coalesce(lnSumma,0) <> 0 or qryPalkLib.liik = 5 then
+  END IF;
+  IF qryPalkLib.liik = 5
+  THEN
+    lcPref = 'SOTS';
+    lnSumma := sp_calc_sots(tnLepingId, tnLibId, tdKpv);
+    lcTp := '014001';
+    IF v_dokprop.asutusid > 0
+    THEN
+      SELECT tp
+      INTO lcTp
+      FROM asutus
+      WHERE id = v_dokprop.asutusId;
+    END IF;
 
-		lnSumma = coalesce(lnSumma,0);
-	
-		if v_klassiflib.tunnusid > 0 then
-			select kood into lcTunnus from library where id = v_klassiflib.tunnusId;
-		end if;
-		if v_palk_kaart.tunnusid > 0 then
-			select kood into lcTunnus from library where id = v_palk_kaart.tunnusId;
-		end if;
+  END IF;
+  IF qryPalkLib.liik = 6
+  THEN
+    lnSumma := sp_calc_tasu(tnLepingId, tnLibId, tdKpv);
+  END IF;
+  IF qryPalkLib.liik = 7
+  THEN
+    lcPref = 'TK';
+    IF lnAsutusest < 1
+    THEN
+      lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
+    ELSE
+      lnSumma := sp_calc_muuda(tnLepingId, tnLibId, tdKpv);
+    END IF;
+    lcTp := '014001';
+    IF v_dokprop.asutusid > 0
+    THEN
+      SELECT tp
+      INTO lcTp
+      FROM asutus
+      WHERE id = v_dokprop.asutusId;
+    END IF;
+  END IF;
+  IF qryPalkLib.liik = 8
+  THEN
+    lcPref = 'PM';
+    lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
+  END IF;
 
-		lcTunnus = ifnull(lcTunnus,space(1));	
-		lcTimestamp = left(lcPref+LTRIM(RTRIM(str(tnLepingId)))+LTRIM(RTRIM(str(tnLibId)))+ltrim(rtrim(str(dateasint(tdKpv)))),20);
-		select muud::varchar as selg, volg1 as tm, tasun1 as tulubaas, volg2 as sm, volg4 as tki, volg5 as pm, volg6 as tka into v_palk_selg 
-			from tmp_viivis 
-			where timestamp = lcTimestamp order by oid desc limit 1;
---		end if;
-		if qrypalklib.tululiik = '' then
-			qrypalklib.tululiik = '0';
-		end if;
+  IF coalesce(lnSumma, 0) <> 0 OR qryPalkLib.liik = 5
+  THEN
 
-		if lnSumma <> 0 then
+    lnSumma = coalesce(lnSumma, 0);
 
-			lnPalkOperId = sp_salvesta_palk_oper(0, lnRekvid, tnLibId, tnlepingid, tdKpv, lnSumma, tnDoklausid, v_palk_selg.selg, 
-				ifnull(v_klassiflib.kood1,space(1)),ifnull(v_klassiflib.kood2,'LE-P'), ifnull(v_klassiflib.kood3,space(1)), 
-				ifnull(v_klassiflib.kood4,space(1)), ifnull(v_klassiflib.kood5,space(1)), ifnull(v_klassiflib.konto,space(1)), 
-				 lcTp, lcTunnus,v_valuuta.kood, v_valuuta.kuurs,v_klassiflib.proj,
-				qrypalklib.tululiik::integer, ifnull(v_palk_selg.tm,0), ifnull(v_palk_selg.sm,0), ifnull(v_palk_selg.tki,0), ifnull(v_palk_selg.pm,0), 
-				ifnull(v_palk_selg.tulubaas,0), coalesce(v_palk_selg.tka,0), null::date);
+    IF v_klassiflib.tunnusid > 0
+    THEN
+      SELECT kood
+      INTO lcTunnus
+      FROM library
+      WHERE id = v_klassiflib.tunnusId;
+    END IF;
+    IF v_palk_kaart.tunnusid > 0
+    THEN
+      SELECT kood
+      INTO lcTunnus
+      FROM library
+      WHERE id = v_palk_kaart.tunnusId;
+    END IF;
 
-			delete from tmp_viivis where rekvid = lnRekvid and timestamp = lcTimestamp;
+    lcTunnus = ifnull(lcTunnus, space(1));
+    lcTimestamp = left(
+        lcPref + LTRIM(RTRIM(str(tnLepingId))) + LTRIM(RTRIM(str(tnLibId))) + ltrim(rtrim(str(dateasint(tdKpv)))), 20);
+    SELECT
+      muud :: VARCHAR AS selg,
+      volg1           AS tm,
+      tasun1          AS tulubaas,
+      volg2           AS sm,
+      volg4           AS tki,
+      volg5           AS pm,
+      volg6           AS tka
+    INTO v_palk_selg
+    FROM tmp_viivis
+    WHERE timestamp = lcTimestamp
+    ORDER BY oid DESC
+    LIMIT 1;
+    --		end if;
+    IF qrypalklib.tululiik = ''
+    THEN
+      qrypalklib.tululiik = '0';
+    END IF;
 
+    IF lnSumma <> 0
+    THEN
+      lnPalkOperId = sp_salvesta_palk_oper(0, lnRekvid, tnLibId, tnlepingid, tdKpv, lnSumma, tnDoklausid,
+                                           v_palk_selg.selg,
+                                           ifnull(v_klassiflib.kood1, space(1)), ifnull(v_klassiflib.kood2, 'LE-P'),
+                                           ifnull(v_klassiflib.kood3, space(1)),
+                                           ifnull(v_klassiflib.kood4, space(1)), ifnull(v_klassiflib.kood5, space(1)),
+                                           ifnull(v_klassiflib.konto, space(1)),
+                                           lcTp, lcTunnus, v_valuuta.kood, v_valuuta.kuurs, v_klassiflib.proj,
+                                           qrypalklib.tululiik :: INTEGER, ifnull(v_palk_selg.tm, 0),
+                                           ifnull(v_palk_selg.sm, 0), ifnull(v_palk_selg.tki, 0),
+                                           ifnull(v_palk_selg.pm, 0),
+                                           ifnull(v_palk_selg.tulubaas, 0), coalesce(v_palk_selg.tka, 0), NULL :: DATE);
 
-		end if;
-		
-		if qryPalkLib.liik = 5 and not empty(tnMinPalk) and (select count(pk.id) 
-				from palk_kaart pk 
-				inner join palk_lib pl on pl.parentid = pk.libId
-				where pk.lepingid in (select id from tooleping  where parentid = lnParentId and pohikoht = 1 or id = tnLepingid) 
-				and pl.liik = 5
-				and coalesce(pk.minsots,0) = 1) > 0 and l_pohikoht = 1 then
-
-				select po.id, po.libid, po.lepingId into l_sotsmaks_min_id , l_lepingId_min_sots, l_libId_min_sots
-					from palk_oper po
-					where lepingid in  (select id from tooleping  where parentid = lnParentId and pohikoht = 1 and rekvid = lnrekvid)
-					and kpv = l_last_paev 
-					and libId = tnLibId 
-					and id <> lnPalkOperId 
-					and po.sotsmaks <> 0
-					limit 1;
-
-
-			-- arvestame sotsmaks minpalgast
-			l_sotsmaks_min_palk =  sp_calc_min_sots(tnLepingid, l_last_paev);
-
-			if l_sotsmaks_min_palk is not null then 
-								
-				l_sotsmaks_min_id =  sp_salvesta_palk_oper(coalesce(l_sotsmaks_min_id,0), lnRekvid, coalesce(l_libId_min_sots,tnLibId), coalesce(l_lepingId_min_sots,tnlepingid), l_last_paev, l_sotsmaks_min_palk[1], tnDoklausid, 
-					('SM min. palgast -> ' + ifnull(l_sotsmaks_min_palk[1],0)::text + ' SM summast -> ' + ifnull(l_sotsmaks_min_palk[2],0)::text), 
-					ifnull(v_klassiflib.kood1,space(1)),ifnull(v_klassiflib.kood2,'LE-P'), ifnull(v_klassiflib.kood3,space(1)), 
-					ifnull(v_klassiflib.kood4,space(1)), ifnull(v_klassiflib.kood5,space(1)), ifnull(v_klassiflib.konto,space(1)), 
-					 lcTp, lcTunnus,v_valuuta.kood, v_valuuta.kuurs,v_klassiflib.proj,
-					qrypalklib.tululiik::integer, 0, ifnull(l_sotsmaks_min_palk[2],0), 0, 0, 
-					0, 0, null::date);
-			else
-				if coalesce(l_sotsmaks_min_id,0) > 0 then
-					-- kustuta vana arvestus
-					perform sp_del_palk_oper(l_sotsmaks_min_id,1);
-				end if;
-
-			end if;
-		end if;
-
-
---		lisatud 31/12/2004
-		IF tnAvans > 0 AND qryPalkLib.liik = 6 then 	
-			perform sp_calc_avansimaksed(lnpalkOperId);
-		END IF;
-
-		-- umardamine
-		if qryPalkLib.liik = 1 and lnSumma <> 0 
-			and -- tulud rohkem kui 1
-				(
-				select count(palk_oper.id) from palk_oper 
-				where lepingId in (select id from tooleping where parentId = lnParentId
-				)
-				and rekvId = lnrekvid
-				and summa <> 0
-				and libId in (select l.id from library l inner join palk_lib pl on pl.parentId = l.id and pl.liik = 1 )
-				and year(kpv) = year(tdKpv) and month(kpv) = month(tdKpv)
-				) > 1
-				
-			
-		then
-				-- umardamine
-				raise notice 'umardamine lnSumma % lnParentId %', lnSumma, lnParentId;
-				perform  sp_calc_umardamine(lnParentId, tdKpv,  lnrekvid);
-
-		end if;
+      DELETE FROM tmp_viivis
+      WHERE rekvid = lnRekvid AND timestamp = lcTimestamp;
 
 
-	
-	end if;
-	Return lnpalkOperId;
-end; 
+    END IF;
+
+    IF qryPalkLib.liik = 5 AND NOT empty(tnMinPalk) AND (SELECT count(pk.id)
+                                                         FROM palk_kaart pk
+                                                           INNER JOIN palk_lib pl ON pl.parentid = pk.libId
+                                                         WHERE pk.lepingid IN (SELECT id
+                                                                               FROM tooleping
+                                                                               WHERE
+                                                                                 parentid = lnParentId AND pohikoht = 1
+                                                                                 OR id = tnLepingid)
+                                                               AND pl.liik = 5
+                                                               AND coalesce(pk.minsots, 0) = 1) > 0 AND l_pohikoht = 1
+    THEN
+
+      SELECT
+        po.id,
+        po.libid,
+        po.lepingId
+      INTO l_sotsmaks_min_id, l_lepingId_min_sots, l_libId_min_sots
+      FROM palk_oper po
+      WHERE lepingid IN (SELECT id
+                         FROM tooleping
+                         WHERE parentid = lnParentId AND pohikoht = 1 AND rekvid = lnrekvid)
+            AND kpv = l_last_paev
+            AND libId = tnLibId
+            AND id <> lnPalkOperId
+            AND po.sotsmaks <> 0
+      LIMIT 1;
+
+      -- arvestame sotsmaks minpalgast
+      l_sotsmaks_min_palk = sp_calc_min_sots(tnLepingid, l_last_paev);
+
+      IF l_sotsmaks_min_palk IS NOT NULL
+      THEN
+
+        l_sotsmaks_min_id = sp_salvesta_palk_oper(coalesce(l_sotsmaks_min_id, 0), lnRekvid,
+                                                  coalesce(l_libId_min_sots, tnLibId),
+                                                  coalesce(l_lepingId_min_sots, tnlepingid), l_last_paev,
+                                                  l_sotsmaks_min_palk [1], tnDoklausid,
+                                                  ('SM min. palgast -> ' + ifnull(l_sotsmaks_min_palk [1], 0) :: TEXT +
+                                                   ' SM summast -> ' + ifnull(l_sotsmaks_min_palk [2], 0) :: TEXT),
+                                                  ifnull(v_klassiflib.kood1, space(1)),
+                                                  ifnull(v_klassiflib.kood2, 'LE-P'),
+                                                  ifnull(v_klassiflib.kood3, space(1)),
+                                                  ifnull(v_klassiflib.kood4, space(1)),
+                                                  ifnull(v_klassiflib.kood5, space(1)),
+                                                  ifnull(v_klassiflib.konto, space(1)),
+                                                  lcTp, lcTunnus, v_valuuta.kood, v_valuuta.kuurs, v_klassiflib.proj,
+                                                  qrypalklib.tululiik :: INTEGER, 0, ifnull(l_sotsmaks_min_palk [2], 0),
+                                                  0, 0,
+                                                  0, 0, NULL :: DATE);
+      ELSE
+        IF coalesce(l_sotsmaks_min_id, 0) > 0
+        THEN
+          -- kustuta vana arvestus
+          PERFORM sp_del_palk_oper(l_sotsmaks_min_id, 1);
+        END IF;
+
+      END IF;
+    END IF;
+
+    --		lisatud 31/12/2004
+    IF tnAvans > 0 AND qryPalkLib.liik = 6
+    THEN
+      PERFORM sp_calc_avansimaksed(lnpalkOperId);
+    END IF;
+
+    -- umardamine
+    IF qryPalkLib.liik = 1 AND lnSumma <> 0
+       AND -- tulud rohkem kui 1
+       (
+         SELECT count(palk_oper.id)
+         FROM palk_oper
+         WHERE lepingId IN (SELECT id
+                            FROM tooleping
+                            WHERE parentId = lnParentId
+         )
+--               AND rekvId = lnrekvid // proovime arvesta miinus MVT kui meil oli arvestused teistel asutustel
+               AND summa <> 0
+               AND libId IN (SELECT l.id
+                             FROM library l INNER JOIN palk_lib pl ON pl.parentId = l.id AND pl.liik = 1)
+               AND year(kpv) = year(tdKpv) AND month(kpv) = month(tdKpv)
+       ) > 1
+
+
+    THEN
+      -- umardamine
+      PERFORM sp_calc_umardamine(lnParentId, tdKpv, lnrekvid);
+
+    END IF;
+
+
+  END IF;
+  RETURN lnpalkOperId;
+END;
 $BODY$
-  LANGUAGE 'plpgsql' VOLATILE
-  COST 100;
-  
-GRANT EXECUTE ON FUNCTION gen_palkoper(integer, integer, integer, date, integer, integer) TO dbkasutaja;
-GRANT EXECUTE ON FUNCTION gen_palkoper(integer, integer, integer, date, integer, integer) TO dbpeakasutaja;
+LANGUAGE 'plpgsql' VOLATILE
+COST 100;
 
+GRANT EXECUTE ON FUNCTION gen_palkoper(INTEGER, INTEGER, INTEGER, DATE, INTEGER, INTEGER) TO dbkasutaja;
+GRANT EXECUTE ON FUNCTION gen_palkoper(INTEGER, INTEGER, INTEGER, DATE, INTEGER, INTEGER) TO dbpeakasutaja;
+
+
+
+/*
+SELECT gen_palkoper(133396, 569970, 1455, DATE(2018, 5, 31), 0, 1);
+select * from library where id = 569970
+
+
+ */

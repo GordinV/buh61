@@ -130,7 +130,6 @@ Procedure arVutus
 			ENDIF
 			
 
-
 			Select qryPalkKaart
 			Scan
 				Select ValPalkLib
@@ -173,6 +172,11 @@ Procedure edIt_oper
 		STR(Year(gdKpv),4)+","+Str(Month(gdKpv),2)+","+Str(Day(gdKpv),2)+")"+",0,"+ Alltrim(Str(l_arvesta_min_sots))
 
 	leRror = odB.Exec("gen_palkoper ",lcString,'qryOper')
+	IF !lerror 
+		_cliptext = lcString
+		MESSAGEBOX('Viga',0,'Error')
+	ENDIF
+	
 	Return leRror
 Endproc
 *

@@ -1,7 +1,8 @@
 ﻿
 drop function if exists calculate_tulumaks(numeric(14,4), numeric(14,4));
+drop function if exists calculate_tulumaks(numeric(14,4), numeric(14,4));
 
-CREATE OR REPLACE FUNCTION calculate_tulumaks(tulu numeric(14,4), mvt numeric(14,4))
+CREATE OR REPLACE FUNCTION calculate_tulumaks(tulu numeric(14,4), mvt numeric(14,4), tululiik )
   RETURNS numeric AS
 $BODY$
 declare 
