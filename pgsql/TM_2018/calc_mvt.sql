@@ -13,9 +13,14 @@ DECLARE
 	lnTuluMaxPiir numeric(14,4) = 1200;
 	lnTuluMinPiir numeric(14,4) = 900;
 	lnMaxMvt numeric(14,4) = lnMaxLubatatudMVT - lnMaxLubatatudMVT / lnTuluMinPiir * (tulu - lnTuluMaxPiir); 	--500 - 500 / 900 × 	(tulu - 1200) 
-	lnArvestatudMVT numeric(14,4)  = lnTaotlusedMVT - lnTaotlusedMVT / lnTuluMinPiir * (tulu - lnTuluMaxPiir);
+	lnArvestatudMVT numeric(14,4) = lnMaxMvt ;
 
 begin
+	if lnMaxMvt > mvt then
+		--vottame nii palju kui lubatatud
+		lnArvestatudMVT = mvt;
+	END IF;
+
 	if lnMaxMvt < mvt and lnArvestatudMVT < lnMaxMvt then
 		-- vottame max lubatatud MVT
 		lnArvestatudMVT = lnMaxMvt;
@@ -50,7 +55,7 @@ $BODY$
 GRANT EXECUTE ON FUNCTION calc_mvt(numeric, numeric, date) TO dbkasutaja;
 GRANT EXECUTE ON FUNCTION calc_mvt(numeric, numeric, date) TO dbpeakasutaja;
 
-select calc_mvt(1200, 500, date(2018,01,31));
+select calc_mvt(1670, 230, date(2018,01,31));
 
 
 

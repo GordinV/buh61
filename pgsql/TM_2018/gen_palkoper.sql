@@ -1,6 +1,6 @@
 ﻿-- Function: gen_palkoper(integer, integer, integer, date, integer, integer)
 
-DROP FUNCTION if exists gen_palkoper(integer, integer, integer, date, integer, integer);
+DROP FUNCTION IF EXISTS gen_palkoper( INTEGER, INTEGER, INTEGER, DATE, INTEGER, INTEGER );
 
 CREATE OR REPLACE FUNCTION gen_palkoper(tnlepingid INTEGER, tnlibid INTEGER, tndoklausid INTEGER, tdkpv DATE,
                                         tnavans    INTEGER, tnminpalk INTEGER)
@@ -13,10 +13,10 @@ DECLARE
   v_palk_kaart        RECORD;
   v_dokprop           RECORD;
   lnAsutusest         INT;
-  lnSumma             NUMERIC(12, 4);
-  lcTunnus            VARCHAR;
+  lnSumma             NUMERIC(12, 4) = 0;
+  lcTunnus            VARCHAR = space(1);
   lnPalkOperId        INT;
-  lcTp                VARCHAR;
+  lcTp                VARCHAR = '800699';
   v_valuuta           RECORD;
   lnRekvId            INTEGER;
   lnParentId          INTEGER;
@@ -34,6 +34,7 @@ DECLARE
 
 BEGIN
   lcPref = '';
+
   SELECT
     rekvid,
     parentId,
@@ -53,19 +54,21 @@ BEGIN
   FROM Library
   WHERE library = 'VALUUTA' AND library.tun1 = 1;
 
-  lcTp := '800699';
-  lcTunnus := space(1);
-  lnSumma := 0;
+  -- v_klassiflib init
   SELECT *
   INTO v_klassiflib
   FROM klassiflib
   WHERE libId = tnLibId
   ORDER BY id DESC
   LIMIT 1;
+
+  -- v_palk_kaart init
   SELECT *
   INTO v_palk_kaart
   FROM palk_kaart
   WHERE libId = tnLibId AND lepingId = tnLepingId;
+
+  -- qrypalklib init
   SELECT
     palk_lib.*,
     library.rekvId
@@ -73,11 +76,14 @@ BEGIN
   FROM palk_lib
     INNER JOIN library ON library.id = palk_lib.parentid
   WHERE palk_lib.parentid = tnLibId;
+
+  --v_dokprop init
   SELECT *
   INTO v_dokprop
   FROM dokprop
   WHERE id = tnDokLausId;
 
+  --delete old calculations
   IF qryPalkLib.liik = 1 AND (SELECT count(id)
                               FROM palk_oper
                               WHERE kpv = tdKpv AND lepingId = tnLepingid AND libId = tnLibId AND period IS NOT NULL AND
@@ -95,87 +101,85 @@ BEGIN
 
   END IF;
 
+  --calculation
+
   IF qryPalkLib.liik = 1
   THEN
     lnSumma = sp_calc_arv(tnLepingId, tnLibId, tdKpv, NULL, NULL, 0);
     lcPref = 'ARV';
-  END IF;
-  IF qryPalkLib.liik = 2
-  THEN
-    lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
-  END IF;
-  IF qryPalkLib.liik = 3
-  THEN
-    lnSumma := sp_calc_muuda(tnLepingId, tnLibId, tdKpv);
-  END IF;
-  IF qryPalkLib.liik = 4
-  THEN
-    lnSumma := sp_calc_tulumaks(tnLepingId, tnLibId, tdKpv);
-    lcTp := '014001';
-    IF v_dokprop.asutusid > 0
-    THEN
-      SELECT tp
-      INTO lcTp
-      FROM asutus
-      WHERE id = v_dokprop.asutusId;
-    END IF;
-    lcPref = 'TM';
-
-  END IF;
-  IF qryPalkLib.liik = 5
-  THEN
-    lcPref = 'SOTS';
-    lnSumma := sp_calc_sots(tnLepingId, tnLibId, tdKpv);
-    lcTp := '014001';
-    IF v_dokprop.asutusid > 0
-    THEN
-      SELECT tp
-      INTO lcTp
-      FROM asutus
-      WHERE id = v_dokprop.asutusId;
-    END IF;
-
-  END IF;
-  IF qryPalkLib.liik = 6
-  THEN
-    lnSumma := sp_calc_tasu(tnLepingId, tnLibId, tdKpv);
-  END IF;
-  IF qryPalkLib.liik = 7
-  THEN
-    lcPref = 'TK';
-    IF lnAsutusest < 1
+  ELSEIF qryPalkLib.liik = 2
     THEN
       lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
-    ELSE
-      lnSumma := sp_calc_muuda(tnLepingId, tnLibId, tdKpv);
-    END IF;
-    lcTp := '014001';
-    IF v_dokprop.asutusid > 0
+  ELSEIF qryPalkLib.liik = 3
     THEN
-      SELECT tp
-      INTO lcTp
-      FROM asutus
-      WHERE id = v_dokprop.asutusId;
-    END IF;
+      lnSumma := sp_calc_muuda(tnLepingId, tnLibId, tdKpv);
+  ELSEIF qryPalkLib.liik = 4
+    THEN
+      lnSumma := sp_calc_tulumaks(tnLepingId, tnLibId, tdKpv);
+      lcTp := '014001';
+      IF v_dokprop.asutusid > 0
+      THEN
+        SELECT tp
+        INTO lcTp
+        FROM asutus
+        WHERE id = v_dokprop.asutusId;
+      END IF;
+      lcPref = 'TM';
+  ELSEIF qryPalkLib.liik = 5
+    THEN
+      lcPref = 'SOTS';
+      lnSumma := sp_calc_sots(tnLepingId, tnLibId, tdKpv);
+      lcTp := '014001';
+      IF v_dokprop.asutusid > 0
+      THEN
+        SELECT tp
+        INTO lcTp
+        FROM asutus
+        WHERE id = v_dokprop.asutusId;
+      END IF;
+  ELSEIF qryPalkLib.liik = 6
+    THEN
+      lnSumma := sp_calc_tasu(tnLepingId, tnLibId, tdKpv);
+  ELSEIF qryPalkLib.liik = 7
+    THEN
+      lcPref = 'TK';
+      IF lnAsutusest < 1
+      THEN
+        lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
+      ELSE
+        lnSumma := sp_calc_muuda(tnLepingId, tnLibId, tdKpv);
+      END IF;
+      lcTp := '014001';
+      IF v_dokprop.asutusid > 0
+      THEN
+        SELECT tp
+        INTO lcTp
+        FROM asutus
+        WHERE id = v_dokprop.asutusId;
+      END IF;
+  ELSEIF qryPalkLib.liik = 8
+    THEN
+      lcPref = 'PM';
+      lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
+  ELSE
+    lnSumma = 0;
   END IF;
-  IF qryPalkLib.liik = 8
-  THEN
-    lcPref = 'PM';
-    lnSumma := sp_calc_kinni(tnLepingId, tnLibId, tdKpv);
-  END IF;
+
 
   IF coalesce(lnSumma, 0) <> 0 OR qryPalkLib.liik = 5
   THEN
 
     lnSumma = coalesce(lnSumma, 0);
 
-    IF v_klassiflib.tunnusid > 0
+    --find tunnus
+    IF v_klassiflib.tunnusid > 0 AND empty(v_palk_kaart.tunnusid)
     THEN
       SELECT kood
       INTO lcTunnus
       FROM library
       WHERE id = v_klassiflib.tunnusId;
     END IF;
+
     IF v_palk_kaart.tunnusid > 0
     THEN
       SELECT kood
@@ -184,9 +188,12 @@ BEGIN
       WHERE id = v_palk_kaart.tunnusId;
     END IF;
 
-    lcTunnus = ifnull(lcTunnus, space(1));
+    lcTunnus = coalesce(lcTunnus, space(1));
+
     lcTimestamp = left(
         lcPref + LTRIM(RTRIM(str(tnLepingId))) + LTRIM(RTRIM(str(tnLibId))) + ltrim(rtrim(str(dateasint(tdKpv)))), 20);
+
+    --get calculation details
     SELECT
       muud :: VARCHAR AS selg,
       volg1           AS tm,
@@ -200,12 +207,14 @@ BEGIN
     WHERE timestamp = lcTimestamp
     ORDER BY oid DESC
     LIMIT 1;
-    --		end if;
+
+
     IF qrypalklib.tululiik = ''
     THEN
       qrypalklib.tululiik = '0';
     END IF;
 
+    --save palk_oper
     IF lnSumma <> 0
     THEN
       lnPalkOperId = sp_salvesta_palk_oper(0, lnRekvid, tnLibId, tnlepingid, tdKpv, lnSumma, tnDoklausid,
@@ -220,12 +229,14 @@ BEGIN
                                            ifnull(v_palk_selg.pm, 0),
                                            ifnull(v_palk_selg.tulubaas, 0), coalesce(v_palk_selg.tka, 0), NULL :: DATE);
 
+      --clean calc details
       DELETE FROM tmp_viivis
       WHERE rekvid = lnRekvid AND timestamp = lcTimestamp;
 
 
     END IF;
 
+    --if calculation of sots.maks, will check sor min.sotsmaks
     IF qryPalkLib.liik = 5 AND NOT empty(tnMinPalk) AND (SELECT count(pk.id)
                                                          FROM palk_kaart pk
                                                            INNER JOIN palk_lib pl ON pl.parentid = pk.libId
@@ -256,6 +267,7 @@ BEGIN
       -- arvestame sotsmaks minpalgast
       l_sotsmaks_min_palk = sp_calc_min_sots(tnLepingid, l_last_paev);
 
+      -- if min.sotsmaks, then save
       IF l_sotsmaks_min_palk IS NOT NULL
       THEN
 
@@ -301,10 +313,12 @@ BEGIN
                             FROM tooleping
                             WHERE parentId = lnParentId
          )
---               AND rekvId = lnrekvid // proovime arvesta miinus MVT kui meil oli arvestused teistel asutustel
+               AND rekvId = lnrekvid
                AND summa <> 0
                AND libId IN (SELECT l.id
-                             FROM library l INNER JOIN palk_lib pl ON pl.parentId = l.id AND pl.liik = 1)
+                             FROM library l
+                               INNER JOIN palk_lib pl
+                                 ON pl.parentId = l.id AND pl.liik = 1)
                AND year(kpv) = year(tdKpv) AND month(kpv) = month(tdKpv)
        ) > 1
 
@@ -312,7 +326,21 @@ BEGIN
     THEN
       -- umardamine
       PERFORM sp_calc_umardamine(lnParentId, tdKpv, lnrekvid);
+    END IF;
 
+    -- miinus mvt check
+    IF qryPalkLib.liik = 1 AND lnSumma <> 0 AND (SELECT count(id)
+                                                 FROM palk_oper
+                                                 WHERE lepingId IN (SELECT id
+                                                                    FROM tooleping
+                                                                    WHERE parentId = lnParentId
+                                                 )
+                                                       AND rekvId = lnrekvid
+                                                       AND summa <> 0
+                                                       AND year(kpv) = year(tdKpv) AND month(kpv) = month(tdKpv)
+                                                       AND tulubaas < 0) > 0
+    THEN
+      PERFORM sp_paranda_mvt_miinus(lnParentId, lnrekvid, tdKpv);
     END IF;
 
 
@@ -327,10 +355,23 @@ GRANT EXECUTE ON FUNCTION gen_palkoper(INTEGER, INTEGER, INTEGER, DATE, INTEGER,
 GRANT EXECUTE ON FUNCTION gen_palkoper(INTEGER, INTEGER, INTEGER, DATE, INTEGER, INTEGER) TO dbpeakasutaja;
 
 
-
 /*
-SELECT gen_palkoper(133396, 569970, 1455, DATE(2018, 5, 31), 0, 1);
+
+SELECT gen_palkoper(128178, pk.libid, 1530, DATE(2018, 1, 31), 0, 1)
+  from palk_kaart pk
+  inner join palk_lib pl on pl.parentid = pk.libid
+   where lepingid = 128178 and status = 1
+  order by pl.liik, case when empty(pl.tululiik) then 99::text else tululiik end
+
+
+
+* from palk_kaart where lepingid = 128178 and status = 1
+
 select * from library where id = 569970
 
+select * from palk_oper where tulubaas > 0 order by id desc limit 10
+
+tnlepingid INTEGER, tnlibid INTEGER, tndoklausid INTEGER, tdkpv DATE,
+                                        tnavans    INTEGER, tnminpalk INTEGER
 
  */
