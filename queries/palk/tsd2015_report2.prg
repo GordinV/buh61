@@ -118,13 +118,14 @@ ELSE
 
 	Scan
 * 1090	
-			IF curTsd.isikukood = '47705273714'
+			IF curTsd.isikukood = '48408073732'
 				SET STEP ON 
 			ENDIF
 		
 		IF l_last_isikukood <> curTSD.isikukood
 			l_last_isikukood = curTSD.isikukood
-			l_used_1090 = .f.			
+			l_used_1090 = .f.	
+			l_used_mvt = .f.		
 		
 		ENDIF
 		
@@ -151,7 +152,13 @@ ELSE
 			l_v1040 = 0
 		ENDIF
 		   
+		l_mvt = 0   
+		IF  l_used_mvt = .f.
+			l_mvt = calcMVT(curTSD.isikukood)
+			l_used_mvt = .t.			
+		ENDIF
 
+		
 	* 1200, 1210, 1220
 		Select Sum((curTSD.Summa) *  curTSD.sm_arv) As Summa, Sum(qryTsd.sm) As sm, Sum(qryTsd.tm) As tm, Sum(qryTsd.tki) As tki, ;
 			sum(qryTsd.tka) As tka, Sum(qryTsd.pm) As pm ;
@@ -164,8 +171,8 @@ ELSE
 			values (curTSD.isikukood, curTSD.isik, curTSD.tululiik, (curTSD.Summa) , l_v1040, curTSD.riik,;
 			(curTSD.Summa) * curTSD.sm_arv, 0,0, l_1090, l_sm, curTSD.pm,; 
 			(curTSD.Summa) * curTSD.tk_arv,;
-			curTSD.tki, curTSD.tka, '610', curTSD.tulubaas, ;
-			curTSD.tulubaas,0,0,0, ;
+			curTSD.tki, curTSD.tka, '610', l_mvt, ;
+			l_mvt,0,0,0, ;
 			curTSD.tm,tmpMaksud.Summa, tmpMaksud.sm, tmpMaksud.pm, tmpMaksud.tki, tmpMaksud.tka, tmpMaksud.tm)
 
 	ENDSCAN
@@ -202,5 +209,18 @@ If Used('qryKoormusLisa')
 Endif
 
 Select tsd_report
-*brow
 
+
+FUNCTION calcMVT 
+LPARAMETERS tcIsikukood
+LOCAL lMVT
+lMVT = 0
+
+lcAlias = ALIAS()
+SELECT sum(curTSD.tulubaas) as mvt FROM curTsd WHERE curTSD.isikukood = tcIsikukood INTO CURSOR tmp
+IF USED('tmp') AND RECCOUNT('tmp') > 0 
+	lMVT = tmp.mvt
+ENDIF
+USE IN tmp
+SELECT (alias)
+RETURN lMvt

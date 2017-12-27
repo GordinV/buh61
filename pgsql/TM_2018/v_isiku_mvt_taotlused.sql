@@ -1,4 +1,4 @@
-DROP VIEW IF EXISTS v_isiku_mvt_taotlused;
+﻿DROP VIEW IF EXISTS v_isiku_mvt_taotlused;
 
 CREATE VIEW v_isiku_mvt_taotlused AS
   SELECT
@@ -46,6 +46,10 @@ CREATE VIEW v_isiku_mvt_taotlused AS
                AND t.summa > 0
        ) qry
   GROUP BY isikid, aasta, kuu;
+
+
+GRANT ALL ON TABLE v_isiku_mvt_taotlused TO dbkasutaja;
+GRANT ALL ON TABLE v_isiku_mvt_taotlused TO dbpeakasutaja;
 
 /*
 

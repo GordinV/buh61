@@ -162,6 +162,8 @@ BEGIN
          v_arv.pm - round(v_fakt_arv.pm, 2) <> 0
       THEN
         --saving diff
+        raise notice 'v_arv.mvt  %',v_arv.mvt;
+
         l_id = sp_salvesta_palk_oper(0, tnRekvId, v_leping.libId, v_leping.lepingId, ldKpv, 0, v_leping.Doklausid,
                                      'Ümardamine' + v_arv.muud,
                                      ifnull(v_leping.kood1, space(1)), ifnull(v_leping.kood2, 'LE-P'),
@@ -173,7 +175,7 @@ BEGIN
                                      ifnull(v_arv.sm - round(v_fakt_arv.sm, 2), 0),
                                      ifnull(v_arv.tki - round(v_fakt_arv.tki, 2), 0),
                                      ifnull(v_arv.pm - round(v_fakt_arv.pm, 2), 0),
-                                     l_mvt_diff, coalesce(v_arv.tka - round(v_fakt_arv.tka, 2), 0), NULL :: DATE);
+                                     v_arv.mvt, coalesce(v_arv.tka - round(v_fakt_arv.tka, 2), 0), NULL :: DATE);
 
         -- if mvt was not used in full permited
         IF v_fakt_arv.mvt < 500
@@ -225,7 +227,6 @@ COST 100;
 ALTER FUNCTION sp_calc_umardamine( INTEGER, DATE, INTEGER )
 OWNER TO vlad;
 
-SELECT sp_calc_umardamine(27011, date(2018, 01, 31), 106);
 /*
 SELECT sp_calc_umardamine(27011, date(2018, 01, 31), 106);
 

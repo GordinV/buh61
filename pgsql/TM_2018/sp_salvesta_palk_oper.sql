@@ -92,6 +92,8 @@ raise notice 'start';
 	
 --	perform recalc_palk_saldo(tnlepingid::integer ,month(tdkpv)::int2);	
 	perform gen_lausend_palk(lnpalk_operId);
+
+
 	
         return  lnpalk_operId;
 end;$BODY$

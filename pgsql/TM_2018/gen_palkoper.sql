@@ -328,7 +328,7 @@ BEGIN
       PERFORM sp_calc_umardamine(lnParentId, tdKpv, lnrekvid);
     END IF;
 
-    -- miinus mvt check
+    /*-- miinus mvt check
     IF qryPalkLib.liik = 1 AND lnSumma <> 0 AND (SELECT count(id)
                                                  FROM palk_oper
                                                  WHERE lepingId IN (SELECT id
@@ -342,7 +342,7 @@ BEGIN
     THEN
       PERFORM sp_paranda_mvt_miinus(lnParentId, lnrekvid, tdKpv);
     END IF;
-
+*/
 
   END IF;
   RETURN lnpalkOperId;

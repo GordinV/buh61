@@ -536,6 +536,7 @@ BEGIN
                                 INNER JOIN tooleping t ON t.id = po.lepingId
                                 INNER JOIN palk_lib pl ON pl.parentId = po.libId
                               WHERE t.parentid = qryTooleping.parentId
+                                    AND po.period IS NULL
                                     AND pl.liik = 1
                                     AND (tnSumma IS NULL OR pl.tululiik = qryPalkLib.tululiik)
                                     -- calculate only 1 tululiik
@@ -561,6 +562,7 @@ BEGIN
           INNER JOIN palk_lib pl ON pl.parentId = po.libId
         WHERE t.parentid = qryTooleping.parentId
               AND pl.liik = 1
+              AND po.period IS NULL -- ainult arvestuse period
               AND year(po.kpv) = year(tdKpv) AND month(po.kpv) = month(tdKpv)
               --            AND po.rekvId = qryTooleping.rekvId --Arvestame koik tulud seles kuu
               AND (tnSumma IS NOT NULL OR po.id NOT IN (SELECT id
@@ -666,7 +668,7 @@ COMMENT ON FUNCTION sp_calc_arv(INTEGER, INTEGER, DATE, NUMERIC, DATE,
 /*
 SELECT sp_calc_umardamine(27011, date(2018, 01, 31), 106);
 
-select sp_calc_arv(136328, 585436, date(2018,01,31), null, null, 1);
+select sp_calc_arv(136328, 585436, date(2018,01,31), null::numeric, null::date, 1);
 
 
 select * from asutus where regkood = '37808283716'
