@@ -1,9 +1,9 @@
 ﻿-- Function: sp_calc_umardamine(integer, date, integer)
 
-DROP FUNCTION IF EXISTS sp_calc_umardamine( INTEGER, DATE, INTEGER );
+-- DROP FUNCTION sp_calc_umardamine(integer, date, integer);
 
-CREATE OR REPLACE FUNCTION sp_calc_umardamine(tnisikid INTEGER, tdkpv DATE, tnrekvid INTEGER)
-  RETURNS NUMERIC AS
+CREATE OR REPLACE FUNCTION sp_calc_umardamine(tnisikid integer, tdkpv date, tnrekvid integer)
+  RETURNS numeric AS
 $BODY$
 DECLARE
   v_tululiik       RECORD;
@@ -17,6 +17,7 @@ DECLARE
   l_tulubaas_kokku NUMERIC(14, 4);
 
   l_mvt_kokku      NUMERIC(14, 4) = 0;
+  l_mvt_fakt numeric(14,2) = 0;
   l_pm_kokku       NUMERIC(14, 4) = 0;
   l_tk_kokku       NUMERIC(14, 4) = 0;
   l_tm_kokku       NUMERIC(14, 4) = 0;
@@ -29,13 +30,14 @@ BEGIN
   v_leping = ROW (NULL);
 
   -- kustutame eelamise arvestus
-  DELETE FROM palk_oper po
+
+DELETE FROM palk_oper po
   WHERE po.lepingId IN (
     SELECT id
     FROM tooleping
     WHERE parentId = tnIsikId
   )
-        AND po.kpv >= date(year(tdKpv), month(tdKpv), 1) AND kpv <= ldKpv
+        AND po.kpv = tdKpv
         AND po.rekvId = tnRekvId
         AND po.summa = 0;
 
@@ -64,6 +66,7 @@ BEGIN
   GROUP BY pl.tululiik, pl.liik
   ORDER BY pl.liik
   LOOP
+  
 
     IF v_tululiik.arv_count > 1
     THEN
@@ -83,20 +86,18 @@ BEGIN
       ORDER BY t.pohikoht DESC, po.summa DESC
       LIMIT 1;
 
-
-      IF lcTimestamp IS NULL
-      THEN
         lcTimestamp = left('ARV' + LTRIM(RTRIM(str(v_leping.LepingId))) + LTRIM(RTRIM(str(v_leping.LibId))) +
                            ltrim(rtrim(str(dateasint(tdKpv)))), 20);
-      END IF;
 
       IF v_leping.lepingId IS NULL
       THEN
         RETURN 0;
       END IF;
 
+      -- 
+
       --calculate full summa for this tululiik
-      raise notice 'start arv for summa-> %, lcTimestamp -> %',v_tululiik.summa, lcTimestamp;
+      --raise notice 'start arv for summa-> %, lcTimestamp -> %, v_leping.LepingId -> %, v_leping.libId %',v_tululiik.summa, lcTimestamp, v_leping.LepingId, v_leping.libId;
       lnSumma = sp_calc_arv(v_leping.lepingId, v_leping.libId, v_leping.kpv, v_tululiik.summa, NULL, 1);
 
       SELECT
@@ -112,9 +113,27 @@ BEGIN
       FROM tmp_viivis
       WHERE alltrim(timestamp) = alltrim(lcTimestamp);
 
-      raise notice 'got arvestus -> %',v_arv;
+      raise notice 'got arvestus -> %',v_arv.tm;
 
 -- get fact summa done before
+      SELECT
+        sum(tulubaas)  AS mvt
+      INTO l_mvt_fakt
+      FROM palk_oper po
+        INNER JOIN library l ON l.id = po.libid
+        INNER JOIN palk_lib pl ON pl.parentid = l.id
+      WHERE po.lepingId IN (
+        SELECT id
+        FROM tooleping
+        WHERE parentId = tnIsikId
+      )
+            --	and po.kpv = tdKpv
+            AND po.kpv >= date(year(tdKpv), month(tdKpv), 1) AND kpv <= ldKpv
+            AND po.rekvId = tnRekvId
+            AND pl.liik = 1;
+--            AND pl.tululiik = v_tululiik.tululiik;
+
+
       SELECT
         sum(summa)     AS arv,
         sum(tulumaks)  AS tm,
@@ -122,7 +141,7 @@ BEGIN
         sum(tootumaks) AS tki,
         sum(pensmaks)  AS pm,
         sum(tka)       AS tka,
-        sum(tulubaas)  AS mvt
+        sum(tulumaks)  AS tm
       INTO v_fakt_arv
       FROM palk_oper po
         INNER JOIN library l ON l.id = po.libid
@@ -136,23 +155,8 @@ BEGIN
             AND po.kpv >= date(year(tdKpv), month(tdKpv), 1) AND kpv <= ldKpv
             AND po.rekvId = tnRekvId
             AND pl.liik = 1
-            AND pl.tululiik = v_tululiik.tululiik;
+          AND pl.tululiik = v_tululiik.tululiik;
 
-      -- kontrollime MVT
-      l_tulubaas_kokku = coalesce((SELECT sum(mvt.summa)
-                                   FROM taotlus_mvt mvt
-                                     INNER JOIN tooleping t ON t.id = mvt.lepingId
-                                   WHERE t.parentId = tnIsikId AND alg_kpv <= tdKpv AND lopp_kpv >= tdKpv), 0);
-
-      -- calculate basis MVT full fact summa according to MVT
-      l_tulubaas = calc_mvt(v_fakt_arv.arv, l_tulubaas_kokku, tdKpv);
-
-      -- calc MVT to round it or update it
-      IF v_fakt_arv.mvt - (v_arv.tm - round(v_fakt_arv.tm, 2) - (v_arv.pm - round(v_fakt_arv.pm, 2)) - v_arv.tki -
-                           round(v_fakt_arv.tki, 2)) > l_tulubaas
-      THEN
-        v_arv.mvt = l_tulubaas - v_fakt_arv.mvt;
-      END IF;
 
       -- check if we need to round taxes
       IF v_arv.tm - round(v_fakt_arv.tm, 2) <> 0 OR
@@ -162,10 +166,9 @@ BEGIN
          v_arv.pm - round(v_fakt_arv.pm, 2) <> 0
       THEN
         --saving diff
-        raise notice 'v_arv.mvt  %',v_arv.mvt;
 
-        l_id = sp_salvesta_palk_oper(0, tnRekvId, v_leping.libId, v_leping.lepingId, ldKpv, 0, v_leping.Doklausid,
-                                     'Ümardamine' + v_arv.muud,
+        l_id = sp_salvesta_palk_oper(0, tnRekvId, v_leping.libId, v_leping.lepingId, tdKpv, 0, v_leping.Doklausid,
+                                     'Ćmardamine' + v_arv.muud,
                                      ifnull(v_leping.kood1, space(1)), ifnull(v_leping.kood2, 'LE-P'),
                                      ifnull(v_leping.kood3, space(1)),
                                      ifnull(v_leping.kood4, space(1)), ifnull(v_leping.kood5, space(1)),
@@ -176,11 +179,11 @@ BEGIN
                                      ifnull(v_arv.tki - round(v_fakt_arv.tki, 2), 0),
                                      ifnull(v_arv.pm - round(v_fakt_arv.pm, 2), 0),
                                      v_arv.mvt, coalesce(v_arv.tka - round(v_fakt_arv.tka, 2), 0), NULL :: DATE);
-
+/*
         -- if mvt was not used in full permited
-        IF v_fakt_arv.mvt < 500
+        IF l_mvt_fakt > 0 and l_mvt_fakt < l_tulubaas and v_fakt_arv.arv <  l_tulubaas
         THEN
-          -- select used MVT in period for isik in all departments
+         --raise notice 'select used MVT in period for isik in all departments';
           SELECT
             sum(summa)     AS arv,
             sum(tulumaks)  AS tm,
@@ -204,15 +207,18 @@ BEGIN
           l_mvt_diff = coalesce(l_mvt_kokku, 0) - (coalesce(l_tulu_kokku, 0) -
                                                    (coalesce(l_tm_kokku, 0) + coalesce(l_tk_kokku, 0) +
                                                     coalesce(l_pm_kokku, 0)));
-
+                                                    
+                                                    
+	--raise notice 'l_mvt_diff %, l_mvt_kokku -> %, l_tulu_kokku -> %, l_tm_kokku -> %, l_tk_kokku -> %, l_pm_kokku -> %, l_mvt_fakt -> %',l_mvt_diff, l_mvt_kokku, l_tulu_kokku, l_tm_kokku, l_tk_kokku, l_pm_kokku, l_mvt_fakt;
           -- if diff is bigger than 0< then saving mvt diff
-          IF l_mvt_diff > 0
+          IF l_mvt_diff <> 0 and (l_mvt_diff < l_tulubaas - l_mvt_fakt)
           THEN
             UPDATE palk_oper
             SET Tulubaas = Tulubaas - l_mvt_diff
             WHERE id = l_id;
           END IF;
         END IF;
+        */
       END IF;
 
     END IF; -- arv count peaks rohkem kui 1
@@ -222,52 +228,21 @@ BEGIN
   RETURN 0;
 END;
 $BODY$
-LANGUAGE 'plpgsql' VOLATILE
-COST 100;
-ALTER FUNCTION sp_calc_umardamine( INTEGER, DATE, INTEGER )
-OWNER TO vlad;
+  LANGUAGE 'plpgsql' VOLATILE
+  COST 100;
+ALTER FUNCTION sp_calc_umardamine(integer, date, integer) OWNER TO vlad;
+GRANT EXECUTE ON FUNCTION sp_calc_umardamine(integer, date, integer) TO public;
+GRANT EXECUTE ON FUNCTION sp_calc_umardamine(integer, date, integer) TO vlad;
+GRANT EXECUTE ON FUNCTION sp_calc_umardamine(integer, date, integer) TO dbkasutaja;
+GRANT EXECUTE ON FUNCTION sp_calc_umardamine(integer, date, integer) TO dbpeakasutaja;
+
+--	select sp_calc_umardamine_(37118, '2018-02-28', 121)
+
 
 /*
-SELECT sp_calc_umardamine(27011, date(2018, 01, 31), 106);
+select * from asutus where regkood  = '48607053730'
 
-delete from palk_oper where kpv = date(2018,01,31) and rekvid = 106 and lepingid =
-
-SELECT
-        round(tasun1, 2)    AS tulubaas,
-        round(volg1, 2)     AS tm,
-        round(volg2, 2)     AS sm,
-        round(volg4, 2)     AS tki,
-        round(volg5, 2)     AS pm,
-        round(volg6, 2)     AS tka,
-        muud,
-        0 :: NUMERIC(14, 4) AS mvt
-      INTO v_arv
-      FROM tmp_viivis
-      WHERE alltrim(timestamp) = alltrim('ARV12817829002320180')
---
-select * from rekv where nimetus = '0922051 Narva Kesklinna Gumnaasium KP'
-
-select gen_palkoper(133396, 289108, 1455, date(2018,05,31), 0, 0)
-
-delete from palk_oper where rekvid = 106 and kpv = date(2018,01,31) and lepingid in (select id from tooleping where parentId = 27011)
-
-select * from asutus where regkood = '48004262229'
---16159
-
-select * from tooleping where id = 137542
-select * from palk_oper where lepingid in (128141) and year(kpv) = 2018 and month(kpv) = 8 and summa = 0
---1184
-
-select * from rekv where regkood = '75024403'
-
-select * from palk_oper where id = 4858367
-
-
-select * from palk_oper where tulubaas < 0 and year(kpv) = 2018 order by id desc limit 10
-
-select * from palk_oper where id in (4858835, 4858834)
-
-select * from tooleping where id = 133396
-
-select * from asutus where id = 31259
+select sp_calc_umardamine_(33302, date(2018,02,27), 64)
 */
+
+

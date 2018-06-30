@@ -30,7 +30,6 @@ If Used('qryEelarve1')
 	Endif
 
 	Select eelarve_report2
-	brow
 	Return .T.
 Else
 	Select 0

@@ -184,8 +184,7 @@ Scan
 					isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 				 From qryPO ;
 					WHERE alltrim(konto) In ('413320','500005','500105','500145','500155','500215','500245','500255','500285','500265', '500205',;
-					'50000701','50010701','50012701','50014701','50015701','50020701','50021701','50024701','50025701','50026701',;
-					'50027701',	'50028701',	'50029701');
+					'50012701','50027701');
 					and lepingid = qryTooLepingud.lepingid ;
 					AND liik = '1';
 					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -194,7 +193,8 @@ Scan
 				Select kuu, Sum(Summa) As Summa, 'Hüvitised ja toetused' As nimetus, '+' As liik ,;
 					isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 				 From qryPO ;
-					WHERE alltrim(konto) In ('500007','50029701','50000701','500107','500147','500157','500217','500247','500257','500287', '500267', '500207');
+					WHERE alltrim(konto) In ('500007','50029701','50000701','50010701','500107','50014701','500147','50015701','500157','50021701','500217',;
+					'500247','50024701','500257','50025701','500287', '50028701', '500267','50026701', '500207','50020701');
 					and lepingid = qryTooLepingud.lepingid ;
 					AND liik = '1';
 					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -203,7 +203,7 @@ Scan
 				Select kuu, Sum(Summa) As Summa, 'Võlaõiguslikud lepingud' As nimetus, '+' As liik ,;
 					isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 				 From qryPO ;
-					WHERE konto in ('500500','500298');
+					WHERE konto in ('500500','500298', '500268');
 					and lepingid = qryTooLepingud.lepingid ;
 					AND liik = '1';
 					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -276,7 +276,6 @@ Scan
 					AND liik = '2';
 					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 					INTO Cursor qryPOKinni
-
 
 				Insert Into palk_kaart_report1 (Id, lepingid,isikukood, isik, nimetus , osakond,;
 					 amet, liik, summa1,;

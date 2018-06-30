@@ -1,4 +1,18 @@
 Parameter cWhere
+l_test = .f.
+IF l_test = .t.
+	CREATE cursor fltrAruanne (kpv1 d, kpv2 d, konto c(20), asutusid int, tunnus int, kond int)
+	INSERT INTO fltrAruanne (kpv1, kpv2, konto, asutusid, tunnus, kond) ;
+		values (DATE(2018,01,01), DATE(2018,01,31), '203630', 0, 0, 0)
+	gnHandle = SQLCONNECT('NarvaLvPg')
+	gRekv = 63
+	gUserId = 1
+	gVersia = 'PG'
+	SET STEP on
+
+ENDIF
+
+
 Local lnDeebet, lnKreedit
 	Create Cursor KaibeAsutusAndmik_report1 (algsaldo N(18,6),deebet N(18,6),;
 		kreedit N(18,6), loppsaldo n(18,6), konto c(20), nimetus c(120), asutus c(120), Asutusid Int, regkood c(20), tp c(20),subrekvid int, subrekvnim c(254) null )
@@ -30,7 +44,7 @@ If gVersia = 'PG'
 	" DATE("+Str(Year(fltrAruanne.kpv2),4)+","+	STR(Month(fltrAruanne.kpv2),2)+","+Str(Day(fltrAruanne.kpv2),2)+"),"+;
 	STR(fltrAruanne.asutusId,9)+",'"+;
 	LTRIM(RTRIM(lcTunnus))+"%',1,"+str(fltrAruanne.kond,9),"qryKbAsu")
-*SET STEP ON 
+
 If Used('qryKbAsu')
 	tcTimestamp = Alltrim(qryKbAsu.sp_subkontod_report)
 	oDb.Use('tmpsubkontod_report')

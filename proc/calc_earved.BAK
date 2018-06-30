@@ -1,6 +1,6 @@
 Lparameters tnId
 Local lError
-SET TEXTMERGE ON
+Set Textmerge On
 
 cIds = ''
 *!*	Test()
@@ -13,13 +13,13 @@ If !Empty(tnId)
 Else
 	If Used('curArved')
 		Select curArved
-		SCAN FOR !EMPTY(curArved.valitud)
+		Scan For !Empty(curArved.valitud)
 			If Len(cIds) > 1
 				cIds = cIds + ','
 			Endif
 
 			cIds = cIds + Alltrim(Str(curArved.Id))
-		endscan
+		Endscan
 	Endif
 
 Endif
@@ -49,33 +49,36 @@ Return cFail
 
 
 Function execute
-LOCAL laAddress[3]
+	Local laAddress[3]
 TEXT TO lcString noshow
 		select arv.*, case when arv.liik = 0 then a.regkood else rtrim(LTRIM(a.regkood)) end as regkood ,
 			CASE when arv.liik = 0 then coalesce(rekv.muud,rekv.nimetus) else rtrim(LTRIM(a.nimetus)) || ' ' || rtrim(a.omvorm) end::varchar as muuja,
 			CASE when arv.liik = 1 then coalesce(rekv.muud,rekv.nimetus) else rtrim(LTRIM(a.nimetus)) || ' ' || rtrim(a.omvorm) end::varchar as ostja,
 			CASE when arv.liik = 0 then rekv.regkood else rtrim(LTRIM(a.regkood))  end as muuja_regkood,
+			CASE when arv.liik = 0 then rekv.aadress else rtrim(LTRIM(a.aadress))  end as muuja_aadress,
+			CASE when arv.liik = 0 then rekv.email else rtrim(LTRIM(a.email))  end as muuja_email,
+			CASE when arv.liik = 0 then rekv.tel else rtrim(LTRIM(a.tel))  end as muuja_tel,
 			CASE when arv.liik = 1 then rekv.regkood else rtrim(LTRIM(a.regkood))  end as ostja_regkood,
 			a.aadress, a.email,
-			(select arve from aa where parentId = rekv.id and default_ = 1 and not empty(pank) and kassa = 1 order by id desc limit 1)::varchar as arve			
+			(select arve from aa where parentId = rekv.id and default_ = 1 and not empty(pank) and kassa = 1 order by id desc limit 1)::varchar as arve
 			from arv
 			inner join asutus a on a.id = arv.asutusId
 			inner join rekv on arv.rekvId = rekv.id
 			where arv.rekvId = ?gRekv
 ENDTEXT
 
-lcString = lcString + ' and arv.id in (' + cIds + ') order by kpv, number, id '
+	lcString = lcString + ' and arv.id in (' + cIds + ') order by kpv, number, id '
 
 
 	lnError = SQLEXEC(gnhandle,lcString,'qryeArved')
 	If lnError < 0
-		_cliptext = lcString
+		_Cliptext = lcString
 		Set Step On
 	Endif
 
-	lcKpv = Str(Year(DATE()),4) + '-'+;
-			IIF(Month(DATE())<10,'0','') + Alltrim(Str(Month(DATE()),2))+'-'+;
-			IIF(Day(DATE())<10,'0','')+Alltrim(Str(Day(DATE()),2))
+	lcKpv = Str(Year(Date()),4) + '-'+;
+		IIF(Month(Date())<10,'0','') + Alltrim(Str(Month(Date()),2))+'-'+;
+		IIF(Day(Date())<10,'0','')+Alltrim(Str(Day(Date()),2))
 
 
 TEXT TO lcFileString NOSHOW
@@ -87,7 +90,7 @@ TEXT TO lcFileString NOSHOW
 			<AppId>EARVE</AppId>
 			<Version>1.1</Version>
 		</Header>
-	
+
 ENDTEXT
 
 	Select qryeArved
@@ -103,20 +106,30 @@ ENDTEXT
 				IIF(Month(qryeArved.tahtaeg)<10,'0','') + Alltrim(Str(Month(qryeArved.tahtaeg),2))+'-'+;
 				IIF(Day(qryeArved.tahtaeg)<10,'0','')+Alltrim(Str(Day(qryeArved.tahtaeg),2))
 		ENDIF
+		
+		SET STEP ON 
 		laAddress = getAddress(qryeArved.aadress)
-		lcCity = laAddress[3]
-		lcPost = laAddress[1]
-		
-		WAIT WINDOW 'lcCity ' + lcCity
-		WAIT WINDOW 'lcPost ' + lcPost
-		
-		TEXT TO lcFileString ADDITIVE NOSHOW
-					
+		lcCity = getAddress(qryeArved.aadress, 3)
+		lcPost = getAddress(qryeArved.aadress, 1)
+		la_muuja_Address = getAddress(qryeArved.muuja_aadress)
+		lc_muuja_City = getAddress(qryeArved.muuja_aadress, 3)
+		lc_muuja_Post = getAddress(qryeArved.muuja_aadress, 1)
+
+
+TEXT TO lcFileString ADDITIVE NOSHOW
+
 			<Invoice invoiceId="<<Alltrim(convert_to_utf(qryeArved.Number))>>" regNumber="<<Alltrim(qryeArved.regkood)>>">
 				<InvoiceParties>
 					<SellerParty>
 						<Name><<Alltrim(convert_to_utf(qryeArved.muuja))>></Name>
 						<RegNumber><<Alltrim(qryeArved.muuja_regkood)>></RegNumber>
+						<ContactData>
+							<PhoneNumber><<qryeArved.muuja_tel>></PhoneNumber>
+							<LegalAddress>
+								<PostalAddress1><<Alltrim(convert_to_utf(lc_muuja_Post))>></PostalAddress1>
+								<City><<ALLTRIM(convert_to_utf(lc_muuja_City))>></City>
+							</LegalAddress>
+						</ContactData>
 					</SellerParty>
 					<BuyerParty>
 						<Name><<Alltrim(convert_to_utf(qryeArved.ostja))>></Name>
@@ -139,8 +152,8 @@ ENDTEXT
 				<InvoiceSumGroup>
 					<InvoiceSum><<Alltrim(Str(qryeArved.Summa,14,2))>></InvoiceSum>
 					<VAT>
-		ENDTEXT
-		
+ENDTEXT
+
 TEXT TO lcString noshow
 			select (case n.doklausid when 0 then 18 when 1 then 0 when 2 then 5 when 3 then 0 when 4 then 9 else 20 end::numeric) as vatRate,
 				sum(kbm) as vatSum, n.doklausid, arv1.parentId, sum(summa) as summa
@@ -152,7 +165,7 @@ ENDTEXT
 		lnError = SQLEXEC(gnhandle,lcString,'qryeArvedVat')
 		If lnError < 0
 			Set Step On
-			exit
+			Exit
 		Endif
 
 TEXT TO lcString noshow
@@ -172,28 +185,28 @@ ENDTEXT
 		Endif
 		If Used('qryeArvedDet')
 			lcFileString= lcFileString  + create_details()
-		ENDIF
+		Endif
 
-TEXT TO lcFileString ADDITIVE NOSHOW	
-	
+TEXT TO lcFileString ADDITIVE NOSHOW
+
 		</InvoiceItemGroup>
 	</InvoiceItem>
 	<AdditionalInformation>
 		<InformationName>Lisa</InformationName>
 		<InformationContent><<Alltrim(convert_to_utf(qryeArved.lisa))>></InformationContent>
-		
+
 ENDTEXT
-		
-		
-	If !Empty(qryeArved.muud)
-		TEXT TO lcFileString ADDITIVE NOSHOW		
+
+
+		If !Empty(qryeArved.muud)
+TEXT TO lcFileString ADDITIVE NOSHOW
 			<InformationName>Muud</InformationName>
 			<InformationContent><<Alltrim(convert_to_utf(qryeArved.muud))>></InformationContent>
-		ENDTEXT
-		
-	ENDIF
+ENDTEXT
 
-	TEXT TO lcFileString ADDITIVE NOSHOW	
+		Endif
+
+TEXT TO lcFileString ADDITIVE NOSHOW
 		</AdditionalInformation>
 		<PaymentInfo>
 			<Currency>EUR</Currency>
@@ -209,8 +222,8 @@ ENDTEXT
 		</PaymentInfo>
 		</Invoice>
 
-	ENDTEXT
-	
+ENDTEXT
+
 
 
 *	lcString = ALLTRIM(lcString)
@@ -221,18 +234,18 @@ ENDTEXT
 	Sum Summa To lnTotalSumma
 
 
-	TEXT TO lcFileString ADDITIVE NOSHOW
-	
+TEXT TO lcFileString ADDITIVE NOSHOW
+
 			<Footer>
 				<TotalNumberInvoices><<Alltrim(Str(Reccount('qryeArved')))>></TotalNumberInvoices>
 				<TotalAmount><<Alltrim(Str(lnTotalSumma,14,2))>></TotalAmount>
 			</Footer>
 		</E_Invoice>
-	ENDTEXT
-		
+ENDTEXT
+
 
 	Strtofile(lcFileString, cFail, 4)
-	RETURN FILE(cFail)
+	Return File(cFail)
 Endfunc
 
 
@@ -262,18 +275,18 @@ Function create_details
 
 	Select qryeArvedVat
 	Scan
-		TEXT TO lcString ADDITIVE NOSHOW
-		
+TEXT TO lcString ADDITIVE NOSHOW
+
 				<SumBeforeVAT><<Alltrim(Str(qryeArvedVat.summa - qryeArvedVat.vatSum, 14,2))>></SumBeforeVAT>
 				<VATRate><<Alltrim(Str(qryeArvedVat.vatRate))>></VATRate>
 				<VATSum><<Alltrim(Str(qryeArvedVat.vatSum,14,2))>></VATSum>
 				<Currency>EUR</Currency>
 				<SumAfterVAT><<Alltrim(Str(qryeArvedVat.summa,14,2))>></SumAfterVAT>
-		ENDTEXT
-		
+ENDTEXT
+
 	Endscan
-	TEXT TO lcString ADDITIVE NOSHOW
-	
+TEXT TO lcString ADDITIVE NOSHOW
+
 			</VAT>
 			<TotalSum><<Alltrim(Str(qryeArved.Summa,14,2))>></TotalSum>
 			<Currency>EUR</Currency>
@@ -281,12 +294,12 @@ Function create_details
 		<InvoiceItem>
 			<InvoiceItemGroup>
 
-	ENDTEXT
-	
+ENDTEXT
+
 	Select qryeArvedDet
 	Scan
-		TEXT TO lcString ADDITIVE NOSHOW
-		
+TEXT TO lcString ADDITIVE NOSHOW
+
 			<ItemEntry>
 				<Description><<Alltrim(convert_to_utf(qryeArvedDet.Description))>></Description>
 				<ItemDetailInfo>
@@ -303,65 +316,68 @@ Function create_details
 				</VAT>
 				<ItemTotal><<Alltrim(Str(qryeArvedDet.itemTotal,14,2))>></ItemTotal>
 			</ItemEntry>
-		ENDTEXT
-			
-	ENDSCAN
-	
+ENDTEXT
+
+	Endscan
+
 *	Copy Memo tmpMk.iso To (cFail)
-	RETURN lcString
+	Return lcString
 *	Return File(cFail)
 Endfunc
 
 
-FUNCTION getAddress(tcAadress) 
-LOCAL lcString, laAddress[10], returnAadress[3], lcIndex, lcLinn
-lcIndex = ''
-lcLinn = ''
+Function getAddress(tcAadress, Index)
+	Local lcString, laAddress[10], returnAadress[3], lcIndex, lcLinn, lcPost
+	lcIndex = ''
+	lcLinn = ''
 
-TEXT TO lcString noshow
-	SELECT DISTINCT nimetus FROM library WHERE  library = 'LINNAD'
-ENDTEXT
-lnError = SQLEXEC(gnHandle, lcString, 'qryCities')
+	If !Used('qryCities')
+		TEXT TO lcString noshow
+			SELECT DISTINCT nimetus FROM library WHERE  library = 'LINNAD'
+		ENDTEXT
+		lnError = SQLEXEC(gnhandle, lcString, 'qryCities')
+	Endif
 
-SELECT qryCities
 
-nRows = ALINES(laAddress, STRTRAN(tcAadress,",",CHR(13)))
+	Select qryCities
 
-FOR i = 1 TO nRows
-	if len(ALLTRIM(laAddress[i]))  = 5 AND ISDIGIT(ALLTRIM(laAddress[i]))
+	nRows = Alines(laAddress, Strtran(tcAadress,",",Chr(13)))
+
+	For i = 1 To nRows
+		If Len(Alltrim(laAddress[i]))  = 5 And Isdigit(Alltrim(laAddress[i]))
 			lcIndex = laAddress[i]
-	ENDIF
-	
-	select nimetus from qryCities where UPPER(ALLTRIM(nimetus)) = UPPER(ALLTRIM(laAddress[i])) INTO CURSOR qryTmp
+		Endif
 
-	IF RECCOUNT('qryTmp') > 0 
-		lcLinn = laAddress[i]
-	ENDIF	
-	USE IN qryTmp
-ENDFOR
+		Select nimetus From qryCities Where Upper(Alltrim(nimetus)) = Upper(Alltrim(laAddress[i])) Into Cursor qryTmp
 
-lcPost = ''
-FOR i = 1 TO nRows
-	IF ALLTRIM(laAddress[i]) <> ALLTRIM(lcIndex) AND ALLTRIM(UPPER(laAddress[i])) <> ALLTRIM(UPPER(lcLinn))
-		lcPost = lcPost + IIF(i > 1, ', ','') + laAddress[i]
-	ENDIF	
-ENDFOR
+		If Reccount('qryTmp') > 0
+			lcLinn = laAddress[i]
+		Endif
+		Use In qryTmp
+	Endfor
 
-IF EMPTY(lcLinn) 
-	lcLinn = laAddress[nRows]
-ENDIF
+	lcPost = ''
+	For i = 1 To nRows
+		If Alltrim(laAddress[i]) <> Alltrim(lcIndex) And Alltrim(Upper(laAddress[i])) <> Alltrim(Upper(lcLinn))
+			lcPost = lcPost + Iif(i > 1, ', ','') + laAddress[i]
+		Endif
+	Endfor
 
-returnAadress[1] = lcPost
-returnAadress[2] = lcIndex
-returnAadress[3] = lcLinn
+	If Empty(lcLinn)
+		lcLinn = laAddress[nRows]
+	Endif
 
-RETURN returnAadress
-ENDFUNC
+	returnAadress[1] = lcPost
+	returnAadress[2] = lcIndex
+	returnAadress[3] = lcLinn
+
+	Return returnAadress[index]
+Endfunc
 
 
-FUNCTION test
-gRekv = 119
-gnHandle = SQLCONNECT('NarvaLvPg','vlad','Vlad490710')
-getAddress('rahu 15, Narva, 29024') 
+Function test
+	grekv = 119
+	gnhandle = SQLConnect('NarvaLvPg','vlad','Vlad490710')
+	getAddress('rahu 15, Narva, 29024')
 
-ENDFUNC
+Endfunc

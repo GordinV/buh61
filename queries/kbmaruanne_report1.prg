@@ -31,23 +31,55 @@ If reccount('cursor2') = 0 or;
 Endif
 &&Use curJournal in 0 alias cursor1 nodata
 Create cursor kbmandmik_report1 (Nimetus c(120), regkood c(11), aadress c(120), kbmkood c(11),;
-	tel c(60), email c(120), raama c(120), rea01 n(14,2),rea011 n(14,2),rea012 n(14,2),	rea02 n(14,2),;
-	rea03 n(14,2), rea031 n(14,2), rea0311 n(14,2), rea032 n(14,2) , rea0321 n(14,2), rea04 n(14,2), rea05 n(14,2),;
+	tel c(60), email c(120), raama c(120), rea01 n(14,2),rea011 n(14,2),rea012 n(14,2),	rea02 n(14,2),rea021 n(14,2),;
+	rea03 n(14,2), rea031 n(14,2), rea0311 n(14,2), rea032 n(14,2) , rea0321 n(14,2), rea04 n(14,2), rea041 n(14,2), rea05 n(14,2),;
 	 rea051 n(14,2), rea052 n(14,2), rea06 n(14,2), rea061 n(14,2),;
 	rea062 n(14,2), rea07 n(14,2),rea071 n(14,2), rea08 n(14,2), rea09 n(14,2), rea10 n(14,2), rea11 n(14,2),;
 	rea12 n(14,2), rea13 n(14,2))
 	
 Select kbmandmik_report1
 Append blank
-brow
 
-IF 'EELARVE' $ curkey.versia
-	* arvede alusel (eelarve)
-	= f_kbm_arve()
-ELSE
-	* lausendide alusel
-	= f_kbm_lausend()
-ENDIF
+TEXT TO lcString noshow
+	SELECT * from kbm_report1(?gRekv::integer, ?dKpv1::date, ?dKpv2::date)
+ENDTEXT
+
+lnError = SQLEXEC(gnHandle, lcString, 'qryKbm')
+If lnError < 0
+	Messagebox('Tekkis viga',0,'Viga')
+	Select 0
+	Return
+Endif
+
+SELECT qryKbm
+
+Select kbmandmik_report1
+Replace rea01 With qryKbm.rea01, ;
+	rea011 With qryKbm.rea011, ;
+	rea02 With qryKbm.rea02, ;
+	rea021 With qryKbm.rea021, ;
+	rea03 With qryKbm.rea03, ;
+	rea031 With qryKbm.rea031, ;
+	rea0311 With qryKbm.rea0311, ;
+	rea04 With qryKbm.rea04, ;
+	rea041 With qryKbm.rea041, ;
+	rea05 With qryKbm.rea05, ;
+	rea051 With qryKbm.rea051, ;
+	rea052 With qryKbm.rea052, ;
+	rea12 With rea04 - rea05 In kbmandmik_report1
+
+Use In qryKbm
+SELECT kbmandmik_report1
+RETURN .t.
+
+
+*!*	IF 'EELARVE' $ curkey.versia
+*!*		* arvede alusel (eelarve)
+*!*		= f_kbm_arve()
+*!*	ELSE
+*!*		* lausendide alusel
+*!*		= f_kbm_lausend()
+*!*	ENDIF
 
 select kbmandmik_report1
 

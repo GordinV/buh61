@@ -11,7 +11,7 @@ Public gnHandle,gnHandleAsync, gcWindow, gRekv,gUserId, oPrintform2, oFinder, gR
 	oPuudumised, oEtsd,tcOsakond, tnOsakondId1, tnOsakondId2,gnPaev,tnParentRekvId,;
 	oTpr, oRahavoodid, oMenu, oConnect, oKorderID, gcKey, oVanemtasu, gcAmetnik, oLahetuskulud, oLapsed,;
 	oEeltaotlus, oEelVariandid,oDokumendid,;
-	oProjektid, oUritused, tcProj, tcUritus, tcgrupp, oValuuta,gcCurrentValuuta
+	oProjektid, oUritused, tcProj, tcUritus, tcgrupp, oValuuta,gcCurrentValuuta, glMvt
 gnPaev = 0
 gcAmetnik = ''
 tcKasutaja = '%'
@@ -39,6 +39,7 @@ cKasutaja = ''
 gnHandle = 0
 guserid = 0
 gRekv = 0
+glMvt = .t.
 *!*	grekv = 1
 *!*	gUserid = 1
 Local lError

@@ -2,23 +2,21 @@
 
 -- DROP FUNCTION sp_update_palk_jaak(date, date, integer, integer);
 
-CREATE OR REPLACE FUNCTION sp_update_palk_jaak(date, date, integer, integer)
+CREATE OR REPLACE FUNCTION sp_update_palk_jaak(tdkpv1 date, tdkpv2 date, tnrekvid integer, tnlepingid integer)
   RETURNS integer AS
 $BODY$
 declare
-	tdKpv1 alias for $1;
-	tdKpv2	alias for $2;
-	tnRekvId alias for $3;
-	tnlepingId alias for $4;
+
 	v_palk_jaak palk_jaak%rowtype;
-	v_tooleping record;
-	lnKuu1 int4;
-	lnKuu2	int4;
-	lnAasta1 int4;
-	lnAasta2 int4;	
+	v_tooleping record ;
+	v_palk_config record;
+	lnKuu1 integer = month(tdKpv1);
+	lnKuu2	integer = month(tdKpv2);
+	lnAasta1 integer = year(tdKpv1);
+	lnAasta2 integer = year(tdKpv2);	
 	lnElatis numeric (12,4);
 	lnTulubaas numeric(12,4);
-	lnTookoht int;
+	lnTookoht integer = 1;
 	lnArv numeric (12,4);
 	lnCount int;
 	lnCount_2004 int;
@@ -30,31 +28,31 @@ declare
 	lnTuluArv numeric(12,4);
 	lnArvJaak numeric(12,4);
 	lnTulumaar int;
+	l_tulubaas_2015 numeric(14,2);
+	lnTuludPm numeric (12,4);
 
+	l_jaak numeric (12,4) = 0;
+	l_eelmine_jaak numeric (12,4) = 0;
+	l_eelmine_kuu integer = case when (lnKuu1 - 1) < 1 then 12 else lnKuu1 - 1 end;
+	l_eelmine_aasta integer = case when l_eelmine_kuu = 12 then lnAasta1 - 1 else lnAasta1 end;
+	
 begin
-
-	lnkuu1 := month(tdKpv1); 
-	lnkuu2 := month(tdKpv2);  
-	lnAasta1 := year(tdKpv1);  
-	lnAasta2 := year(tdKpv2);
-	lnTookoht := 1; 
-
 	select * into v_tooleping from tooleping where id = tnLepingId;
 	
-	lnTookoht := v_tooleping.pohikoht;
---	select pohikoht into lnTookoht from tooleping where id = tnLepingId;
---	select Tulubaas into lnTulubaas from palk_config where rekvid = tnRekvId;
+	lnTookoht = v_tooleping.pohikoht;
 
-	select palk_config.tulubaas * ifnull(dokvaluuta1.kuurs,1) into lnTulubaas 
-		from palk_config left outer join dokvaluuta1 on (palk_config.id =dokvaluuta1.dokid and  dokvaluuta1.dokliik = 26) where palk_config.rekvid = tnrekvId;
+	select palk_config.*, ifnull(dokvaluuta1.kuurs,1) as kuurs  into v_palk_config
+		from palk_config 
+		left outer join dokvaluuta1 on (palk_config.id =dokvaluuta1.dokid and  dokvaluuta1.dokliik = 26) where palk_config.rekvid = tnrekvId;
 
-	lnTulubaas = ifnull(lnTulubaas,2250);	
+	lnTulubaas = coalesce(v_palk_config.Tulubaas * v_palk_config.kuurs,180);	
 
 	if lnTookoht = 0 then
 		lnTulubaas := 0;
 	end if;
 
-	SELECT sum( Palk_oper.summa * ifnull(dokvaluuta1.kuurs,1)::numeric) into v_palk_jaak.arvestatud 
+	SELECT sum( Palk_oper.summa * ifnull(dokvaluuta1.kuurs,1)::numeric),  
+		sum( coalesce(Palk_oper.tulubaas,0) * ifnull(dokvaluuta1.kuurs,1)::numeric) into v_palk_jaak.arvestatud , v_palk_jaak.g31
 	FROM Library inner join Palk_lib on library.id = palk_lib.parentid 
 	inner join Palk_oper on library.id = palk_oper.libid 
 	left outer join dokvaluuta1 on (palk_oper.id = dokvaluuta1.dokid and dokvaluuta1.dokliik = 12)
@@ -64,9 +62,25 @@ begin
 	AND Palk_oper.rekvId = tnRekvId
 	AND palk_oper.lepingId	= tnLepingId;
 
-	v_palk_jaak.arvestatud  := ifnull (v_palk_jaak.arvestatud ,0);
+	v_palk_jaak.arvestatud  = coalesce(v_palk_jaak.arvestatud ,0);
+	-- kontrollime PM
 
-	raise notice 'v_palk_jaak.arvestatud: %',v_palk_jaak.arvestatud;
+	select sum(palk_oper.summa* ifnull(dokvaluuta1.kuurs,1)) into lnTuludPM 
+		FROM  Palk_oper inner Join palk_lib On palk_lib.parentId = Palk_oper.libId 	
+		inner Join palk_kaart  On (palk_kaart.libId = Palk_oper.libId And Palk_oper.lepingid = palk_kaart.lepingid)
+		left outer join dokvaluuta1 on (palk_oper.id = dokvaluuta1.dokid and dokvaluuta1.dokliik = 12) 	
+		WHERE palk_lib.liik = 1  
+		AND Palk_oper.kpv >= tdKpv1   
+		AND Palk_oper.kpv <= tdKpv2
+		and ltrim(rtrim(palk_lib.tululiik)) = '22'
+		And Palk_oper.rekvid =  tnRekvId
+		And palk_kaart.lepingid = tnLepingid;
+
+	lnTuludPm = coalesce(lnTuludPm,0);	
+	if lnTuludPm > 0 then
+		raise notice 'tulud Pm III samba: %',lnTuludPm;
+		v_palk_jaak.arvestatud = v_palk_jaak.arvestatud - lnTuludPm;
+	end if;
 
 	SELECT sum( Palk_oper.summa * ifnull(dokvaluuta1.kuurs,1)::numeric) into v_palk_jaak.kinni 
 	FROM Library inner join Palk_lib on library.id = palk_lib.parentid 
@@ -78,7 +92,7 @@ begin
 	AND Palk_oper.rekvId = tnRekvId
 	AND palk_oper.lepingId	= tnLepingId;
 
-	v_palk_jaak.kinni := ifnull (v_palk_jaak.kinni,0);
+	v_palk_jaak.kinni = coalesce(v_palk_jaak.kinni,0);
 
 	SELECT sum( Palk_oper.summa * ifnull(dokvaluuta1.kuurs,1)::numeric ) into v_palk_jaak.tki
 	FROM Library inner join Palk_lib on library.id = palk_lib.parentid 
@@ -90,7 +104,7 @@ begin
 	AND Palk_oper.rekvId = tnRekvId
 	AND palk_oper.lepingId	= tnLepingId;
 
-	v_palk_jaak.tki := ifnull (v_palk_jaak.tki,0);
+	v_palk_jaak.tki = coalesce (v_palk_jaak.tki,0);
 
 	SELECT sum( Palk_oper.summa * ifnull(dokvaluuta1.kuurs,1)::numeric ) into v_palk_jaak.tka
 	FROM Library inner join Palk_lib on library.id = palk_lib.parentid 
@@ -102,7 +116,7 @@ begin
 	AND Palk_oper.rekvId = tnRekvId
 	AND palk_oper.lepingId	= tnLepingId;
 
-	v_palk_jaak.tka := ifnull (v_palk_jaak.tka,0);
+	v_palk_jaak.tka = coalesce(v_palk_jaak.tka,0);
 
 	SELECT  sum( Palk_oper.summa * ifnull(dokvaluuta1.kuurs,1)::numeric) into v_palk_jaak.pm
 	FROM Library inner join Palk_lib on library.id = palk_lib.parentid 
@@ -114,7 +128,7 @@ begin
 	AND Palk_oper.rekvId = tnRekvId
 	AND palk_oper.lepingId	= tnLepingId;
 
-	v_palk_jaak.pm := ifnull (v_palk_jaak.pm,0);
+	v_palk_jaak.pm = coalesce(v_palk_jaak.pm,0);
 
 	SELECT  sum( Palk_oper.summa * ifnull(dokvaluuta1.kuurs,1)::numeric) into v_palk_jaak.tulumaks
 	FROM Library inner join Palk_lib on library.id = palk_lib.parentid 
@@ -126,7 +140,7 @@ begin
 	AND Palk_oper.rekvId = tnRekvId
 	AND palk_oper.lepingId	= tnLepingId;
 
-	v_palk_jaak.tulumaks := ifnull (v_palk_jaak.Tulumaks,0);
+	v_palk_jaak.tulumaks = coalesce(v_palk_jaak.Tulumaks,0);
 
 	SELECT  sum( Palk_oper.summa * ifnull(dokvaluuta1.kuurs,1)::numeric) into v_palk_jaak.sotsmaks
 	FROM Library inner join Palk_lib on library.id = palk_lib.parentid 
@@ -138,20 +152,14 @@ begin
 	AND Palk_oper.rekvId = tnRekvId
 	AND palk_oper.lepingId	= tnLepingId;
 
-	v_palk_jaak.Sotsmaks := ifnull (v_palk_jaak.Sotsmaks,0);
+	v_palk_jaak.Sotsmaks = coalesce(v_palk_jaak.Sotsmaks,0);
 
-	select id into v_palk_jaak.id from palk_jaak 
-	where lepingId = tnlepingId 
-	and kuu = lnkuu1
-	and aasta = lnaasta1;
+	delete from palk_jaak 
+		where  lepingId = tnlepingId 
+		and kuu = lnkuu1
+		and aasta = lnaasta1;
 
-	v_palk_jaak.id := ifnull(v_palk_jaak.id,0);
-
-
-	if not found then
-		v_palk_jaak.id := 0;
-	end if;
-	        select sum(palk_oper.summa * ifnull(dokvaluuta1.kuurs,1)::numeric) into lnElatis 
+	select sum(palk_oper.summa * coalesce(dokvaluuta1.kuurs,1)::numeric) into lnElatis 
 			from palk_oper 
 			left outer join dokvaluuta1 on (palk_oper.id = dokvaluuta1.dokid and dokvaluuta1.dokliik = 12)
 			where libId in 
@@ -161,7 +169,7 @@ begin
 			AND Palk_oper.rekvId = tnRekvId
 			AND palk_oper.lepingId	= tnLepingId;
 
-        select sum(o.summa * ifnull(dokvaluuta1.kuurs,1)::numeric) into lnArv 
+        select sum(o.summa * coalesce(dokvaluuta1.kuurs,1)::numeric) into lnArv 
 		from palk_oper o inner join palk_kaart  k on o.lepingid = k.lepingid and k.libId = o.libId
 		left outer join dokvaluuta1 on (o.id = dokvaluuta1.dokid and dokvaluuta1.dokliik = 12)
 		where o.libId in 
@@ -172,109 +180,19 @@ begin
 		AND o.rekvId = tnRekvId
 		AND o.lepingId	= tnLepingId;
 
-	v_palk_jaak.g31 := lnArv - v_palk_jaak.tki - v_palk_jaak.pm;
-
--- muudetud 03/01/2005
-
-	if v_palk_jaak.g31 > lnTulubaas then
-		v_palk_jaak.g31 := lnTulubaas;
-	end if;
-	
-	if v_tooleping.pohikoht > 0 then
-
-		select sum(palk_jaak.g31) into lng31_2005 from palk_jaak 
-			where lepingId = tnlepingId 
-			and aasta = lnAasta1 
-			and kuu < lnKuu1;
-
-	raise notice 'lng31 %',lng31_2005;
-
-	select count(*) into lnCount_2005 from palk_jaak 
-			where lepingId = tnlepingId 
-			and aasta = lnAasta1 
-			and kuu < lnKuu1
-			and date(aasta,kuu,1) >= v_tooleping.algab;
-
-		raise notice 'lnCount %',lnCount_2005;
-
-		-- should be 1400 * periods
-		ng31 :=  lnTulubaas * lnCount_2005 ;
-		raise notice 'lnKuu1 %',lnKuu1;
-		raise notice 'ng31 %',ng31;
-		raise notice 'v_palk_jaak.arvestatud %',v_palk_jaak.arvestatud;
-		raise notice 'lnTulubaas %',lnTulubaas;
-
-		lnArvJaak := v_palk_jaak.arvestatud - v_palk_jaak.pm - v_palk_jaak.tki;
-		raise notice 'lnArvJaak %',lnArvJaak;
-
-		if lnArvJaak < lnTulubaas  then
-			-- muudetud 25/01/2005
-			-- kontrollime teised lepingud
-			select count(*) into lnTulumaar from palk_kaart 
-				where lepingId in (select id from tooleping where parentid = v_tooleping.parentId 
-				and pohikoht = 0)
-				and tulumaar = 0 
-				and libId in (select parentid from palk_lib where liik = 4);
-			if ifnull(lnTulumaar,0) > 0 then
-				-- > 2 lepingud ja vahemalkt uks ei arvesta
-				select sum(arvestatud) - sum(pm) - sum(tki) into lnArvJaak from palk_jaak 
-					where aasta = lnAasta1 
-					and kuu = lnKuu1
-					and date(aasta,kuu,1) >= v_tooleping.algab
-					and (lepingId = v_tooleping.id or lepingId in 
-					(select distinct palk_kaart.lepingid from palk_kaart inner join tooleping on palk_kaart.lepingId = tooleping.id 
-						where tooleping.parentid = v_tooleping.parentId and pohikoht = 0
-						and tulumaar = 0 		
-						and libId in (select parentid from palk_lib where liik = 4)));
-			end if;
-		end if;	
-		raise notice 'parast lnArvJaak %',lnArvJaak;
-
-		if lnArvJaak < lnTulubaas  then
-
-			lnTulubaas := lnArvJaak;
-			raise notice 'less then vaja %',lnTulubaas;
-		else
-
-			if ng31 > lng31_2005 and lnCount_2005 > 0 then
-				-- on reserv
-				lnTulubaas := lnTulubaas + (ng31 - lng31_2005);
-				raise notice 'with reserv  %',lnTulubaas;
-			end if;
-			raise notice 'with reserv after %',lnTulubaas;
-			raise notice 'limited lnArvJaak%',lnArvJaak;
-			if lnTulubaas > lnArvJaak then
-				lnTulubaas := lnArvJaak;
 		
-			end if;
+	-- calc saldo
+	-- 1. prev. saldo
 
-		end if;
-	else
-		lnTulubaas:= 0;
-	end if;
+	select jaak into l_eelmine_jaak from palk_jaak where lepingId = tnlepingId and kuu = l_eelmine_kuu and aasta = l_eelmine_aasta;
+	
+	l_jaak  = coalesce(l_eelmine_jaak,0) + coalesce(v_palk_jaak.arvestatud,0) - coalesce(v_palk_jaak.kinni,0) - coalesce(v_palk_jaak.tulumaks,0); 
 
-raise notice 'lnTulubaas %',lnTulubaas;		
-
-if v_palk_jaak.id = 0 then
-
-	insert into palk_jaak ( lepingId, kuu, aasta, arvestatud, kinni, tulumaks, sotsmaks, tka, tki, pm, g31)
+	insert into palk_jaak ( lepingId, kuu, aasta, arvestatud, kinni, tulumaks, sotsmaks, tka, tki, pm, g31, jaak)
 		values (tnlepingId, lnkuu1, lnaasta1, v_palk_jaak.arvestatud, v_palk_jaak.kinni, 
-		v_palk_jaak.tulumaks, v_palk_jaak.sotsmaks, v_palk_jaak.tka, v_palk_jaak.tki, v_palk_jaak.pm, ifnull(lnTulubaas,0));
-else
---raise notice 'v_palk_jaak.id %',v_palk_jaak.id;
-	update palk_jaak set 
-		arvestatud = v_palk_jaak.arvestatud,
-		kinni = v_palk_jaak.kinni,
-		tka = v_palk_jaak.tka,
-		tki = v_palk_jaak.tki,
-		pm = v_palk_jaak.pm,
-		tulumaks = v_palk_jaak.tulumaks,
-		sotsmaks = v_palk_jaak.sotsmaks,
-		g31 = ifnull(lnTulubaas,0)
-		where id = v_palk_jaak.id;
-end if;
+		v_palk_jaak.tulumaks, v_palk_jaak.sotsmaks, v_palk_jaak.tka, v_palk_jaak.tki, v_palk_jaak.pm, coalesce(v_palk_jaak.g31,0), l_jaak) ;
 
- return sp_calc_palk_jaak (lnKuu1, lnaasta1, tnlepingId);
+ return 1;
 
 end; 
 $BODY$

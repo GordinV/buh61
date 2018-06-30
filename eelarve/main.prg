@@ -39,7 +39,7 @@ cKasutaja = ''
 gnHandle = 0
 guserid = 0
 gRekv = 0
-glMvt = .f.
+glMvt = .t.
 *!*	grekv = 1
 *!*	gUserid = 1
 Local lError
@@ -234,29 +234,6 @@ If lQuit = .f.
 	
 	
 	Read events
-Endif
-If file ('buh50viga.log') and ;
-		used ('qryRekv') and !empty (qryRekv.email) ;
-		and !empty (mline(qryRekv.muud,1)) and;
-		!isnull(qryRekv.muud) and !empty (config.reserved3)
-	Create cursor mail (smtpto c(254), cclist c(254), bcclist c(254), subject c(50),;
-		attachment c(254), message m)
-	cAttach = sys(5)+sys(2003)+'\buh50viga.log'
-	Insert into mail (smtpto, subject, attachment);
-		values (ltrim(rtrim(config.reserved3)),'Raamatupidamine 5.0 Viga',cAttach)
-	Set classlib to classe\email
-	oEmail = createobject('email')
-	With oEmail
-		.SmtpFrom = ltrim(rtrim(qryRekv.email))
-		.SmtpReply = ltrim(rtrim(qryRekv.email))
-		.SmtpServer = ltrim(rtrim(mline (qryRekv.muud,1)))
-		lError = .send()
-		If lError = .t.
-			Erase (cAttach)
-		Endif
-	Endwith
-	Use in mail
-	Release oEmail
 Endif
 Set proc to
 If gnHandle >0 and gVersia <> 'VFP'

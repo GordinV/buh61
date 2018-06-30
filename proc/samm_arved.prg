@@ -136,9 +136,9 @@ Function edIt_arve
 		Select comAsutusRemote
 		Locate For Id = queryLeping.asutusId
 		Wait Window 'Arvestan '+Alltrim(comAsutusRemote.niMetus) Nowait
-		If Reccount('queryLeping')<1 .Or. ( .Not.  ;
-				ISNULL(queryLeping.taHtaeg) .And. ;
-				(Year(queryLeping.taHtaeg) <> Year(ldArvKpv) Or Month(queryLeping.taHtaeg) <> Month(ldArvKpv)) And ;
+		
+		If Reccount('queryLeping')=  0 .Or. ( .not. ISNULL(queryLeping.taHtaeg) .And. ;
+				(Year(queryLeping.taHtaeg) <> Year(ldArvKpv) .Or. Month(queryLeping.taHtaeg) <> Month(ldArvKpv)) .And. ;
 				queryLeping.taHtaeg < ldArvKpv)
 
 			Wait Window 'Leping nr.:'+queryLeping.Number + ' välja sest lepingu tähtaeg on lõpetatud' Nowait

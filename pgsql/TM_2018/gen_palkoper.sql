@@ -1,10 +1,9 @@
 ﻿-- Function: gen_palkoper(integer, integer, integer, date, integer, integer)
 
-DROP FUNCTION IF EXISTS gen_palkoper( INTEGER, INTEGER, INTEGER, DATE, INTEGER, INTEGER );
+-- DROP FUNCTION gen_palkoper_(tnlepingid integer, tnlibid integer, tndoklausid integer, tdkpv date, tnavans integer, tnminpalk integer)
 
-CREATE OR REPLACE FUNCTION gen_palkoper(tnlepingid INTEGER, tnlibid INTEGER, tndoklausid INTEGER, tdkpv DATE,
-                                        tnavans    INTEGER, tnminpalk INTEGER)
-  RETURNS INTEGER AS
+CREATE OR REPLACE FUNCTION gen_palkoper(tnlepingid integer, tnlibid integer, tndoklausid integer, tdkpv date, tnavans integer, tnminpalk integer)
+  RETURNS integer AS
 $BODY$
 DECLARE
   l_sotsmaks_min_palk NUMERIC [];
@@ -243,11 +242,13 @@ BEGIN
                                                          WHERE pk.lepingid IN (SELECT id
                                                                                FROM tooleping
                                                                                WHERE
-                                                                                 parentid = lnParentId AND pohikoht = 1
-                                                                                 OR id = tnLepingid)
+                                                                                 (parentid = lnParentId
+                                                                                 OR id = tnLepingid) 
+                                                                                 and rekvid = lnRekvid)
                                                                AND pl.liik = 5
-                                                               AND coalesce(pk.minsots, 0) = 1) > 0 AND l_pohikoht = 1
+                                                               AND coalesce(pk.minsots, 0) = 1) > 0 
     THEN
+
 
       SELECT
         po.id,
@@ -257,23 +258,27 @@ BEGIN
       FROM palk_oper po
       WHERE lepingid IN (SELECT id
                          FROM tooleping
-                         WHERE parentid = lnParentId AND pohikoht = 1 AND rekvid = lnrekvid)
+                         WHERE parentid = lnParentId AND rekvid = lnrekvid)
             AND kpv = l_last_paev
             AND libId = tnLibId
             AND id <> lnPalkOperId
             AND po.sotsmaks <> 0
       LIMIT 1;
 
+	-- delete old min sots.maks arvestus
+	if l_sotsmaks_min_id is not null then 
+		delete from palk_oper where id = l_sotsmaks_min_id;
+	end if;
       -- arvestame sotsmaks minpalgast
       l_sotsmaks_min_palk = sp_calc_min_sots(tnLepingid, l_last_paev);
 
       -- if min.sotsmaks, then save
       IF l_sotsmaks_min_palk IS NOT NULL
       THEN
-
-        l_sotsmaks_min_id = sp_salvesta_palk_oper(coalesce(l_sotsmaks_min_id, 0), lnRekvid,
-                                                  coalesce(l_libId_min_sots, tnLibId),
-                                                  coalesce(l_lepingId_min_sots, tnlepingid), l_last_paev,
+		raise notice 'l_libId_min_sots %',l_libId_min_sots;
+        l_sotsmaks_min_id = sp_salvesta_palk_oper(0, lnRekvid,
+                                                  coalesce(tnLibId),
+                                                  coalesce(tnlepingid), l_last_paev,
                                                   l_sotsmaks_min_palk [1], tnDoklausid,
                                                   ('SM min. palgast -> ' + ifnull(l_sotsmaks_min_palk [1], 0) :: TEXT +
                                                    ' SM summast -> ' + ifnull(l_sotsmaks_min_palk [2], 0) :: TEXT),
@@ -287,6 +292,7 @@ BEGIN
                                                   qrypalklib.tululiik :: INTEGER, 0, ifnull(l_sotsmaks_min_palk [2], 0),
                                                   0, 0,
                                                   0, 0, NULL :: DATE);
+        raise notice 'l_sotsmaks_min_id %', l_sotsmaks_min_id;
       ELSE
         IF coalesce(l_sotsmaks_min_id, 0) > 0
         THEN
@@ -348,30 +354,10 @@ BEGIN
   RETURN lnpalkOperId;
 END;
 $BODY$
-LANGUAGE 'plpgsql' VOLATILE
-COST 100;
-
-GRANT EXECUTE ON FUNCTION gen_palkoper(INTEGER, INTEGER, INTEGER, DATE, INTEGER, INTEGER) TO dbkasutaja;
-GRANT EXECUTE ON FUNCTION gen_palkoper(INTEGER, INTEGER, INTEGER, DATE, INTEGER, INTEGER) TO dbpeakasutaja;
-
-
-/*
-
-SELECT gen_palkoper(128178, pk.libid, 1530, DATE(2018, 1, 31), 0, 1)
-  from palk_kaart pk
-  inner join palk_lib pl on pl.parentid = pk.libid
-   where lepingid = 128178 and status = 1
-  order by pl.liik, case when empty(pl.tululiik) then 99::text else tululiik end
-
-
-
-* from palk_kaart where lepingid = 128178 and status = 1
-
-select * from library where id = 569970
-
-select * from palk_oper where tulubaas > 0 order by id desc limit 10
-
-tnlepingid INTEGER, tnlibid INTEGER, tndoklausid INTEGER, tdkpv DATE,
-                                        tnavans    INTEGER, tnminpalk INTEGER
-
- */
+  LANGUAGE 'plpgsql' VOLATILE
+  COST 100;
+ALTER FUNCTION gen_palkoper(integer, integer, integer, date, integer, integer) OWNER TO vlad;
+GRANT EXECUTE ON FUNCTION gen_palkoper(integer, integer, integer, date, integer, integer) TO public;
+GRANT EXECUTE ON FUNCTION gen_palkoper(integer, integer, integer, date, integer, integer) TO vlad;
+GRANT EXECUTE ON FUNCTION gen_palkoper(integer, integer, integer, date, integer, integer) TO dbkasutaja;
+GRANT EXECUTE ON FUNCTION gen_palkoper(integer, integer, integer, date, integer, integer) TO dbpeakasutaja;

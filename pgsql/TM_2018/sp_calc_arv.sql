@@ -1,11 +1,6 @@
-﻿-- Function: sp_calc_arv(integer, integer, date, numeric, date)
-
-DROP FUNCTION IF EXISTS sp_calc_arv( INTEGER, INTEGER, DATE, NUMERIC, DATE );
-DROP FUNCTION IF EXISTS sp_calc_arv( INTEGER, INTEGER, DATE, NUMERIC, DATE, INTEGER );
-
-CREATE OR REPLACE FUNCTION sp_calc_arv(tnLepingid INTEGER, tnLibId INTEGER, tdKpv DATE, tnSumma NUMERIC,
-                                       tdPeriod   DATE, tnUmardamine INTEGER)
-  RETURNS NUMERIC AS
+﻿
+CREATE OR REPLACE FUNCTION sp_calc_arv(tnlepingid integer, tnlibid integer, tdkpv date, tnsumma numeric, tdperiod date, tnumardamine integer)
+  RETURNS numeric AS
 $BODY$
 DECLARE
   lnSumma              NUMERIC(18, 8);
@@ -34,7 +29,9 @@ DECLARE
   v_kaart              RECORD;
   l_tulubaas_kokku     NUMERIC(14, 4) = 0;
   l_tulubaas           NUMERIC(14, 4) = 0;
-  l_kasutatud_tulubaas NUMERIC(14, 4) = 0;
+  l_tulubaas_lisa	numeric(14,4) = 0;
+  l_kasutatud_tulubaas NUMERIC(14, 4) = 0; --tululiigi kasutatud mvt kuues
+  l_isiku_tulubaas     NUMERIC(14, 4) = 0; --isik kasutatud mvt kuues
   l_PM_maar            NUMERIC(8, 2) = 2;
   l_TKI_maar           NUMERIC(8, 2) = 1.6;
   l_TKA_maar           NUMERIC(8, 2) = 0.8;
@@ -394,7 +391,7 @@ BEGIN
     l_TM_maar = qryPalkLib.tun1;
 
     -- kui period on eelmine aasta siis kasutame eelmise aasta maksumaarad
-    IF tdPeriod IS NOT NULL AND year(tdPeriod) < year(tdKpv)
+    IF tdPeriod IS NOT NULL AND year(tdPeriod) < 2017
     THEN
       l_TKI_maar = 2;
       l_TKA_maar = 1;
@@ -423,6 +420,8 @@ BEGIN
       THEN 1
                                                                         ELSE 0 END, 0), 2);
 
+	--raise notice ' SM arvestus lnSumma %, lnSumma * 0.01 * l_SM_maar * qryPalkLib.tun2 %, round -> %',lnSumma, (lnSumma * 0.01 * l_SM_maar * qryPalkLib.tun2), round(lnSumma * 0.01 * l_SM_maar * qryPalkLib.tun2, 2);
+
     --lSM = (case when lnSumma < qryTooleping.minpalk * l_min_sots then qryTooleping.minpalk else lnSumma end) * 0.01 * l_SM_maar * qryPalkLib.tun2 * coalesce(case when v_kaart.sm > 0 then 1 else 0 end,0);
 
     ltSelgitus = ltSelgitus + 'SM arvestus: ' + (CASE WHEN lnSumma < qryTooleping.minpalk * l_min_sots
@@ -440,92 +439,13 @@ BEGIN
                  '*' + (0.01 * l_TKA_maar) :: TEXT + '*' + qryPalkLib.tun4 :: TEXT + ltEnter;
 
 
-    IF year(tdKpv) < 2018
-    THEN
-      RAISE NOTICE '2017 arvestus';
-      IF qryTooleping.pohikoht = 1
-      THEN
-
-        IF year(tdKpv) >= 2015
-        THEN
-          l_tulubaas_kokku = (SELECT month(tdKpv) - month(l_aasta_alg) + 1) *
-                             (SELECT coalesce(tulubaas, 154)
-                              FROM palk_config
-                              WHERE rekvid = qryTooleping.rekvid
-                              LIMIT 1);
-        ELSE
-          l_tulubaas_kokku = (144 * 11) + (SELECT coalesce(tulubaas, 154)
-                                           FROM palk_config
-                                           WHERE rekvid = qryTooleping.rekvid
-                                           LIMIT 1);
-        END IF;
-
-        -- kasutatud tulubaas
-        -- should be only for tululiik we calculate (if umardamine)
-        SELECT sum(tulubaas) AS tulubaas
-        INTO l_kasutatud_tulubaas
-        FROM palk_oper po
-          INNER JOIN tooleping t ON po.lepingid = t.id
-        WHERE tulubaas IS NOT NULL
-              AND tulubaas > 0
-              AND kpv >= date(year(tdKpv), month(l_aasta_alg), 01) AND kpv <= tdKpv
-              AND po.id NOT IN (SELECT id
-                                FROM palk_oper
-                                WHERE libId = tnLibId AND lepingId = tnLepingId AND kpv = tdKpv)
-              AND po.libId IN (SELECT l.Id
-                               FROM library l INNER JOIN palk_lib pl ON l.id = pl.parentId
-                               WHERE rekvId = qryTooleping.rekvId AND pl.liik = 1)
-              AND t.parentid = qryTooleping.parentid;
-
-        IF year(tdKpv) < 2015
-        THEN
-          SELECT sum(g31)
-          INTO l_tulubaas
-          FROM palk_jaak
-          WHERE lepingid IN (SELECT id
-                             FROM tooleping
-                             WHERE rekvid = qryTooleping.rekvid AND parentId = qryTooleping.parentId)
-                AND kuu >= 1 AND kuu < month(tdKpv) AND aasta = year(tdKpv);
-
-          l_kasutatud_tulubaas = coalesce(l_kasutatud_tulubaas, 0) + coalesce(l_tulubaas, 0);
-        END IF;
-
-        --			raise notice 'l_tulubaas_kokku %, l_kasutatud_tulubaas %, l_aasta_alg %', l_tulubaas_kokku, l_kasutatud_tulubaas, l_aasta_alg;
-
-        -- periodi kogus
-        --			raise notice 'tulubaasi kasutamine lnSumma %, tnSumma %', lnSumma, tnSumma;
-        IF tnSumma IS NULL OR lnSumma != tnSumma
-        THEN
-          l_tulubaas = coalesce(l_tulubaas_kokku, 0) - coalesce(l_kasutatud_tulubaas, 0);
-        ELSE
-          SELECT sum(tulubaas)
-          INTO l_tulubaas
-          FROM palk_oper po
-          WHERE po.lepingid IN (SELECT id
-                                FROM tooleping
-                                WHERE parentId = qryTooleping.parentid AND rekvId = qryTooleping.rekvId)
-                AND kpv = tdKpv
-                AND libId IN
-                    (
-                      SELECT l.id
-                      FROM library l
-                        INNER JOIN palk_lib pl ON l.id = pl.parentId
-                      WHERE l.rekvId = qryTooleping.rekvId
-                            AND pl.tululiik = qryPalkLib.tululiik
-                            AND pl.liik = qryPalkLib.liik
-                    );
-
-          l_tulubaas = coalesce(l_tulubaas, 0);
-          ltSelgitus = ltSelgitus + ' kasutame enne arvestatud kasutatud tulubaas ' + ltEnter;
-        END IF;
-      END IF;
-    ELSE
       --	raise notice 'Tulubaas 2018 arvestus';
       -- TM 2018 arvestus
       l_tulubaas_kokku = coalesce((SELECT sum(summa)
                                    FROM taotlus_mvt mvt
                                      INNER JOIN tooleping t ON t.id = mvt.lepingId
                                    WHERE t.parentId = qryTooleping.parentId
+                                   and t.rekvid = qryTooleping.rekvid
                                          AND alg_kpv <= tdKpv
                                          AND lopp_kpv >= tdKpv), 0);
       -- 1.  arvestus
@@ -536,6 +456,7 @@ BEGIN
                                 INNER JOIN tooleping t ON t.id = po.lepingId
                                 INNER JOIN palk_lib pl ON pl.parentId = po.libId
                               WHERE t.parentid = qryTooleping.parentId
+				    and t.rekvid = qryTooleping.rekvid
                                     AND po.period IS NULL
                                     AND pl.liik = 1
                                     AND (tnSumma IS NULL OR pl.tululiik = qryPalkLib.tululiik)
@@ -549,7 +470,26 @@ BEGIN
                                                                                 AND libid = tnLibId))
       );
 
-      RAISE NOTICE 'l_kasutatud_tulubaas -> %', l_kasutatud_tulubaas;
+-- isiku kokku kasutatud mvt
+      l_isiku_tulubaas = (SELECT sum(po.tulubaas)
+                              FROM palk_oper po
+                                INNER JOIN tooleping t ON t.id = po.lepingId
+                                INNER JOIN palk_lib pl ON pl.parentId = po.libId
+                              WHERE t.parentid = qryTooleping.parentId
+                                    AND po.period IS NULL
+                                    AND pl.liik = 1
+				    and t.rekvid = qryTooleping.rekvid
+                                    AND year(po.kpv) = year(tdKpv) AND month(po.kpv) = month(tdKpv)
+                                    AND (tnSumma IS NOT NULL OR po.id NOT IN (SELECT id
+                                                                              FROM palk_oper
+                                                                              WHERE
+                                                                                kpv = tdKpv
+                                                                                AND lepingid = tnLepingid
+                                                                                AND libid = tnLibId))
+      );
+
+
+	raise notice ' l_isiku_tulubaas %',  l_isiku_tulubaas;
 
       -- arvestame kuu tulud
 
@@ -560,54 +500,60 @@ BEGIN
         FROM palk_oper po
           INNER JOIN tooleping t ON t.id = po.lepingId
           INNER JOIN palk_lib pl ON pl.parentId = po.libId
-        WHERE t.parentid = qryTooleping.parentId
+        WHERE t.parentid = qryTooleping.parentId and t.rekvId = qryTooleping.rekvId
               AND pl.liik = 1
               AND po.period IS NULL -- ainult arvestuse period
               AND year(po.kpv) = year(tdKpv) AND month(po.kpv) = month(tdKpv)
               --            AND po.rekvId = qryTooleping.rekvId --Arvestame koik tulud seles kuu
-              AND (tnSumma IS NOT NULL OR po.id NOT IN (SELECT id
+              AND (po.id NOT IN (SELECT id
                                                         FROM palk_oper
                                                         WHERE kpv = tdKpv AND lepingid = tnLepingid AND
-                                                              libid =
-                                                              tnLibId)); -- kui parandus siis v]ttame koik summad
+                                                              libid = tnLibId)); -- kui parandus siis v]ttame koik summad
 
         lnKuuSumma = coalesce(lnKuuSumma, 0) + (lnSumma - coalesce(tnSumma, 0));
       ELSE
         lnKuuSumma = tnSumma; --if umardamine then do not neccessory calculate kuu summa
       END IF;
+
+
       -- 2 kasutatud mvt
 
+	l_tulubaas = fnc_calc_mvt(lnSumma,  l_tulubaas_kokku, l_isiku_tulubaas, lnKuuSumma, lTKI, lPM, tdkpv);
 
-      l_tulubaas = calc_mvt(lnKuuSumma, l_tulubaas_kokku, tdkpv);
-
-      RAISE NOTICE 'Tulubaas arvestus l_tulubaas ->>> %, lnKuuSumma %, l_tulubaas_kokku % ', l_tulubaas, lnKuuSumma, l_tulubaas_kokku;
-
-      -- 3. parandus
+	/*
 
       IF coalesce(tnUmardamine, 0) = 0
       THEN
         -- ei ole umardamine
-        l_tulubaas = coalesce(l_tulubaas, 0) - coalesce(l_kasutatud_tulubaas, 0);
+        
+	l_tulubaas = l_tulubaas - coalesce(l_isiku_tulubaas, 0);
+	
+        if l_tulubaas <  0 then
+		-- kasutatud
+		l_tulubaas = 0;
+        end if;
+        
       END IF;
 
+	*/
+/*
       IF l_tulubaas > lnSumma
       THEN
         l_tulubaas = lnSumma - lTKI - lPM;
       END IF;
+*/
 
-      IF coalesce(tnUmardamine, 0) = 0 AND (l_kasutatud_tulubaas + l_tulubaas) > lnKuuSumma
+      IF coalesce(tnUmardamine, 0) = 1 and l_tulubaas_kokku > 0
       THEN
-        -- liga palju
-        l_tulubaas = (l_kasutatud_tulubaas + l_tulubaas) - lnKuuSumma;
-      END IF;
+	l_tulubaas = coalesce(l_kasutatud_tulubaas,0);
 
-    END IF;
+      END IF;
 
     IF l_tulubaas < 0 AND (qryPalkLib.lisa IS NULL AND year(tdKpv) < 2018)
     THEN
       l_tulubaas = 0;
     END IF;
-
+/*
     IF lnSumma > 0
     THEN
       lTM = (lnSumma - lTKI - lPM);
@@ -624,7 +570,14 @@ BEGIN
                    ELSE 0 END;
       lTM = 0; -- parandus 28.10.2015 sest votab arvestus 1 euriost
     END IF;
-    lTM = round(lTM * 0.01 * l_TM_maar, 2);
+--    lTM = round(lTM * 0.01 * l_TM_maar, 2);
+    */
+
+    lTM = fnc_calc_tm(lnSumma, l_tulubaas, lTKI, lPM, qryPalkLib.tululiik);
+ --   raise notice 'fnc_calc_tm lTM %, lnSumma %, l_tulubaas %, lTKI %, lPM %, qryPalkLib.tululiik %', lTM, lnSumma, l_tulubaas, lTKI, lPM, qryPalkLib.tululiik;
+    
+
+--    raise notice 'tulubaas lTM %, l_tulubaas %, lnSumma %, lTKI %, lPM %, l_isiku_tulubaas %, l_kasutatud_tulubaas %', lTM, l_tulubaas, lnSumma, lTKI, lPM, l_isiku_tulubaas, l_kasutatud_tulubaas;
 
     ltSelgitus = ltSelgitus + 'TM arvestus:(' + round(lnSumma, 2) :: TEXT +
                  '-' + (CASE WHEN lTKI > 0
@@ -637,6 +590,8 @@ BEGIN
 
     -- tulumaks (tmp_viivis.volg1)
     --	if qryPalkLib.tun1 > 0 then
+--raise notice 'salvestame lSM %', lSM;
+    
     UPDATE tmp_viivis
     SET volg1 = lTM,
       paev1   = CASE WHEN qryPalkLib.tululiik = ''
@@ -657,56 +612,22 @@ BEGIN
 END;
 
 $BODY$
-LANGUAGE 'plpgsql' VOLATILE
-COST 100;
-GRANT EXECUTE ON FUNCTION sp_calc_arv(INTEGER, INTEGER, DATE, NUMERIC, DATE, INTEGER) TO dbkasutaja;
-GRANT EXECUTE ON FUNCTION sp_calc_arv(INTEGER, INTEGER, DATE, NUMERIC, DATE, INTEGER) TO dbpeakasutaja;
-COMMENT ON FUNCTION sp_calc_arv(INTEGER, INTEGER, DATE, NUMERIC, DATE,
-                                INTEGER) IS 'Muudetud 01/02/2005 lisatud ohtu-uletoo tunni alusel tootajad';
+  LANGUAGE 'plpgsql' VOLATILE
+  COST 100;
+
+GRANT EXECUTE ON FUNCTION sp_calc_arv(integer, integer, date, numeric, date, integer) TO dbkasutaja;
+GRANT EXECUTE ON FUNCTION sp_calc_arv(integer, integer, date, numeric, date, integer) TO dbpeakasutaja;
+COMMENT ON FUNCTION sp_calc_arv(integer, integer, date, numeric, date, integer) IS 'Muudetud 01/02/2005 lisatud ohtu-uletoo tunni alusel tootajad';
 
 
 /*
-SELECT sp_calc_umardamine(27011, date(2018, 01, 31), 106);
 
-select sp_calc_arv(136328, 585436, date(2018,01,31), null::numeric, null::date, 1);
+	select sp_calc_arv(137587, 289312, '2018-02-28', null, null, null);
 
+	select * from asutus where regkood = '48510032228'
+	select * from rekv where nimetus ilike '%22011%'
 
-select * from asutus where regkood = '37808283716'
--- 17892
-
-select * from rekv where regkood = '75024283';
-
-select * from tooleping where parentid = 31444
-and rekvid = 72
-
-select * from palk_oper where lepingid = 136328 and year(kpv) = 2018 and rekvid = 125
-
-
-delete from palk_jaak WHERE lepingid in (select id FROM tooleping WHERE rekvid = 106 AND parentid = 25515) and aasta = 2018 and kuu = 10
-
-DELETE FROM palk_oper WHERE lepingid in (select id FROM tooleping WHERE rekvid = 106 AND parentid = 25515) AND kpv = date(2018,10,05)
-
-select sum(po.summa) from palk_oper po where lepingid in (select id from tooleping where parentId = 25515 and id = 134258) and kpv = date(2018,02,28) and tka > 0 
-
-delete from palk_oper where lepingid in (select id from tooleping where parentId = 25515) and kpv = date(2018,02,28) 
-
-select * from palk_jaak where lepingid in (select id from tooleping where parentId = 22013)  and aasta = 2018
-
-select * from curpalkjaak where regkood = '38403123743' and aasta = 2018 and kuu = 1
-
-				select pk.id, pk.parentid, pk.lepingid, pk.libid, pk.summa
-							 FROM Library l
-							 inner join Palk_kaart  pk on pk.libId = l.id
-							 inner join   Palk_lib pl on pl.parentId = l.id
-							 inner join tooleping t on pk.lepingId = t.id
-							 left outer join dokvaluuta1 on (pk.id = dokvaluuta1.dokid and dokvaluuta1.dokliik = 20)
-							 where pk.parentid = ?tnId
-							 and t.rekvid = ?gRekv
-							 and pk.status = 1
-							 and not EMPTY(pk.summa)
-							 and t.algab <= ?gdKpv
-							 and (t.lopp is null or t.lopp >= ?gdKpv)
-							 and (?lcOsakonnad = ''  or and t.osakondid  in ?lcOsakonnad)
-							 order by liik, case when empty(pl.tululiik) then 99::text else tululiik end, Pk.percent_ desc, pk.summa desc
+	select sp_calc_umardamine(37118, '2018-02-28', 121)
+	-- 205.77
 
 */

@@ -63,7 +63,7 @@ ENDIF
 
 tnParentRekvId = gRekv
 * GET month norm
-
+SET STEP ON 
 
 WITH oDb
 	.Use ('qryPalkArvLeht')

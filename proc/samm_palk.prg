@@ -1,5 +1,5 @@
 Parameter tnIsikid
-
+SET STEP ON 
 SET TEXTMERGE ON
 
 Local lnResult, leRror
@@ -108,7 +108,7 @@ Procedure arVutus
 							 and t.algab <= ?gdKpv
 							 and (t.lopp is null or t.lopp >= ?gdKpv)
 							 and (<<lcOsakonnad>>::text = ''  or t.osakondid  in <<lcOsakonnad>>)
-							 order by liik, case when empty(pl.tululiik) then 99::text else tululiik end, Pk.percent_ desc, pk.summa desc
+							 order by liik, t.pohikoht desc, case when empty(pl.tululiik) then 99::text else tululiik end, Pk.percent_ desc, pk.summa desc
 			ENDTEXT
 			
 
@@ -120,7 +120,7 @@ Procedure arVutus
 				lcDate = 'date(' + STR(YEAR(gdKpv),4)+','+STR(MONTH(gdKpv),2)+ ','+ STR(DAY(gdKpv),2)+ ')'
 				* kustuta eelmine arvestus
 				TEXT TO lcString NOSHOW
-					DELETE FROM palk_oper WHERE lepingid in (select id FROM tooleping WHERE rekvid = ?gRekv AND parentid = ?qryPalkKaart.parentid) AND kpv = <<lcDate>>
+					DELETE FROM palk_oper WHERE lepingid in (select id FROM tooleping WHERE rekvid = ?gRekv AND parentid = ?tnId) AND kpv = <<lcDate>>
 				ENDTEXT
 				lError = odB.execsql(lcString)
 				IF EMPTY(lError) 
@@ -138,11 +138,11 @@ Procedure arVutus
 					leRror = edIt_oper(recalc1.Id)
 				Endif
 			Endscan
-			If leRror=.F.
+			If !leRror
 				Exit
 			Endif
 		Endscan
-		If leRror<>.T.
+		If !leRror
 			If _vfp.StartMode = 0
 				Set Step On
 			Endif
