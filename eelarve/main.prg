@@ -1,10 +1,10 @@
 Parameter tcKey
-_Screen.windowstate = 2
+_Screen.WindowState = 2
 Public gnHandle,gnHandleAsync, gcWindow, gRekv,gUserId, oPrintform2, oFinder, gReturn, oAsutused, oUserid,;
 	oArved, oDokLausend, oNomenklatuur, oKontod, oAllikad, oArtikkel, oTegev,;
 	oObjekt, oTunnus,oJournal, oSaldo, oAsutused, oUserid, oRekv, oLausendid, oKlsaldo, oDok, oTasud,;
 	oLepingud, cKasutaja, oDb, oPohivara, oPvGruppid, oOsakonnad, oAmetid, oPalklib, oPalkOper, oTaabel1, oPeriod,;
-	oHoliday, gnKuu, gnAasta, gdKpv, oPalkJaak, oMaksuKoodid,; 
+	oHoliday, gnKuu, gnAasta, gdKpv, oPalkJaak, oMaksuKoodid,;
 	oGruppid, oLaduOper, oVarad, oLaduJaak, oLaduArved,;
 	gVersia, gcDatabase, glError, oEelarve, oTuludeAllikad, oTulutaitm, oKuluTaitm, gcHelp, oTeenused,;
 	tcAllikas, tcArtikkel, tcObjekt, tcTegev, tcEelAllikas, oToograafik, eETSD, tcTunnus, gcProgNimi, omk, oTood,;
@@ -22,232 +22,234 @@ tnOsakondId2 = 999999999
 gcKey = tcKey
 gcProgNimi = 'EELARVE.EXE'
 tcTunnus = '%'
-cCaption = _screen.caption
+cCaption = _Screen.Caption
 tcAllikas = '%'
 tcArtikkel = '%'
 tcObjekt = '%'
-tcproj = '%'
+tcProj = '%'
 tcUritus = '%'
 tcgrupp = '%'
 
 tcTegev = '%'
 tcEelAllikas = '%'
-glError = .f.
+glError = .F.
 gVersia = 'MSSQL'
-gdKpv = date()
+gdKpv = Date()
 cKasutaja = ''
 gnHandle = 0
-guserid = 0
+gUserId = 0
 gRekv = 0
-glMvt = .t.
+glMvt = .T.
 *!*	grekv = 1
 *!*	gUserid = 1
 Local lError
-Close data all
-Set UDFPARMS TO VALUE
-On SHUTDOWN quit
-Set resource off
-Set HOURS TO 24
-Set compatible off
-Set null off
-Set AUTOSAVE ON
-Set point to '.'
-Set help on
-Set lock on
-Set exclusive off
-Set multilock on
-Set century on
-Set talk off
-Set console off
-Set notify off
-Set safety off
-Set delete on
-SET ANSI ON
-SET EXACT on
-SET CONSOLE OFF
-Set date to german
-Set memowidth to 8000
+Close Data All
+Set Udfparms To Value
+On Shutdown Quit
+Set Resource Off
+Set Hours To 24
+Set Compatible Off
+Set Null Off
+Set Autosave On
+Set Point To '.'
+Set Help On
+Set Lock On
+Set Exclusive Off
+Set Multilock On
+Set Century On
+Set Talk Off
+Set Console Off
+Set Notify Off
+Set Safety Off
+Set Delete On
+Set Ansi On
+Set Exact On
+Set Console Off
+Set Date To German
+Set Memowidth To 8000
 cFile = 'buh60.chm'
-If file(cFile)
-	On key label F1 do fHelp
-	Set HELP TO buh60.CHM
-	gcHelp = .t.
+If File(cFile)
+	On Key Label F1 Do fHelp
+	Set Help To buh60.CHM
+	gcHelp = .T.
 Else
-	Set help off
-	gcHelp = .f.
+	Set Help Off
+	gcHelp = .F.
 Endif
 
-create cursor curprinter (id int, objekt c(40), nimetus1 c(120), nimetus2 c(120), procfail c(120), reportfail c(120),;
-	reportvene c(120), parameter m)
+Create Cursor curprinter (Id Int, objekt c(40), nimetus1 c(120), nimetus2 c(120), procfail c(120), reportfail c(120),;
+	reportvene c(120), Parameter m)
 
 
 cFile = 'EELARVE\curPrinter.DBF'
-If file (cFile)
-	Use (cFile) in 0 alias curPrinter0
+If File (cFile)
+	Use (cFile) In 0 Alias curPrinter0
 Else
-	Use curPrinter in 0 alias curPrinter0
+	Use curprinter In 0 Alias curPrinter0
 Endif
- 
+
 * uuendamine curPrinter
 cFileUuend = 'TMP\tmpPrinter.dbf'
 cFileUuendFpt = 'TMP\tmpPrinter.fpt'
-IF FILE(cFileUuend)
-	USE (cFileUuend) IN 0 ALIAS tmpPrinter
-	SELECT tmpPrinter
-	scan
-		SELECT curPrinter0
-		LOCATE FOR id = tmpPrinter.id AND ALLTRIM(UPPER(curPrinter0.objekt)) = ALLTRIM(UPPER(tmpPrinter.objekt))
-		IF !FOUND()
-			INSERT INTO curPrinter0 (id, objekt, nimetus1, nimetus2, procfail, reportfail, reportvene, parameter) ;
-				VALUES (tmpPrinter.id, tmpPrinter.objekt, tmpPrinter.nimetus1, tmpPrinter.nimetus2, tmpPrinter.procfail, ;
-				tmpPrinter.reportfail, tmpPrinter.reportvene, tmpPrinter.parameter)
-		endif
-	ENDSCAN
-	USE IN tmpprinter
-	ERASE (cFileUuend) 
-	ERASE (cFileUuendFpt) 
-ENDIF
+If File(cFileUuend)
+	Use (cFileUuend) In 0 Alias tmpPrinter
+	Select tmpPrinter
+	Scan
+		Select curPrinter0
+		Locate For Id = tmpPrinter.Id And Alltrim(Upper(curPrinter0.objekt)) = Alltrim(Upper(tmpPrinter.objekt))
+		If !Found()
+			Insert Into curPrinter0 (Id, objekt, nimetus1, nimetus2, procfail, reportfail, reportvene, Parameter) ;
+				VALUES (tmpPrinter.Id, tmpPrinter.objekt, tmpPrinter.nimetus1, tmpPrinter.nimetus2, tmpPrinter.procfail, ;
+				tmpPrinter.reportfail, tmpPrinter.reportvene, tmpPrinter.Parameter)
+		Endif
+	Endscan
+	Use In tmpPrinter
+	Erase (cFileUuend)
+	Erase (cFileUuendFpt)
+Endif
 
 
 
-select curprinter
-append from dbf('curPrinter0')	 
+Select curprinter
+Append From Dbf('curPrinter0')
 
-use in curPrinter0
+Use In curPrinter0
 
 cFile = 'palk\curPrintertsd.DBF'
-If file (cFile)
-	Use (cFile) in 0 alias curPrinter1
-	select curprinter
-	append from dbf('curPrinter1')	 
-	use in curPrinter1
+If File (cFile)
+	Use (cFile) In 0 Alias curPrinter1
+	Select curprinter
+	Append From Dbf('curPrinter1')
+	Use In curPrinter1
 Endif
 
 
 
 cFile = 'EELARVE\saldoandmik\curPrinter.DBF'
-If file (cFile)
-	Use (cFile) in 0 alias curPrinter1
+If File (cFile)
+	Use (cFile) In 0 Alias curPrinter1
 Else
-	Use curPrinter in 0 alias curPrinter1
+	Use curprinter In 0 Alias curPrinter1
 Endif
-select curprinter
-append from dbf('curPrinter1')	 
+Select curprinter
+Append From Dbf('curPrinter1')
 
-use in curPrinter1
+Use In curPrinter1
 
 cFile = 'ladu\curPrinter.DBF'
-If file (cFile)
-	Use (cFile) in 0 alias curPrinter2
-	select curprinter
-	append from dbf('curPrinter2')	 
-	use in curPrinter2
+If File (cFile)
+	Use (cFile) In 0 Alias curPrinter2
+	Select curprinter
+	Append From Dbf('curPrinter2')
+	Use In curPrinter2
 Endif
 
 cFile1 = 'EELPROJ\curPrinter.DBF'
-If file (cFile1)
-	Use (cFile1) in 0 alias curPrinter3
-	select curPrinter
-	append from dbf('curPrinter3')	 	
-	use in curPrinter3
+If File (cFile1)
+	Use (cFile1) In 0 Alias curPrinter3
+	Select curprinter
+	Append From Dbf('curPrinter3')
+	Use In curPrinter3
 Endif
 
 cFile1 = 'ERI\curPrinter.DBF'
-If file (cFile1)
-	Use (cFile1) in 0 alias curPrinter4
-	select curPrinter
-	append from dbf('curPrinter4')	 	
-	use in curPrinter4
+If File (cFile1)
+	Use (cFile1) In 0 Alias curPrinter4
+	Select curprinter
+	Append From Dbf('curPrinter4')
+	Use In curPrinter4
 Endif
 
 
-Use config in 0
+Use config In 0
 Select config
-=cursorsetprop('buffering',3)
+=CursorSetProp('buffering',3)
 
-If FILE ('KEY.DBF')
-	Use key in 0
+If File ('KEY.DBF')
+	Use Key In 0
 Endif
 
-IF !USED('v_roles')
-CREATE CURSOR v_roles (	nimetus c(120) DEFAULT 'Raamatupidaja', asutusid int, nomid int, nomidkassa int,nomidpank int, kbmnomidkassa int,;
-		kassaid int, aaid int, alus c(120),kassanr c(20),arvnr c(20), ;
-		dokpropidarvvalju int, dokpropidsorder int, dokpropidpank int, tunnusid int)
-ENDIF
+If !Used('v_roles')
+	Create Cursor v_roles (	nimetus c(120) Default 'Raamatupidaja', asutusid Int, nomid Int, nomidkassa Int,nomidpank Int, kbmnomidkassa Int,;
+		kassaid Int, aaid Int, alus c(120),kassanr c(20),arvnr c(20), ;
+		dokpropidarvvalju Int, dokpropidsorder Int, dokpropidpank Int, tunnusid Int)
+Endif
 
 
-Create cursor comkey (id int, omanik c(120))
-Select id, left(decrypt(f_key(),mline(omanik,1)),120) as omanik from key into cursor qryComkey
+Create Cursor comkey (Id Int, omanik c(120))
+Select Id, Left(decrypt(f_key(),Mline(omanik,1)),120) As omanik From Key Into Cursor qryComkey
 Select comkey
-Append from dbf ('qryComkey')
-Use in qryComkey
+Append From Dbf ('qryComkey')
+Use In qryComkey
 Select comkey
 =secure('OFF')
-lQuit = .f.
-If !empty (config.reserved1) and file ('updater1.exe')
+lQuit = .F.
+If !Empty (config.reserved1) And File ('updater1.exe')
 	lresult = checkuuendused(config.reserved1)
-	If used ('ajalugu')
-		Use in ajalugu
+	If Used ('ajalugu')
+		Use In ajalugu
 	Endif
-	If used ('uuendus')
-		Use in uuendus
+	If Used ('uuendus')
+		Use In uuendus
 	Endif
-	If lresult = .t.
-		lnResult = messagebox (iif(config.keel = 2,'Kas uuenda programm?','Обновить приложение?'),1+32+0,'Uuendamine')
+	If lresult = .T.
+		lnResult = Messagebox (Iif(config.keel = 2,'Kas uuenda programm?','Обновить приложение?'),1+32+0,'Uuendamine')
 		If lnResult = 1
-			! /N updater1.exe
-			lQuit = .t.
+			! /N updater1.Exe
+			lQuit = .T.
 		Endif
 	Endif
 Endif
-If lQuit = .f.
+If lQuit = .F.
 	Set Sysmenu To
 	Set Sysmenu Automatic
 
-	Set classlib to classlib
-	Set proc to classes\login
-	oLogin = createobject('login', tcKey)
-	oLogin.show()
-&&	Do createmenu with 'MAIN',iif(config.keel = 1,.f.,.t.),.f.
-	If !empty(config.background)
-		_Screen.picture = trim(config.background)
-	Endif
-	Set classlib to toolseelarve additive
-	oTools = createobject('Toolseelarve')
-	
+	Set Classlib To Classlib
+	Set Proc To classes\login
+	oLogin = Createobject('login', tcKey)
+	oLogin.Show()
+
+
+	Set Classlib To toolseelarve Additive
+	oTools = Createobject('Toolseelarve')
+
 	oTools.translate()
-	oTools.show()
+
+&&	Do createmenu with 'MAIN',iif(config.keel = 1,.f.,.t.),.f.
+	If !Empty(config.background)
+		_Screen.Picture = Trim(config.background)
+	Endif
 *!*		Set classlib to checkKontoIntegrity additive
 *!*		oRI = createobject('checkKontoIntegrity')
-	Do case
-		Case config.debug = 0
-			On error do err with program(), lineno(1)
-		Case config.debug = 1
-			On error
-		Case config.debug = 2
-			On error do ferr
-	ENDCASE
-	
-	IF !EMPTY(tckey) AND tckey = '-m'
-		DO valirekv
-	ENDIF
-	
-	
-	Read events
+	Do Case
+		Case config.Debug = 0
+			On Error Do err With Program(), Lineno(1)
+		Case config.Debug = 1
+			On Error
+		Case config.Debug = 2
+			On Error Do Ferr
+	Endcase
+
+	If !Empty(tcKey) And tcKey = '-m'
+		Do valirekv
+	Endif
+
+
+	Read Events
 Endif
-Set proc to
-If gnHandle >0 and gVersia <> 'VFP'
+Set Proc To
+If gnHandle >0 And gVersia <> 'VFP'
 	=sqldisconnect(gnHandle)
 	gnHandle = 0
 Endif
-_Screen.caption = cCaption
+_Screen.Caption = cCaption
 &&set help to
-On key
-Set sysmenu to default
-_Screen.picture = ''
-Clear all
-On error
+On Key
+Set Sysmenu To Default
+_Screen.Picture = ''
+Clear All
+On Error
 
-Procedure ferr
+Procedure Ferr
 Endproc
 

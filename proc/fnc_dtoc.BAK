@@ -1,0 +1,4 @@
+PARAMETERS tdKpv
+LOCAL lcKpv
+lcKpv = "to_date('" + DTOC(DATE(),1) + "','YYYYMMDD')"
+RETURN lcKpv

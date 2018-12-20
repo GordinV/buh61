@@ -1,0 +1,2 @@
+COPY TO 'kt.csv' TYPE 'CSV' WITH CHARACTER ';'
+Error in line 104: Command contains unrecognized phrase/keyword.

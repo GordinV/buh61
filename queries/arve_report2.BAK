@@ -12,7 +12,6 @@ tdTasud2 = iif(empty(fltrArved.Tasud2),date()+365*10,fltrArved.Tasud2)
 tcAmetnik = '%'+LTRIM(RTRIM(fltrArved.ametnik))+'%'
 tnLiik  = fltrArved.liik
 cQuery = 'printarved'
-SET STEP ON
 oDb.use(cQuery,'arve_report2')
 SELECT arve_report2
 index on id tag id

@@ -1,0 +1,4 @@
+Messagebox('Error in connect',0 + 48,'Error)
+Error in line 5: Command contains unrecognized phrase/keyword.
+Messagebox('Error in sql',0 + 48,'Error)
+Error in line 20: Command contains unrecognized phrase/keyword.

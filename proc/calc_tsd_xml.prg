@@ -202,7 +202,7 @@ ENDTEXT
 		If Val(tcKood) < 13
 TEXT TO lcStr NOSHOW ADDITIVE
 
-					<c1040_OtMaar><<qryTSDtululiik.v1040>></c1040_OtMaar>
+					<c1040_OtMaar><<IIF(qryTSDtululiik.v1040 > 1, 1,  qryTSDtululiik.v1040)>></c1040_OtMaar>
 ENDTEXT
 
 		Endif

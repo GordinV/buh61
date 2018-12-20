@@ -38,7 +38,7 @@ WITH oDb
 ENDWITH
 SELECT v_rekv
 cAadress = ltrim(rtrim(v_rekv.aadress))
-SET STEP ON 
+
 SELECT v_tulem
 SCAN
 	lcReanr = ltrim(rtrim(v_tulem.kood))
@@ -82,11 +82,13 @@ SCAN
 				lnrecno = recno('tulemiaruanne_report1')
 &&			lnAlg = analise_formula(alltrim(tulemiaruanne_report1.konto),fltrAruanne.kpv1, 'cursorAlgSaldo')
 				lnAlg = 0
+
 				lnLopp = analise_formula(subst_macro(alltrim(tulemiaruanne_report1.konto)),fltrAruanne.kpv2,'cursorLoppSaldo')
 				IF !empty (lnrecno)
 					SELECT tulemiaruanne_report1
 					GO lnrecno
 				ENDIF
+
 				REPLACE loppperiod with lnLopp,;
 					algperiod with  lnAlg in tulemiaruanne_report1
 
@@ -95,7 +97,8 @@ SCAN
 	ELSE
 &&		lnAlg = analise_formula(alltrim(tulemiaruanne_report1.konto),fltrAruanne.kpv1, 'cursorAlgSaldo')
 		lnAlg = 0
-		lnLopp = analise_formula(subst_macro(alltrim(tulemiaruanne_report1.konto)),fltrAruanne.kpv2, 'cursorLoppSaldo')
+*		lnLopp = analise_formula(subst_macro(alltrim(tulemiaruanne_report1.konto)),fltrAruanne.kpv2, 'cursorLoppSaldo')
+		lnLopp = analise_formula(alltrim(tulemiaruanne_report1.konto),fltrAruanne.kpv2)
 		IF !empty (lnrecno)
 			SELECT tulemiaruanne_report1
 			GO lnrecno

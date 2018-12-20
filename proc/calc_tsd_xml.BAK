@@ -1,16 +1,16 @@
 Local lnError, lTSD, lnTMkokku
 lnError = 1
-Set Step On
 
-Create Cursor fltrAruanne (kpv1 d, kpv2 d, kond Int)
-Append Blank
-Replace kpv1 with Date(2018,01,01), kpv2 With Date(2018,01,31), kond With 0 In fltrAruanne
+*!*	Set Step On
+*!*	Create Cursor fltrAruanne (kpv1 d, kpv2 d, kond Int)
+*!*	Append Blank
+*!*	Replace kpv1 with Date(2018,01,01), kpv2 With Date(2018,01,31), kond With 0 In fltrAruanne
 
-gnHandle = SQLConnect('NarvaLvPg')
-tdKPv1 = Date(2018,01,01)
-tdKPv2 = Date(2018,01,31)
-l_parent = 999999
-gRekv = 119
+*!*	gnHandle = SQLConnect('NarvaLvPg')
+*!*	tdKPv1 = Date(2018,01,01)
+*!*	tdKPv2 = Date(2018,01,31)
+*!*	l_parent = 999999
+*!*	gRekv = 119
 
 
 Do queries\palk\tsd2015_report2.fxp

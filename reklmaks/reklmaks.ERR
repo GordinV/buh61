@@ -1,7 +1,13 @@
-Visual Class Library z:\avpsoft\buh61\classes\etsd.vcx has the following errors:
+Program c:\avpsoft\buh61\queries\recalc_subkontod.prg has the following errors:
+    Unknown SP_CREATE_SALDO1_TABEL - Undefined
+
+Visual Class Library c:\avpsoft\buh61\classes\etsd.vcx has the following errors:
     Program TSD2015_REPORT2 - Undefined
     Program TSD2015_REPORT3 - Undefined
 
-Program z:\avpsoft\buh61\queries\calc_etsd.prg has the following errors:
+Program c:\avpsoft\buh61\queries\calc_etsd.prg has the following errors:
+    Program TSD2015_REPORT2 - Undefined
+
+Program c:\avpsoft\buh61\proc\calc_tsd_xml.prg has the following errors:
     Program TSD2015_REPORT2 - Undefined
 

@@ -2,9 +2,9 @@ Parameter tcTest
 * TSD 2015 lisa 1
 Local lcString, tdKpv1, tdKpv2, l_parent, l_sm
 l_sm = 0
-ltest = .t.
-SET STEP on
+ltest = .f.
 IF (ltest)
+	SET STEP on
 	gnHandle = SQLCONNECT('NarvaLvPg')
 	tdKPv1 = DATE(2018,01,01)
 	tdKPv2 = DATE(2018,01,31)
@@ -164,10 +164,10 @@ Else
 			l_v1040 = 0
 		ENDIF
 		
-		IF curTsd.isikukood = '47805312216'
-			SET STEP ON 
-		ENDIF
-		
+*!*			IF curTsd.isikukood = '47805312216'
+*!*				SET STEP ON 
+*!*			ENDIF
+*!*			
 
 
 		l_mvt = 0

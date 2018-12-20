@@ -21,7 +21,7 @@ index on left(upper(asutus),40) tag asutus additive
 index on summa tag summa additive
 index on tasud tag tasud additive
 index on tahtaeg tag tahtaeg additive
-
+set order to kpv
 &&use (cQuery) in 0 alias arve_report2
 
 IF USED('curArved')

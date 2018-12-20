@@ -6,6 +6,7 @@ lnrecno = Recno()
 If Empty (tdKpv)
 	tdKpv = Date()
 Endif
+
 tcString = tString
 lnSaldo = 0
 lcparam = ''
@@ -261,9 +262,7 @@ Function getkaibed
 	Select (tcCursor)
 	If Reccount (tcCursor) > 0
 		Select (tcCursor)
-		Scan For Left(Alltrim(Evaluate (tcCursor+'.konto')),Len(Alltrim(tcKonto))) == Alltrim(tcKonto)
 			lnKaibed = lnKaibed + Iif(tcOpt = 'D',Evaluate(tcCursor+'.deebet'),Evaluate (tcCursor+'.kreedit'))
-		Endscan
 	Endif
 	Return lnKaibed
 

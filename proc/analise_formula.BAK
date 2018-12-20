@@ -6,6 +6,7 @@ lnrecno = Recno()
 If Empty (tdKpv)
 	tdKpv = Date()
 Endif
+
 tcString = tString
 lnSaldo = 0
 lcparam = ''
@@ -449,8 +450,6 @@ Function ASD
 			STR(Month(tdKpv),2)+','+Str(Day(tdKpv),2)+')','qrySd')
 		If lError = .T.
 			lnSaldo = qrySd.ASD
-			SELECT qrySd
-*			brow
 			Use In qrySd
 		Endif
 

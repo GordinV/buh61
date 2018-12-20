@@ -1,0 +1,11 @@
+<?xml version = "1.0" encoding="Windows-1252" standalone="yes"?>
+<VFPData>
+	<customer>
+		<name>Fabio Vazquez</name>
+		<qtyorders>1</qtyorders>
+	</customer>
+	<customer>
+		<name>Another Customer</name>
+		<qtyorders>0</qtyorders>
+	</customer>
+</VFPData>

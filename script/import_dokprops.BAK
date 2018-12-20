@@ -1,0 +1,95 @@
+gnHandle = SQLCONNECT('KU')
+
+IF gnHandle < 0
+	MESSAGEBOX('Viga uhenduses')
+	SET STEP ON 
+	return
+ENDIF
+
+TEXT TO lcString TEXTMERGE NOSHOW 
+	SELECT * from library WHERE library = 'DOK' AND rekvid = 1
+ENDTEXT
+
+l_error = SQLEXEC(gnHandle,lcString, 'tmpDok')
+
+IF l_error < 1
+	MESSAGEBOX('Viga')
+	_cliptext = lcString
+	SET STEP ON 
+	return
+ENDIF
+
+
+TEXT TO lcString TEXTMERGE NOSHOW 
+	SELECT * from rekv WHERE id >= 54 AND id < 75
+ENDTEXT
+
+l_error = SQLEXEC(gnHandle,lcString, 'tmpRekv')
+
+IF l_error < 1
+	MESSAGEBOX('Viga')
+	_cliptext = lcString
+	SET STEP ON 
+	return
+ENDIF
+
+
+TEXT TO lcString TEXTMERGE NOSHOW 
+	SELECT * from dokprop WHERE parentid in (SELECT id from library WHERE library = 'DOK' AND rekvid = 1)
+
+ENDTEXT
+
+l_error = SQLEXEC(gnHandle,lcString, 'tmpDokProp')
+
+IF l_error < 1
+	MESSAGEBOX('Viga')
+	_cliptext = lcString
+	SET STEP ON 
+	return
+ENDIF
+*set STEP on 
+SELECT tmpRekv
+SCAN
+
+	SELECT tmpDok
+	SCAN
+		WAIT WINDOW 'import -> ' + ALLTRIM(tmpRekv.nimetus) + 'tmpDok.kood' nowait
+		TEXT TO lcString TEXTMERGE noshow	
+			INSERT INTO library (rekvid, kood, nimetus, library)
+				values(<<tmpRekv.id>>, '<<ALLTRIM(tmpDok.kood)>>','<<ALLTRIM(tmpDok.nimetus)>>','DOK') returning id				
+		ENDTEXT
+		l_error = SQLEXEC(gnHandle, lcString,'qryId')
+		IF l_error < 1
+			MESSAGEBOX('Viga')
+			_cliptext = lcString
+			SET STEP ON 
+			exit		
+		ENDIF
+		
+		SELECT 	tmpDokProp
+		SCAN FOR parentid = tmpDok.id
+			WAIT WINDOW 'Import dokprop' + STR(RECNO('tmpDokProp')) + '/' + STR(RECCOUNT('tmpDokProp')) nowait
+			TEXT TO lcString TEXTMERGE noshow
+				INSERT INTO dokprop (parentid, registr, vaatalaus, selg, muud, asutusid, konto, kbmkonto, tyyp)
+					values(<<qryId.id>>,<<tmpDokProp.registr>>,<<tmpDokProp.vaatalaus>>,'<<tmpDokProp.selg>>',
+					'<<tmpDokProp.muud>>',<<tmpDokProp.asutusid>>,'<<tmpDokProp.konto>>','<<tmpDokProp.kbmkonto>>',<<tmpDokProp.tyyp>>)
+			ENDTEXT
+			
+		ENDSCAN
+		l_error = SQLEXEC(gnHandle, lcString)
+		IF l_error < 1
+			MESSAGEBOX('Viga')
+			_cliptext = lcString
+			SET STEP ON 
+			exit		
+		ENDIF
+			
+	ENDSCAN
+	
+	
+ENDSCAN
+
+
+
+
+=SQLDISCONNECT(gnHandle)

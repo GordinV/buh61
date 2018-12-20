@@ -1,32 +1,54 @@
 Parameter tcWhere
-SET STEP ON 
-lcString = "select count(*) as count from pg_proc where proname = 'sp_saldoandmik_aruanned'"
-lError = oDb.execsql(lcString, 'tmpProc')
-If !Empty (lError) And Used('tmpProc') And !Empty(tmpProc.Count)
-	Wait Window 'Serveri poolt funktsioon ...' Nowait
-	
-	lError = oDb.Exec("sp_saldoandmik_aruanned ", Str(grekv)+", DATE("+Str(Year(fltrAruanne.kpv2),4)+","+;
-		STR(Month(fltrAruanne.kpv2),2)+","+Str(Day(fltrAruanne.kpv2),2)+"),"+str(year(fltrAruanne.kpv2))+",3,"+Str(fltrAruanne.arvestus,9)+","+Str(fltrAruanne.kond,9),"qrySaldoandmik")
-	
-	
-*	lError = oDb.Exec("sp_saldoandmik_aruanned ", Str(grekv)+", DATE("+Str(Year(fltrAruanne.kpv2),4)+","+;
-*		STR(Month(fltrAruanne.kpv2),2)+","+Str(Day(fltrAruanne.kpv2),2)+"),"+str(year(fltrAruanne.kpv2))+",3,"+Str(fltrAruanne.kond,9)+","+Str(fltrAruanne.arvestus,9),"qrySaldoandmik")
 
-	If Used('qrySaldoandmik')
-		tcTimestamp = Alltrim(qrySaldoandmik.sp_saldoandmik_aruanned)
-		lcString = "select konto, nimetus, summa01 from tmp_sk_aruanned where rekvid = "+Str(grekv)+;
-			" and timestamp = '"+tcTimestamp +"'"+;
-			" order by tegev,konto "
-			
-		lError = oDb.execsql(lcString, 'bilanss_report1')
-
-		If !Empty (lError) And Used('bilanss_report1')
-			Select bilanss_report1
-			Return
+IF !EMPTY(fltrAruanne.arvestus)
+	l_answer = MESSAGEBOX('Kas re-arvesta kondsaldoandmik ?',4+32+256,'Bilanss')
+	IF l_answer = 6
+				
+		TEXT TO l_params TEXTMERGE NOSHOW 
+			{"kpv":"<<DTOC(fltrAruanne.kpv2,1)>>","tyyp":1}
+		ENDTEXT
+		WAIT WINDOW 'Arvestan ...' nowait
+		lError = oDb.readFromModel('aruanned\eelarve\kond_saldoandmik', 'koosta_saldoandmik', 'gUserId,l_params', 'tmpTulemus')
+		If !lError
+			Messagebox('Viga',0+16, 'Eelarve kondsaldoandmik')
+			Set Step On
+			Select 0
+			Return .F.
 		Endif
+		WAIT WINDOW 'Arvestan ...tehtud' nowait
+	ENDIF
+	
+ENDIF
 
-	Else
-		Select 0
-		Return .F.
-	Endif
+
+TEXT TO lcWhere TEXTMERGE noshow
+	(EMPTY(<<fltrAruanne.asutusid>>) or rekv_id = <<fltrAruanne.asutusid>>)
+	and coalesce(konto,'') like '<<ALLTRIM(fltrAruanne.konto)>>%'
+ENDTEXT
+
+l_kpv2 = fltrAruanne.kpv2
+l_rekv = IIF(fltrAruanne.kond = 1 and gRekv = 63,999, gRekv)
+
+If Empty(fltrAruanne.kond)
+	TEXT TO lcWhere ADDITIVE TEXTMERGE noshow
+			and rekv_id = <<l_rekv>>
+	ENDTEXT
+ENDIF
+
+lError = oDb.readFromModel('aruanned\eelarve\pikk_bilanss', 'pikk_bilanss', 'l_kpv2, l_rekv, fltrAruanne.kond', 'tmpReport', lcWhere)
+If !lError
+	Messagebox('Viga',0+16, 'Eelarve kondsaldoandmik')
+	Set Step On
+	Select 0
+	Return .F.
 Endif
+
+Select sum(summa) as summa, konto, nimetus ;
+	from tmpReport ;
+	GROUP By konto, nimetus ;	
+	ORDER By konto ;
+	INTO Cursor bilanss_report1
+
+Use In tmpReport
+Select bilanss_report1
+
