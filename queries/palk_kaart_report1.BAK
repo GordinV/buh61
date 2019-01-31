@@ -17,10 +17,6 @@ INDEX ON LEFT(isik,40) TAG isik
 	
 	
 tcNimetus = '%'+Rtrim(Ltrim(fltrPalkOper.nimetus))+'%'
-*!*	Select Distinct Id, lepingId, nimetus From comTootajad ;
-*!*	where osakondId >= Iif(Empty(fltrPalkOper.osakondId),0,fltrPalkOper.osakondId);
-*!*	And	osakondId <= Iif(Empty(fltrPalkOper.osakondId),999999999,fltrPalkOper.osakondId);
-*!*	Order By nimetus Into Cursor qryTootajad1
 
 If  .Not. Used('qryHoliday')
 		lError = odB.Use('curHoliday','qryHoliday')
@@ -37,7 +33,6 @@ lcString = "select asutus.id, asutus.regkood, asutus.nimetus , tooleping.id as l
 	STR(DAY(fltrPalkOper.kpv1),2) +") and "+;
 	" UPPER(asutus.nimetus) like '" + ALLTRIM(UPPER(fltrPalkOper.isik))+"%' and tooleping.osakondId >= "+STR(lnOsakondId1,9)+" and tooleping.osakondId <= "+STR(lnOsakondId2,9)
 	
-*_cliptext = lcString	
 lnError = SQLEXEC(gnHandle,lcString,'qryTooLepingud')
 IF lnError < 1 OR !USED('qryTooLepingud')
 	WAIT WINDOW 'Päringu viga' nowait
@@ -45,7 +40,7 @@ IF lnError < 1 OR !USED('qryTooLepingud')
 	RETURN 
 endif
 SELECT qryTooLepingud
-*Select comTootajad
+
 lnRecno = RECNO('qryTooLepingud')
 Scan
 	Wait Window 'Arvestan:'+Ltrim(Rtrim(qryTooLepingud.nimetus)) Nowait
@@ -70,8 +65,6 @@ Scan
 					AND liik = '1';
 					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 					INTO Cursor qryPOPalk
-					
-			*		CREATE CURSOR qryPO (liik int, konto c(20), kuu int, summa n(14,2), isikid int, lepingid int, onimi c(120), animi c(120), pohikoht int, palk n(14,2), koormus int, toopaev int)
 					
 				Select kuu, Sum(Summa) As Summa, 'Lisatasud' As nimetus, '+' As liik ,;
 					isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -111,6 +104,10 @@ Scan
 				INSERT INTO tmpFilter (konto) VALUES ('50028302')
 				INSERT INTO tmpFilter (konto) VALUES ('50029301')
 				INSERT INTO tmpFilter (konto) VALUES ('50029302')
+
+* 500003 01-500003 02	500103 01-500103 02	500123 01-500123 02	500143 01-500143 02	500153 01-500153 02	500203 01-500203 02	
+* 500213 01-500213 02	500243 01-500243 02	500253 01-500253 02	500263 01-500263 02	500273 01-500273 02	500283 01-500283 02	500293 01-500293 02
+
 				
 				Select kuu, Sum(Summa) As Summa, 'Preemiad, tulemuspalk' As nimetus, '+' As liik ,;
 					isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -120,7 +117,6 @@ Scan
 					AND liik = '1';
 					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 					INTO Cursor qryPOPreemia
-* 500003 01-500003 02	500103 01-500103 02	500123 01-500123 02	500143 01-500143 02	500153 01-500153 02	500203 01-500203 02	500213 01-500213 02	500243 01-500243 02	500253 01-500253 02	500263 01-500263 02	500273 01-500273 02	500283 01-500283 02	500293 01-500293 02
 					
 * Toetused, mis ei tulene seadusest					
 				Select kuu, Sum(Summa) As Summa, 'Tööandja toetused' As nimetus, '+' As liik ,;
@@ -132,19 +128,7 @@ Scan
 					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 					INTO Cursor qryMuudToetused
 
-* 500003 03	500103 03	500123 03	500143 03	500153 03	500203 03	500213 03	500243 03	500253 03	500263 03	500273 03	500283 03	500293 03
 					
-*!*	/*
-*!*					Select kuu, Sum(Summa) As Summa, 'Boonused, toetused' As nimetus, '+' As liik ,;
-*!*						isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
-*!*					 From qryPO ;
-*!*						WHERE konto In ('50000303','50010303', '50012303', '50014303', '50015303', '50020303', '50021303', '50024303',; 
-*!*							'50025303', '50026303', '50027303', '50028303', '50029303');
-*!*						and lepingid = qryTooLepingud.lepingid ;
-*!*						AND liik = '1';
-*!*						GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
-*!*						INTO Cursor qryPOBoonused
-*!*	 
 				Select kuu, Sum(Summa) As Summa, 'Puhkusetasud,ja -hüvitised' As nimetus, '+' As liik ,;
 					isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 				 From qryPO ;
@@ -179,16 +163,19 @@ Scan
 					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 					INTO Cursor qryPOlapsePuhkus
 
+* 500007 01	500107 01	500127 01	500147 01	500157 01	500207 01	500217 01	500247 01	500257 01	500267 01	500277 01	500287 01	500297 01
 
-				Select kuu, Sum(Summa) As Summa, 'Hüvitised ja toetused' As nimetus, '+' As liik ,;
-					isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
-				 From qryPO ;
-					WHERE alltrim(konto) In ('413320','500005','500105','500145','500155','500215','500245','500255','500285','500265', '500205',;
-					'50012701','50027701');
-					and lepingid = qryTooLepingud.lepingid ;
-					AND liik = '1';
-					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
-					INTO Cursor qryPOToetus
+
+
+*!*					Select kuu, Sum(Summa) As Summa, 'Hüvitised ja toetused' As nimetus, '+' As liik ,;
+*!*						isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
+*!*					 From qryPO ;
+*!*						WHERE alltrim(konto) In ('413320','500005','500105','500145','500155','500215','500245','500255','500285','500265', '500205',;
+*!*						'50012701','50027701');
+*!*						and lepingid = qryTooLepingud.lepingid ;
+*!*						AND liik = '1';
+*!*						GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
+*!*						INTO Cursor qryPOToetus
 
 				Select kuu, Sum(Summa) As Summa, 'Hüvitised ja toetused' As nimetus, '+' As liik ,;
 					isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -276,7 +263,6 @@ Scan
 					AND liik = '2';
 					GROUP By kuu, liik, isikId, lepingId, onimi, animi, pohikoht, palk, koormus, toopaev;
 					INTO Cursor qryPOKinni
-SET STEP ON 
 
 				Insert Into palk_kaart_report1 (Id, lepingid,isikukood, isik, nimetus , osakond,;
 					 amet, liik, summa1,;
@@ -475,29 +461,29 @@ SET STEP ON
 					 p.nimetus, onimi, animi, liik, koormus, palk, toopaev, pohikoht 
 					
 
-				Insert Into palk_kaart_report1 (Id, lepingid,  isikukood, isik, nimetus , osakond,;
-					 amet, liik, summa1,;
-					summa2, summa3 ,summa4,summa5 ,summa6 ,summa7 ,summa8 ,summa9 ,summa10 ,summa11 ,summa12 ,;
-					koormus, palk , toopaev , pohikoht);
-					SELECT isikId, lepingid,  comAsutusRemote.regkood, comAsutusremote.nimetus as isik,;
-					 p.nimetus, onimi, animi, liik,;
-					sum(Iif(kuu = 1,Summa,000000000.00)),;
-					sum(Iif(kuu = 2,Summa,000000000.00)),;
-					sum(Iif(kuu = 3,Summa,000000000.00)),;
-					sum(Iif(kuu = 4,Summa,000000000.00)),;
-					sum(Iif(kuu = 5,Summa,000000000.00)),;
-					sum(Iif(kuu = 6,Summa,000000000.00)),;
-					sum(Iif(kuu = 7,Summa,000000000.00)),;
-					sum(Iif(kuu = 8,Summa,000000000.00)),;
-					sum(Iif(kuu = 9,Summa,000000000.00)),;
-					sum(Iif(kuu = 10,Summa,000000000.00)),;
-					sum(Iif(kuu = 11,Summa,000000000.00)),;
-					sum(Iif(kuu = 12,Summa,000000000.00)), ;
-					koormus, palk, toopaev, Iif(pohikoht = 1,'Jah','Ei');
-					FROM qryPOToetus p;
-					inner join comAsutusRemote on p.isikId = comAsutusRemote.id;
-					group by isikId, lepingid, comAsutusRemote.regkood, comAsutusremote.nimetus ,;
-					 p.nimetus, onimi, animi, liik, koormus, palk, toopaev, pohikoht 
+*!*					Insert Into palk_kaart_report1 (Id, lepingid,  isikukood, isik, nimetus , osakond,;
+*!*						 amet, liik, summa1,;
+*!*						summa2, summa3 ,summa4,summa5 ,summa6 ,summa7 ,summa8 ,summa9 ,summa10 ,summa11 ,summa12 ,;
+*!*						koormus, palk , toopaev , pohikoht);
+*!*						SELECT isikId, lepingid,  comAsutusRemote.regkood, comAsutusremote.nimetus as isik,;
+*!*						 p.nimetus, onimi, animi, liik,;
+*!*						sum(Iif(kuu = 1,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 2,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 3,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 4,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 5,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 6,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 7,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 8,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 9,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 10,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 11,Summa,000000000.00)),;
+*!*						sum(Iif(kuu = 12,Summa,000000000.00)), ;
+*!*						koormus, palk, toopaev, Iif(pohikoht = 1,'Jah','Ei');
+*!*						FROM qryPOToetus p;
+*!*						inner join comAsutusRemote on p.isikId = comAsutusRemote.id;
+*!*						group by isikId, lepingid, comAsutusRemote.regkood, comAsutusremote.nimetus ,;
+*!*						 p.nimetus, onimi, animi, liik, koormus, palk, toopaev, pohikoht 
 					
 
 				Insert Into palk_kaart_report1 (Id, lepingid, isikukood, isik, nimetus , osakond,;

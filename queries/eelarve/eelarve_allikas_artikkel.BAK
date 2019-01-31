@@ -1,0 +1,59 @@
+LPARAMETERS tcParams
+
+*!*	gRekv = 63
+*!*	CREATE CURSOR fltrAruanne (kpv2 d, kond i, kassakulud i)
+*!*	APPEND BLANK
+*!*	replace kpv2 WITH DATE(2018,12,31), kond WITH 1, kassakulud WITH 1
+*!*	 
+*!*	gnHandle = SQLCONNECT('NarvaLvPg','vlad','Vlad490710')
+ 
+TEXT TO l_string TEXTMERGE noshow
+		SELECT  eelarve_andmik_query('<<DTOC(fltrAruanne.kpv2,1)>>'::date, <<gRekv>>, <<fltrAruanne.kond>>) as  result
+ENDTEXT
+
+WAIT WINDOW 'Päring...' nowait
+l_error = SQLEXEC(gnHandle,l_string,'qryTulemus')
+
+IF l_error < 1 
+	SET STEP ON 
+	SELECT 0
+	return
+ENDIF
+
+WAIT WINDOW 'Päring...korras, andmed laadimine ...' nowait
+TEXT to l_string TEXTMERGE noshow
+	SELECT * from tmp_andmik 
+	WHERE tyyp = 1
+	and <<IIF(!EMPTY(fltrAruanne.asutusid), 'rekvid = ' + ALLTRIM(STR(fltrAruanne.asutusid)), 'rekvid = rekvid')>>
+	and artikkel like '<<RTRIM(fltrAruanne.kood5)+'%'>>'
+	and tegev like '<<RTRIM(fltrAruanne.kood1)+'%'>>'
+	and allikas like '<<RTRIM(fltrAruanne.kood2)+'%'>>' 
+	ORDER BY tegev, allikas, artikkel
+ENDTEXT
+
+
+l_error = SQLEXEC(gnHandle,l_string,'qryReport')
+
+IF l_error < 1 
+	SET STEP ON 
+	SELECT 0
+	return
+ENDIF
+
+*!*	=SQLDISCONNECT(gnHandle)
+
+
+SELECT tegev, allikas, artikkel, nimetus, ;
+	r.nimetus as asutus ,;
+	sum(eelarve) as eelarve, sum(IIF(EMPTY(fltrAruanne.kassakulud),tegelik, kassa)) as taitmine ;
+	FROM qryReport ;
+	INNER JOIN comRekvAruanne r on qryReport.rekvid = r.id ;
+	GROUP BY r.nimetus, tegev, allikas, artikkel, nimetus ;
+	ORDER BY r.nimetus, tegev, allikas, artikkel ;	
+	INTO CURSOR eelarve_report2
+	
+	
+USE IN qryReport
+
+SELECT eelarve_report2
+*brow
