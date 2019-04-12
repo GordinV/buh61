@@ -40,11 +40,6 @@ IF tnTunnus > 0
 ELSE
 	tdKpv = DATE(1900,01,01)
 ENDIF
-IF !EMPTY(fltrAruanne.kond)
-	tnParent = 3
-ELSE
-	tnParent = 1
-ENDIF
 
 With oDb
 	.Use ('CUREELARVE', 'tmpeelarvetulud1')
@@ -95,6 +90,7 @@ Use In tmpTuluTaitm
 
 
 Select tmpeelarvetulud
+
 Scan
 	Select comEelarveRemote
 	Locate For ALLTRIM(kood) = ALLTRIM(tmpeelarvetulud.KOOD4)

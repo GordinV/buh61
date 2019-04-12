@@ -14,7 +14,7 @@ If gnHandle2008 < 1
 Endif
 
 * asutuse nimekirje
-lcString = "select id, nimetus from rekv where parentid < 999 and id not in (select id from rekv where id in (63))" 
+lcString = "select id, parentid, nimetus from rekv where parentid < 999 and id in (select id from rekv where id in (63))" 
 *!*	and "+;
 *!*	" id not in (select distinct rekvid from journal where kpv = date(2009,12,31) and selg like 'Alg.saldo%') order by id "
 
@@ -24,8 +24,8 @@ if lError < 0 or not used('qryRekv')
 	return
 endif
 
-lcKpv = 'date(2018,01,01)'
-lcKpv2 = 'date(2017,12,31)'
+lcKpv = 'date(2019,01,01)'
+lcKpv2 = 'date(2018,12,31)'
 select qryRekv
 scan
 	lcAsutuseNimi = ltrim(rtrim(qryRekv.nimetus))
@@ -43,13 +43,13 @@ scan
 	
 	If Used('qrySA')
 		tcTimestamp = Alltrim(qrySA.sp_saldoandmik_report)
-		lcString = "select konto, tp, tegev, allikas, rahavoo, sum(db) as db, sum(kr) as kr, nimetus from tmp_saldoandmik where rekvid = "+str(qryRekv.id)+;
-			" and timestamp = '"+tcTimestamp +"' and "+;
-			" LEFT(konto,1) in ('1','2') and "+;
-			" left(konto,3) not in ('102','103','109','108','201','202','206','208','258', '200') "+;
-			" group by konto, tp, tegev, allikas, rahavoo, nimetus order by konto, tp, tegev, allikas, rahavoo  "
-
-*			" and LEFT(konto,6) not in ('159910','156920','155900','155910') "+;
+		TEXT TO lcString TEXTMERGE noshow
+		select konto, tp, tegev, allikas, rahavoo, sum(db) as db, sum(kr) as kr, nimetus from tmp_saldoandmik where rekvid = <<qryRekv.id>>
+			and timestamp = '<<tcTimestamp>>' 
+			and LEFT(konto,1) in ('1','2') 
+			and  left(konto,3) not in ('102','103','109','108','201','202','206','208','258', '200')
+			 group by konto, tp, tegev, allikas, rahavoo, nimetus order by konto, tp, tegev, allikas, rahavoo  
+		ENDTEXT
 
 		lError = sqlexec(gnhandle2008,lcString,'qrySaldoaruanne')
 	endif
@@ -137,12 +137,24 @@ scan
 	lcString = "select algjaak, konto, asutusId from tmp_subkontod_report where left(konto,3) in('201') and timestamp = '"+tcTimestamp+"' order by konto, asutusid" 
 	lError = sqlexec(gnhandle2008,lcString,'qrySaldoKreedit1')
 
+IF qryRekv.id <> 119 OR qryRekv.parentid <> 119
 	lcString = "select sp_subkontod_report('202%',"+ Str(qryRekv.id)+","+lcKpv2+","+lcKpv2+",0,'%',3,0)"
 	lError = sqlexec(gnhandle2008,lcString,'qrySA')
+	
+	
 	tcTimestamp = Alltrim(qrySA.sp_subkontod_report)
-
 	lcString = "select algjaak, konto, asutusId from tmp_subkontod_report where left(konto,3) in('202') and timestamp = '"+tcTimestamp+"' order by konto, asutusid" 
 	lError = sqlexec(gnhandle2008,lcString,'qrySaldoKreedit2')
+ELSE
+	lcString = "select sp_subkontod_report('202050%',"+ Str(qryRekv.id)+","+lcKpv2+","+lcKpv2+",0,'%',3,0)"
+	lError = sqlexec(gnhandle2008,lcString,'qrySA')
+	
+	
+	tcTimestamp = Alltrim(qrySA.sp_subkontod_report)
+	lcString = "select algjaak, konto, asutusId from tmp_subkontod_report where left(konto,6) in('202050') and timestamp = '"+tcTimestamp+"' order by konto, asutusid" 
+	lError = sqlexec(gnhandle2008,lcString,'qrySaldoKreedit2')
+
+ENDIF
 
 	lcString = "select sp_subkontod_report('200%',"+ Str(qryRekv.id)+","+lcKpv2+","+lcKpv2+",0,'%',3,0)"
 	lError = sqlexec(gnhandle2008,lcString,'qrySA')
@@ -184,6 +196,7 @@ scan
 	union all;
 	select * from qrySaldoKreedit6;
 	into cursor qrySaldoKreedit
+
 *!*		select * from qrySaldoKreedit3;
 *!*		union all;
 	
@@ -209,7 +222,7 @@ scan
 	* kustutame vana lausend
 	wait window lcAsutuseNimi+' kustutame vana saldo..' nowait
 	
-	lcString = "update aasta set kinni = 0 where rekvid = " + str(qryrekv.id,9)+ " and kuu = 12 and aasta = 2017"
+	lcString = "update aasta set kinni = 0 where rekvid = " + str(qryrekv.id,9)+ " and kuu = 12 and aasta = 2018"
 	lError = sqlexec(gnhandle2009,lcString)
 	if lError < 0
 		messagebox('Viga.'+lcString)
@@ -217,7 +230,7 @@ scan
 		exit
 	ENDIF
 	
-	lcString = "delete from journal where rekvid = " + str(qryrekv.id,9)+ " and kpv = date(2017,12,31) and selg ilike 'Alg.saldo%'"
+	lcString = "delete from journal where rekvid = " + str(qryrekv.id,9)+ " and kpv = date(2018,12,31) and selg ilike 'Alg.saldo%'"
 	lError = sqlexec(gnhandle2009,lcString)
 	if lError < 0
 		messagebox('Viga.'+lcString)

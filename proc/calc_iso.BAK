@@ -100,6 +100,8 @@ ENDTEXT
 			IIF(Month(v_mk.kpv)<10,'0','') + Alltrim(Str(Month(v_mk.kpv),2))+'-'+;
 			IIF(Day(v_mk.kpv)<10,'0','')+Alltrim(Str(Day(v_mk.kpv),2))
 
+
+
 		Create Cursor tmpMk (iso m)
 		Append Blank
 		lcString = lcString +'<PmtInf>'+Chr(13) +;
@@ -107,6 +109,7 @@ ENDTEXT
 			'<PmtMtd>TRF</PmtMtd>' + Chr(13)+;
 			'<BtchBookg>true</BtchBookg>'+ Chr(13)+;
 			'<NbOfTxs>' + Alltrim(Str(Reccount('v_mk1')))+ '</NbOfTxs>' + Chr(13)+;
+			'<CtrlSum>'+ Alltrim(Str(lnSummaKokku,14,2)) + '</CtrlSum>' + Chr(13)+;			
 			'<PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl></PmtTpInf>' + Chr(13)+;
 			'<ReqdExctnDt>' + lcIsoKpv + '</ReqdExctnDt>' + Chr(13) +;
 			'<Dbtr>'+Chr(13)+;

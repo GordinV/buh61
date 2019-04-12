@@ -1,4 +1,5 @@
-﻿drop function if exists get_saldo(konto text, rv text);
+﻿
+drop function if exists get_saldo(konto text, rv text);
 drop function if exists get_saldo(formula text, konto text, rv text);
 drop function if exists get_saldo(formula text, konto text, rv text, tegev text);
 
@@ -17,7 +18,7 @@ select coalesce((SELECT sum(case
 			(select min(aasta) as eelmine_aasta, max(aasta) as aasta, min(kuu) as eelmine_kuu, max(kuu) as kuu from tmp_andmik) aasta			
 			where s.tyyp = 2
 			and s.aasta = case when left($1,1) = 'M' then aasta.eelmine_aasta else  aasta.aasta end
-			and s.kuu = case when left($1,1) = 'M' then aasta.eelmine_kuu else  aasta.kuu end
+--			and s.kuu = case when left($1,1) = 'M' then aasta.eelmine_kuu else  aasta.kuu end
 			and ($2 is null or s.artikkel like trim($2::text ||  '%'))
 			 and ($3 is null or trim(s.rahavoog) = $3)
 			 and ($4 is null or trim(s.tegev) = $4)),0);
@@ -32,6 +33,13 @@ GRANT EXECUTE ON FUNCTION get_saldo(formula text, konto text, rv text, text) TO 
 
 
 /*
+
+SELECT *
+FROM eelarve_andmik(DATE(2019,01,31), 63, 0)
+where (not empty(tegev) or not empty(artikkel))
+
+
+
 
 SELECT * from tmp_andmik
 where tyyp = 2

@@ -15,7 +15,7 @@ declare
 	l_kuu integer = month(l_kpv);
 	l_aasta integer = year(l_kpv);
 	la_kontod text[] = array['100','1000','1001','15','1501','1502','1511','1512','1531','1532','2580','2581','2585','2586','3000','3030',
-				'3034','3041','3044','3045','3047','32','3500','3502','352','35200','35201','381','3818','382','38250','38251',
+				'3034','3041','3044','3045','3047','32','3500','3502','352','35200','352001','381','3818','382','38250','38251',
 				'38252','38254','3880','3882','3888','40','413','4500','4502','452','50','55','60','650','655','9100','9101'];
 begin
 
@@ -63,7 +63,7 @@ return query
 		coalesce(sum(kassa),0) as kassa,
 		get_saldo('KD','352', null, null) - 
 		get_saldo('KD','352000', null, null) - 
-		get_saldo('KD','352010', null, null)  as saldoandmik
+		get_saldo('KD','352001', null, null)  as saldoandmik
 -- KD352-KD352000-KD352010
 	from tmp_andmik q
 	where artikkel like '352%'
@@ -90,12 +90,12 @@ return query
 		$2 as rekvid,
 		''::varchar(20) as tegev,
 		''::varchar(20) as allikas,
-		'35201'::varchar(20) as artikkel,
+		'352001'::varchar(20) as artikkel,
 		'Toetusfond ' as nimetus,
 		coalesce(sum(eelarve),0) as eelarve,
 		coalesce(sum(tegelik),0) as tegelik,
 		coalesce(sum(kassa),0) as kassa,
-		get_saldo('KD','3520010', null, null)  as saldoandmik
+		get_saldo('KD','352001', null, null)  as saldoandmik
 -- KD352010
 	from tmp_andmik q
 	where artikkel like '35201%'
@@ -511,10 +511,14 @@ return query
 		''::varchar(20) as allikas,
 		'2580'::varchar(20) as artikkel,
 		'Võlakohustused' as nimetus,
-		0 as eelarve,
-		0 as tegelik,
-		0 as kassa,
+		coalesce(sum(eelarve),0) as eelarve,
+		coalesce(sum(tegelik),0)  as tegelik,
+		coalesce(sum(kassa),0) as kassa,
 		get_saldo('MDK','208', null, null) + get_saldo('MKD','258', null, null) as saldoandmik
+			from tmp_andmik q
+	where artikkel like '2580%'
+	and tyyp = 1
+
 -- MKD208+MKD258
 	union all
 	select '8.1',
@@ -613,7 +617,7 @@ return query
 	union all
 	select 
 		'3.1'::varchar(20) as idx,
-		0 as is_e,
+		1 as is_e,
 		l_rekvid as rekvid,
 		qry.tegev,		
 		''::varchar(20) as allikas,
@@ -643,18 +647,59 @@ GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbpeakasuta
 GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO eelaktsepterja;
 GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbvaatleja;
 
+/*
 
 SELECT *
-FROM eelarve_andmik(DATE(2018,12,31), 63, 1)
+FROM eelarve_andmik(DATE(2019,03,31), 63, 1)
 where (not empty(tegev) or not empty(artikkel))
+and tegev = '10200'
 
-/*
+
+select get_saldo('KD','50', null, null)
+
+
+select * from tmp_andmik where artikkel like '50%'
+
+select coalesce((SELECT sum(case 
+	when 'KD' like '%KD' then (kr - db) when 'KD' like '%DK' then (db - kr) 
+	else  saldoandmik end) 
+			from tmp_andmik s,
+			(select min(aasta) as eelmine_aasta, max(aasta) as aasta, min(kuu) as eelmine_kuu, max(kuu) as kuu from tmp_andmik) aasta			
+			where s.tyyp = 2
+			and s.aasta = case when left('KD',1) = 'M' then aasta.eelmine_aasta else  aasta.aasta end
+			and ('50' is null or s.artikkel like trim('50'::text ||  '%'))
+						 and (null is null or trim(s.rahavoog) = null)
+				and (null is null or trim(s.tegev) = null)
+)
+			,0)
+
 
 CREATE TYPE eelarve_andmik_type AS (idx varchar(20), is_e integer, rekvid integer, tegev varchar(20), allikas varchar(20), artikkel varchar(20), nimetus varchar(254), eelarve numeric(14,2), tegelik numeric(14,2), kassa numeric(14,2), saldoandmik numeric(14,2));
 
 
 --and tegev = '03600'
 order by tegev, artikkel
+
+
+select sum(saldoandmik)  from tmp_andmik where artikkel like '352010%'
+
+
+select get_saldo('MKD','208', null, null) + get_saldo('MDK','258', null, null)
+
+SELECT *
+FROM eelarve_andmik(DATE(2019,01,31), 63, 0)
+where (not empty(tegev) or not empty(artikkel))
+and artikkel = '2580'
+
+SELECT s.aasta, eelmine_aasta, (case f
+	when 'KD' like '%KD' then (kr - db) when 'KD' like '%DK' then (db - kr) 
+	else  saldoandmik end) 
+			from tmp_andmik s,
+			(select min(aasta) as eelmine_aasta, max(aasta) as aasta, min(kuu) as eelmine_kuu, max(kuu) as kuu from tmp_andmik) aasta			
+			where s.tyyp = 2
+			and s.aasta = case when left('KD',1) = 'M' then aasta.eelmine_aasta else  aasta.aasta end
+			and s.kuu = case when left('KD',1) = 'M' then aasta.eelmine_kuu else  aasta.kuu end
+			and ('30' is null or s.artikkel like trim('30'::text ||  '%'))
+			 and (null is null or trim(s.rahavoog) = null)
+			 and (null is null or trim(s.tegev) = null)
 */
---select * from tmp_andmik where artikkel like '2585%'
---select get_saldo('DK','100', null, null), get_saldo('MDK','100', null, null)

@@ -15,11 +15,9 @@ Create Cursor KaibeAsutusAndmik_report1 (algsaldo N(18,6),deebet N(18,6),;
 	kreedit N(18,6),konto c(20), nimetus c(120), asutus c(120), regkood c(20), Asutusid Int, tp c(20), aadress c(254))
 Index On Asutusid Tag Asutusid
 Index On Left (Upper (asutus),40) Tag asutus
-Index On Alltrim(konto)+':'+Alltrim(Str (Asutusid))  Tag klkonto
+Index On Alltrim(konto)+':'+Left (Upper (asutus),40)  Tag klkonto
 
 Set Order To Asutusid
-
-
 
 With odb
 

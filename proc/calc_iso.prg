@@ -116,7 +116,7 @@ ENDTEXT
 			'<Nm>' + Alltrim(lcRekvNimetus)+'</Nm>'+Chr(13)+;
 			'<PstlAdr>'+Chr(13)+;
 			'<Ctry>EE</Ctry>'+Chr(13)+;
-			'<AdrLine>' + Alltrim(lcRekvAadress)+'</AdrLine>' +Chr(13)+;
+			'<AdrLine>' + LEFT(Alltrim(lcRekvAadress),70)+'</AdrLine>' +Chr(13)+;
 			'</PstlAdr>'+Chr(13)+;
 			'</Dbtr>'+Chr(13)+;
 			'<DbtrAcct>'+Chr(13)+;
@@ -142,7 +142,7 @@ ENDTEXT
 				'<Amt><InstdAmt Ccy="EUR">' + Alltrim(Str(v_mk1.Summa,14,2))+'</InstdAmt></Amt>' + Chr(13)+;
 				'<Cdtr>'+Chr(13)+;
 				'<Nm>' + convert_to_utf(Alltrim(v_mk1.asutus))+'</Nm>'+Chr(13)+;
-				'<PstlAdr><Ctry>EE</Ctry><AdrLine>' + convert_to_utf(Alltrim(v_mk1.aadress))+'</AdrLine></PstlAdr>'+Chr(13)+;
+				'<PstlAdr><Ctry>EE</Ctry><AdrLine>' + LEFT(convert_to_utf(Alltrim(v_mk1.aadress)),70)+'</AdrLine></PstlAdr>'+Chr(13)+;
 				'</Cdtr>'+Chr(13)+;
 				'<CdtrAcct><Id><IBAN>' + Alltrim(v_mk1.aa) + '</IBAN></Id></CdtrAcct>' + Chr(13)+;
 				'<RmtInf>' + Chr(13)+;

@@ -9,7 +9,10 @@ CREATE OR REPLACE FUNCTION eelarve_andmik_query(IN l_kpv DATE,
   RETURNS BOOLEAN
 AS
 $$
+declare 
+	l_count integer = 0;
 BEGIN
+
 
   DROP TABLE IF EXISTS tmp_andmik;
 
@@ -32,7 +35,7 @@ BEGIN
     kuu         INTEGER
   );
 
-
+/*
   CREATE INDEX tyyp_tmp_andmik
     ON tmp_andmik
       USING btree
@@ -50,7 +53,7 @@ BEGIN
       USING btree
       (rahavoog);
 
-
+*/
   INSERT INTO tmp_andmik (idx, tyyp, rekvid, tegev, allikas, artikkel, nimetus, eelarve, tegelik, kassa, aasta, kuu)
   SELECT
     '2.1'                       AS idx,
@@ -217,41 +220,6 @@ BEGIN
                   AND journal1.kood5 IN (SELECT kood FROM library WHERE library.library = 'TULUDEALLIKAD' AND tun5 = 1)
                 GROUP BY journal.rekvid, journal1.kood1, journal1.kood2, journal1.kood5
               ) kassakulu
-/*              
-         UNION ALL
-           -- kassakulud (art.jargi), kulud
-
-         SELECT kassakulu.rekvid,
-                0::NUMERIC   AS eelarve,
-                0::NUMERIC   AS tegelik,
-                -1 * (summa) AS kassa,
-                kassakulu.tegev::VARCHAR(20),
-                kassakulu.allikas::VARCHAR(20),
-                kassakulu.artikkel::VARCHAR(20)
-         FROM (
-                SELECT journal.rekvid,
-                       sum(journal1.summa) AS summa,
-                       journal1.kood1      AS tegev,
-                       journal1.kood2      AS allikas,
-                       journal1.kood5      AS artikkel
-                FROM journal
-                       JOIN journal1 ON journal1.parentid = journal.id
-                       JOIN kassakulud ON ltrim(rtrim(journal1.deebet::TEXT)) ~~ ltrim(rtrim(kassakulud.kood::TEXT))
-                       JOIN kassakontod ON ltrim(rtrim(journal1.kreedit::TEXT)) ~~ ltrim(rtrim(kassakontod.kood::TEXT))
-                WHERE journal.kpv <= $1
-                  AND YEAR(journal.kpv) = YEAR($1)
-                  AND journal.rekvid = (CASE
-                                          WHEN $3 = 1
-                                            THEN rekvid
-                                          ELSE $2 END)
-                  AND journal.rekvid IN (SELECT rekv_id
-                                         FROM get_asutuse_struktuur($2))
-                  AND journal1.kood5 IS NOT NULL
-                  AND NOT empty(journal1.kood5)
-                  AND journal1.kood5 IN (SELECT kood FROM library WHERE library.library = 'TULUDEALLIKAD' AND tun5 = 2)
-                GROUP BY journal.rekvid, journal1.kood1, journal1.kood2, journal1.kood5
-              ) kassakulu
-              */
          UNION ALL
 
            -- kassatulud (art.jargi), kulud
@@ -290,8 +258,14 @@ BEGIN
                                         kood = qry.artikkel AND l.library = 'TULUDEALLIKAD'
   GROUP BY qry.rekvid, qry.tegev, qry.allikas, qry.artikkel, l.nimetus;
 
-  INSERT INTO tmp_andmik (tyyp, tegev, artikkel, rahavoog, nimetus, saldoandmik, db, kr, aasta, kuu)
-  SELECT 2,
+  raise notice 'start saldoandmik kpv %, kond %', $1, $3;
+
+  INSERT INTO tmp_andmik (idx,  tyyp, rekvid, tegev, artikkel, rahavoog, nimetus, saldoandmik, db, kr, aasta, kuu)
+  SELECT 2, 2,
+(CASE
+                    WHEN $3 = 1
+                      THEN 999
+                    ELSE $2 END),  
          tegev,
          konto,
          rahavoo,
@@ -310,10 +284,18 @@ BEGIN
                     ELSE $2 END)
   GROUP BY tegev, konto, rahavoo, nimetus;
 
+GET DIAGNOSTICS l_count= ROW_COUNT;
+raise notice 'inserted kokku %', l_count;
 
   -- eelmise periodi andmed
-  INSERT INTO tmp_andmik (tyyp, tegev, artikkel, rahavoog, nimetus, saldoandmik, db, kr, aasta, kuu)
-  SELECT 2,
+  INSERT INTO tmp_andmik (idx, tyyp,rekvid, tegev, artikkel, rahavoog, nimetus, saldoandmik, db, kr, aasta, kuu)
+  SELECT 2, 
+	2,
+(CASE
+                    WHEN $3 = 1
+                      THEN 999
+                    ELSE $2 END),  
+	
          tegev,
          konto,
          rahavoo,
@@ -331,7 +313,13 @@ BEGIN
                       THEN 999
                     ELSE $2 END)
   GROUP BY tegev, allikas, konto, rahavoo, nimetus;
+
+
+GET DIAGNOSTICS l_count= ROW_COUNT;
+raise notice 'inserted kokku 2%', l_count;
+  
   RETURN TRUE;
+
 
 END;
 $$
@@ -346,72 +334,9 @@ GRANT EXECUTE ON FUNCTION eelarve_andmik_query(DATE, INTEGER, INTEGER ) TO eelak
 GRANT EXECUTE ON FUNCTION eelarve_andmik_query(DATE, INTEGER, INTEGER ) TO dbvaatleja;
 
 
-SELECT eelarve_andmik_query(DATE(2018,12,31), 63, 0);
+SELECT eelarve_andmik_query(DATE(2019,01,31), 63, 0);
 
 SELECT *
 FROM tmp_andmik
-where artikkel like '50%'
-and rekvid = 63;
-/*
-SELECT * 
-			from tmp_andmik s
-			where tyyp = 2
-			and artikkel like trim('50'::text ||  '%')
-			 and (null::text is null or trim(rahavoog) = null::text);
-
-
-select 2, tegev, konto, rahavoo, nimetus, (case when db = 0 then (kr - db) else (db - kr) end)
-from saldoandmik 
-where aasta = 2018 
-and kuu = 12
-and  rekvid = (CASE WHEN 1 = 1
-                            THEN 999
-                          ELSE 63 END)
-
-
---select * from saldoandmik where konto like '4502%'  and aasta = 2018 and kuu = 12 and rekvid = 63
-
-
-         SELECT
-           sum(summa)        AS kassa
-         FROM curkassakuludetaitmine kt
-         WHERE
-             kt.rekvid = 63
-           AND kt.aasta = 2018
-           AND kt.kuu <= 12
-           AND kt.kood IS NOT NULL
-           AND NOT empty(kt.kood)
-           and kood like '50%'
-         and kood in (SELECT kood FROM library WHERE library.library = 'TULUDEALLIKAD' AND tun5 = 2);
-
-
-    SELECT kassakulu.rekvid,
-                0::NUMERIC   AS eelarve,
-                0::NUMERIC   AS tegelik,
-                -1 * (summa) AS kassa,
-                kassakulu.tegev::VARCHAR(20),
-                kassakulu.allikas::VARCHAR(20),
-                kassakulu.artikkel::VARCHAR(20)
-         FROM (
-                SELECT journal.rekvid,
-                       sum(journal1.summa) AS summa,
-                       journal1.kood1      AS tegev,
-                       journal1.kood2      AS allikas,
-                       journal1.kood5      AS artikkel
-                FROM journal
-                       JOIN journal1 ON journal1.parentid = journal.id
-                       JOIN kassakulud ON ltrim(rtrim(journal1.deebet::TEXT)) ~~ ltrim(rtrim(kassakulud.kood::TEXT))
-                       JOIN kassakontod ON ltrim(rtrim(journal1.kreedit::TEXT)) ~~ ltrim(rtrim(kassakontod.kood::TEXT))
-                WHERE journal.kpv <= date(2018,12,31)
-                  AND YEAR(journal.kpv) = 2018
-                  AND journal.rekvid = 63
-                  AND journal1.kood5 IS NOT NULL
-                  AND NOT empty(journal1.kood5)
-                  and kood5 like '50%'
-                  AND journal1.kood5 IN (SELECT kood FROM library WHERE library.library = 'TULUDEALLIKAD' AND tun5 = 2)
-                GROUP BY journal.rekvid, journal1.kood1, journal1.kood2, journal1.kood5
-              ) kassakulu         
-
-
-*/
-       
+where rekvid = 63
+and tyyp = 2;

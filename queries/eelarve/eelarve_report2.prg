@@ -19,6 +19,7 @@ tckOOD5 = Ltrim(Rtrim(fltrAruanne.KOOD5))+'%'
 tckOOD = Iif (Empty(fltrAruanne.KOOD4),'3',Ltrim(Rtrim(fltrAruanne.KOOD4)))+'%'
 tctegev = Ltrim(Rtrim(fltrAruanne.KOOD1))+'%'
 tcValuuta = '%'
+
 IF EMPTY(fltrAruanne.kond)
 	tnParent = 3
 ELSE
@@ -39,11 +40,6 @@ IF tnTunnus > 0
 	tdKpv = fltrAruanne.kpv
 ELSE
 	tdKpv = DATE(1900,01,01)
-ENDIF
-IF !EMPTY(fltrAruanne.kond)
-	tnParent = 3
-ELSE
-	tnParent = 1
 ENDIF
 
 With oDb
@@ -95,7 +91,7 @@ Use In tmpTuluTaitm
 
 
 Select tmpeelarvetulud
-brow
+
 Scan
 	Select comEelarveRemote
 	Locate For ALLTRIM(kood) = ALLTRIM(tmpeelarvetulud.KOOD4)

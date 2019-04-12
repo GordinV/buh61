@@ -60,17 +60,17 @@ append FROM DBF('tmp1')
 USE IN tmp1
 
 
-SELECT 'S' as is_esita, ;
-	'2.1' as idx, 3 as sub_idx, gRekv as rekvid, space(20) as tegev, '350' as artikkel, UPPER('Muud saadud toetused tegevuskuludeks') as nimetus, ;
-	sum(eelarve) as eelarve, sum(tegelik) as tegelik, sum(kassa) as kassa, sum(saldoandmik) as saldoandmik ;
-	FROM qryReport ;
-	where artikkel in  ('35200','35201') ;
-	INTO CURSOR tmp1
+*!*	SELECT 'S' as is_esita, ;
+*!*		'2.1' as idx, 3 as sub_idx, gRekv as rekvid, space(20) as tegev, '350' as artikkel, UPPER('Muud saadud toetused tegevuskuludeks') as nimetus, ;
+*!*		sum(eelarve) as eelarve, sum(tegelik) as tegelik, sum(kassa) as kassa, sum(saldoandmik) as saldoandmik ;
+*!*		FROM qryReport ;
+*!*		where artikkel in  ('35200','35201') ;
+*!*		INTO CURSOR tmp1
 
-select eelarve_report_query 
-append FROM DBF('tmp1')
+*!*	select eelarve_report_query 
+*!*	append FROM DBF('tmp1')
 
-USE IN tmp1
+*!*	USE IN tmp1
 
 
 SELECT 'S' as is_esita, ;
@@ -116,7 +116,7 @@ SELECT 'S' as is_esita, ;
 	'1.0' as idx, 0 as sub_idx, gRekv as rekvid, space(20) as tegev, space(20) as artikkel, UPPER('PÕHITEGEVUSE TULUD KOKKU') as nimetus, ;
 	sum(eelarve) as eelarve, sum(tegelik) as tegelik, sum(kassa) as kassa, sum(saldoandmik) as saldoandmik ;
 	FROM qryReport ;
-	where LEFT(artikkel,2) in ('30','35','38') ;
+	where LEFT(artikkel,2) in ('30','32','35','38') ;
 	INTO CURSOR tmp_tulud_kokku
 
 select eelarve_report_query 
@@ -137,10 +137,10 @@ append FROM DBF('tmp_kulud_kokku')
 INSERT into eelarve_report_query (idx , sub_idx, is_esita , rekvid, tegev, artikkel, nimetus ,;
 	eelarve , tegelik , kassa, saldoandmik ) ;
 VALUES ('2.3', 2, 'S', gRekv , space(20), '', UPPER('PÕHITEGEVUSE TULEM') , ;
-	(tmp_tulud_kokku.eelarve - tmp_kulud_kokku.eelarve),; 
-	(tmp_tulud_kokku.tegelik - tmp_kulud_kokku.tegelik) , ;
-	(tmp_tulud_kokku.kassa - tmp_kulud_kokku.kassa), ;
-	(tmp_tulud_kokku.saldoandmik - tmp_kulud_kokku.saldoandmik) ) 
+	(tmp_tulud_kokku.eelarve + tmp_kulud_kokku.eelarve),; 
+	(tmp_tulud_kokku.tegelik + tmp_kulud_kokku.tegelik) , ;
+	(tmp_tulud_kokku.kassa + tmp_kulud_kokku.kassa), ;
+	(tmp_tulud_kokku.saldoandmik + tmp_kulud_kokku.saldoandmik) ) 
 
 
 SELECT 'S' as is_esita, ;
@@ -156,10 +156,10 @@ append FROM DBF('investeerimis_tegevus')
 INSERT into eelarve_report_query (idx , sub_idx, is_esita , rekvid, tegev, artikkel, nimetus ,;
 	eelarve , tegelik , kassa, saldoandmik ) ;
 VALUES ('2.4.6', 1, 'S', gRekv , space(20), '', UPPER('EELARVE TULEM (ÜLEJÄÄK (+) / PUUDUJÄÄK (-))') , ;
-	(tmp_tulud_kokku.eelarve - tmp_kulud_kokku.eelarve) + investeerimis_tegevus.eelarve,; 
-	(tmp_tulud_kokku.tegelik - tmp_kulud_kokku.tegelik) + investeerimis_tegevus.tegelik , ;
-	(tmp_tulud_kokku.kassa - tmp_kulud_kokku.kassa) + investeerimis_tegevus.kassa, ;
-	(tmp_tulud_kokku.saldoandmik - tmp_kulud_kokku.saldoandmik) + investeerimis_tegevus.saldoandmik ) 
+	(tmp_tulud_kokku.eelarve + tmp_kulud_kokku.eelarve) + investeerimis_tegevus.eelarve,; 
+	(tmp_tulud_kokku.tegelik + tmp_kulud_kokku.tegelik) + investeerimis_tegevus.tegelik , ;
+	(tmp_tulud_kokku.kassa + tmp_kulud_kokku.kassa) + investeerimis_tegevus.kassa, ;
+	(tmp_tulud_kokku.saldoandmik + tmp_kulud_kokku.saldoandmik) + investeerimis_tegevus.saldoandmik ) 
 
 
 SELECT 'S' as is_esita, ;
@@ -175,10 +175,10 @@ append FROM DBF('finants_tegenus')
 
 SELECT 'S' as is_esita, ;
 	'2.4.8' as idx, 2 as sub_idx, gRekv as rekvid, space(20) as tegev, '' as artikkel, UPPER('NÕUETE JA KOHUSTUSTE SALDODE MUUTUS (tekkepõhise e/a korral) (+/-)') as nimetus, ;
-	(q.eelarve) - ((tmp_tulud_kokku.eelarve - tmp_kulud_kokku.eelarve) + investeerimis_tegevus.eelarve) - finants_tegenus.eelarve as eelarve, ;
-	(q.tegelik) - ((tmp_tulud_kokku.tegelik - tmp_kulud_kokku.tegelik) + investeerimis_tegevus.tegelik) - finants_tegenus.tegelik as tegelik, ;
-	(q.kassa) - ((tmp_tulud_kokku.kassa - tmp_kulud_kokku.kassa) + investeerimis_tegevus.kassa) - finants_tegenus.kassa  as kassa, ;
-	(q.saldoandmik) - ((tmp_tulud_kokku.saldoandmik - tmp_kulud_kokku.saldoandmik) + investeerimis_tegevus.saldoandmik) - finants_tegenus.saldoandmik  as saldoandmik ;
+	(q.eelarve) - ((tmp_tulud_kokku.eelarve + tmp_kulud_kokku.eelarve) + investeerimis_tegevus.eelarve) + finants_tegenus.eelarve as eelarve, ;
+	(q.tegelik) - ((tmp_tulud_kokku.tegelik + tmp_kulud_kokku.tegelik) + investeerimis_tegevus.tegelik) + finants_tegenus.tegelik as tegelik, ;
+	(q.kassa) - ((tmp_tulud_kokku.kassa + tmp_kulud_kokku.kassa) + investeerimis_tegevus.kassa) + finants_tegenus.kassa  as kassa, ;
+	(q.saldoandmik) - ((tmp_tulud_kokku.saldoandmik + tmp_kulud_kokku.saldoandmik) + investeerimis_tegevus.saldoandmik) + finants_tegenus.saldoandmik  as saldoandmik ;
 	FROM qryReport q;
 	where alltrim(artikkel) = ('100') ;
 	INTO CURSOR tmp1
@@ -207,6 +207,7 @@ SELECT IIF(EMPTY(q.is_e),'E','') as is_esita,  ;
 	q.eelarve, q.tegelik, q.kassa, q.saldoandmik ;
 	from qryReport q ;
 	INTO cursor tmp2
+
 
 select eelarve_report_query 
 
@@ -548,4 +549,3 @@ USE IN eelarve_report_query
 CLEAR
 
 SELECT eelarve_report1
-brow

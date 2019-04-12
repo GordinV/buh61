@@ -1,6 +1,5 @@
 Local lError
 
-SET STEP ON 
 gnHandle2009 = SQLConnect('narvalvpg')
 gnHandle2008 = SQLConnect('koopia')
 If gnHandle2009 < 1

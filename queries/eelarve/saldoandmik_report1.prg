@@ -1,11 +1,5 @@
-**
-** saldoandmik_report1.fxp
-**
+PARAMETERS tcParam
 
-
- 
- 
- 
  
 CREATE CURSOR saldoaruanne_report1 (konto c(20), tp c(20), tegev c(20), allikas c(20), rahavoo c(20), db n(18,6), kr n(18,6), nimetus c(254),;
 	dbKokku n(18,6), krKokku n(18,6))

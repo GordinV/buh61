@@ -60,7 +60,8 @@ TEXT TO lcString noshow
 			CASE when arv.liik = 0 then rekv.tel else rtrim(LTRIM(a.tel))  end as muuja_tel,
 			CASE when arv.liik = 1 then rekv.regkood else rtrim(LTRIM(a.regkood))  end as ostja_regkood,
 			a.aadress, a.email,
-			(select arve from aa where parentId = rekv.id and default_ = 1 and not empty(pank) and kassa = 1 order by id desc limit 1)::varchar as arve
+			(select arve from aa where parentId = rekv.id and default_ = 1 and not empty(pank) and kassa = 1 order by id desc limit 1)::varchar as arve,
+			arv.lisa
 			from arv
 			inner join asutus a on a.id = arv.asutusId
 			inner join rekv on arv.rekvId = rekv.id
@@ -83,13 +84,13 @@ ENDTEXT
 
 TEXT TO lcFileString NOSHOW
 <?xml version="1.0" encoding="UTF-8"?>
-	<E_Invoice>
-		<Header>
-			<Date><<lcKpv>></Date>
-			<FileId>1</FileId>
-			<AppId>EARVE</AppId>
-			<Version>1.1</Version>
-		</Header>
+<E_Invoice>
+<Header>
+<Date><<lcKpv>></Date>
+<FileId>1</FileId>
+<AppId>EARVE</AppId>
+<Version>1.1</Version>
+</Header>
 
 ENDTEXT
 
@@ -107,7 +108,6 @@ ENDTEXT
 				IIF(Day(qryeArved.tahtaeg)<10,'0','')+Alltrim(Str(Day(qryeArved.tahtaeg),2))
 		ENDIF
 		
-		SET STEP ON 
 		laAddress = getAddress(qryeArved.aadress)
 		lcCity = getAddress(qryeArved.aadress, 3)
 		lcPost = getAddress(qryeArved.aadress, 1)
@@ -118,40 +118,40 @@ ENDTEXT
 
 TEXT TO lcFileString ADDITIVE NOSHOW
 
-			<Invoice invoiceId="<<Alltrim(convert_to_utf(qryeArved.Number))>>" regNumber="<<Alltrim(qryeArved.regkood)>>">
-				<InvoiceParties>
-					<SellerParty>
-						<Name><<Alltrim(convert_to_utf(qryeArved.muuja))>></Name>
-						<RegNumber><<Alltrim(qryeArved.muuja_regkood)>></RegNumber>
-						<ContactData>
-							<PhoneNumber><<qryeArved.muuja_tel>></PhoneNumber>
-							<LegalAddress>
-								<PostalAddress1><<Alltrim(convert_to_utf(lc_muuja_Post))>></PostalAddress1>
-								<City><<ALLTRIM(convert_to_utf(lc_muuja_City))>></City>
-							</LegalAddress>
-						</ContactData>
-					</SellerParty>
-					<BuyerParty>
-						<Name><<Alltrim(convert_to_utf(qryeArved.ostja))>></Name>
-						<RegNumber><<Alltrim(qryeArved.ostja_regkood)>></RegNumber>
-						<ContactData>
-							<E-mailAddress><<Alltrim(convert_to_utf(qryeArved.email))>></E-mailAddress>
-							<LegalAddress>
-								<PostalAddress1><<Alltrim(convert_to_utf(lcPost))>></PostalAddress1>
-								<City><<ALLTRIM(convert_to_utf(lcCity))>></City>
-							</LegalAddress>
-						</ContactData>
-					</BuyerParty>
-				</InvoiceParties>
-				<InvoiceInformation>
-					<Type type="DEB"/>
-					<DocumentName>Arve</DocumentName>
-					<InvoiceNumber><<Alltrim(convert_to_utf(qryeArved.Number))>></InvoiceNumber>
-					<InvoiceDate><<lcKpv>></InvoiceDate>
-				</InvoiceInformation>
-				<InvoiceSumGroup>
-					<InvoiceSum><<Alltrim(Str(qryeArved.Summa,14,2))>></InvoiceSum>
-					<VAT>
+<Invoice invoiceId="<<Alltrim(convert_to_utf(qryeArved.Number))>>" regNumber="<<Alltrim(qryeArved.regkood)>>">
+<InvoiceParties>
+<SellerParty>
+<Name><<Alltrim(convert_to_utf(qryeArved.muuja))>></Name>
+<RegNumber><<Alltrim(qryeArved.muuja_regkood)>></RegNumber>
+<ContactData>
+<PhoneNumber><<qryeArved.muuja_tel>></PhoneNumber>
+<LegalAddress>
+<PostalAddress1><<Alltrim(convert_to_utf(lc_muuja_Post))>></PostalAddress1>
+<City><<ALLTRIM(convert_to_utf(lc_muuja_City))>></City>
+</LegalAddress>
+</ContactData>
+</SellerParty>
+<BuyerParty>
+<Name><<Alltrim(convert_to_utf(qryeArved.ostja))>></Name>
+<RegNumber><<Alltrim(qryeArved.ostja_regkood)>></RegNumber>
+<ContactData>
+<E-mailAddress><<Alltrim(convert_to_utf(qryeArved.email))>></E-mailAddress>
+<LegalAddress>
+<PostalAddress1><<Alltrim(convert_to_utf(lcPost))>></PostalAddress1>
+<City><<ALLTRIM(convert_to_utf(lcCity))>></City>
+</LegalAddress>
+</ContactData>
+</BuyerParty>
+</InvoiceParties>
+<InvoiceInformation>
+<Type type="DEB"/>
+<DocumentName>Arve</DocumentName>
+<InvoiceNumber><<Alltrim(convert_to_utf(qryeArved.Number))>></InvoiceNumber>
+<InvoiceDate><<lcKpv>></InvoiceDate>
+</InvoiceInformation>
+<InvoiceSumGroup>
+<InvoiceSum><<Alltrim(Str(qryeArved.Summa,14,2))>></InvoiceSum>
+<VAT>
 ENDTEXT
 
 TEXT TO lcString noshow
@@ -189,41 +189,38 @@ ENDTEXT
 
 TEXT TO lcFileString ADDITIVE NOSHOW
 
-		</InvoiceItemGroup>
-	</InvoiceItem>
-	<AdditionalInformation>
-		<InformationName>Lisa</InformationName>
-		<InformationContent><<Alltrim(convert_to_utf(qryeArved.lisa))>></InformationContent>
+</InvoiceItemGroup>
+</InvoiceItem>
 
 ENDTEXT
-
-
-		If !Empty(qryeArved.muud)
-TEXT TO lcFileString ADDITIVE NOSHOW
-			<InformationName>Muud</InformationName>
-			<InformationContent><<Alltrim(convert_to_utf(qryeArved.muud))>></InformationContent>
-ENDTEXT
-
-		Endif
+l_tahtaeg = ALLTRIM(STR(YEAR(qryeArved.tahtaeg))) + '-' + ALLTRIM(STR(MONTH(qryeArved.tahtaeg))) + '-' + ALLTRIM(STR(DAY(qryeArved.tahtaeg)))
 
 TEXT TO lcFileString ADDITIVE NOSHOW
-		</AdditionalInformation>
-		<PaymentInfo>
-			<Currency>EUR</Currency>
-			<PaymentRefId><<qryeArved.id>></PaymentRefId>
-			<PaymentDescription>Arve <<convert_to_utf(qryeArved.Number)>></PaymentDescription>
-			<Payable>YES</Payable>
-			<PayDueDate><<lcTKpv>></PayDueDate>
-			<PaymentTotalSum><<Alltrim(Str(qryeArved.Summa,14,2))>></PaymentTotalSum>
-			<PayerName><<Alltrim(convert_to_utf(qryeArved.ostja)) >></PayerName>
-			<PaymentId><<ALLTRIM(convert_to_utf(qryeArved.number))>></PaymentId>
-			<PayToAccount><<ALLTRIM(qryeArved.arve)>></PayToAccount>
-			<PayToName><<ALLTRIM(convert_to_utf(qryeArved.muuja))>></PayToName>
-		</PaymentInfo>
-		</Invoice>
+<PaymentInfo>
+<Currency>EUR</Currency>
+<PaymentRefId></PaymentRefId>
+<PaymentDescription>Arve <<convert_to_utf(qryeArved.Number)>></PaymentDescription>
+<Payable>YES</Payable>
+<PayDueDate><<l_tahtaeg>></PayDueDate> 
+<PaymentTotalSum><<Alltrim(Str(qryeArved.Summa,14,2))>></PaymentTotalSum>
+<PayerName><<Alltrim(convert_to_utf(qryeArved.ostja)) >></PayerName>
+<PaymentId><<ALLTRIM(convert_to_utf(qryeArved.number))>></PaymentId>
+<PayToAccount><<ALLTRIM(qryeArved.arve)>></PayToAccount>
+<PayToName><<ALLTRIM(convert_to_utf(qryeArved.muuja))>></PayToName>
+</PaymentInfo>
+</Invoice>
 
 ENDTEXT
 
+IF !ISNULL(qryeArved.muud) AND !EMPTY(qryeArved.muud)
+TEXT TO lcFileString ADDITIVE NOSHOW
+<AdditionalInformation id  ="  Note">  
+<InformationName> Märkus </InformationName><InformationContent><<ALLTRIM(qryeArved.muud)>></InformationContent>
+</AdditionalInformation>
+	
+ENDTEXT
+
+ENDIF
 
 
 *	lcString = ALLTRIM(lcString)
@@ -236,11 +233,11 @@ ENDTEXT
 
 TEXT TO lcFileString ADDITIVE NOSHOW
 
-			<Footer>
-				<TotalNumberInvoices><<Alltrim(Str(Reccount('qryeArved')))>></TotalNumberInvoices>
-				<TotalAmount><<Alltrim(Str(lnTotalSumma,14,2))>></TotalAmount>
-			</Footer>
-		</E_Invoice>
+<Footer>
+<TotalNumberInvoices><<Alltrim(Str(Reccount('qryeArved')))>></TotalNumberInvoices>
+<TotalAmount><<Alltrim(Str(lnTotalSumma,14,2))>></TotalAmount>
+</Footer>
+</E_Invoice>
 ENDTEXT
 
 
@@ -277,22 +274,22 @@ Function create_details
 	Scan
 TEXT TO lcString ADDITIVE NOSHOW
 
-				<SumBeforeVAT><<Alltrim(Str(qryeArvedVat.summa - qryeArvedVat.vatSum, 14,2))>></SumBeforeVAT>
-				<VATRate><<Alltrim(Str(qryeArvedVat.vatRate))>></VATRate>
-				<VATSum><<Alltrim(Str(qryeArvedVat.vatSum,14,2))>></VATSum>
-				<Currency>EUR</Currency>
-				<SumAfterVAT><<Alltrim(Str(qryeArvedVat.summa,14,2))>></SumAfterVAT>
+<SumBeforeVAT><<Alltrim(Str(qryeArvedVat.summa - qryeArvedVat.vatSum, 14,2))>></SumBeforeVAT>
+<VATRate><<Alltrim(Str(qryeArvedVat.vatRate))>></VATRate>
+<VATSum><<Alltrim(Str(qryeArvedVat.vatSum,14,2))>></VATSum>
+<Currency>EUR</Currency>
+<SumAfterVAT><<Alltrim(Str(qryeArvedVat.summa,14,2))>></SumAfterVAT>
 ENDTEXT
 
 	Endscan
 TEXT TO lcString ADDITIVE NOSHOW
 
-			</VAT>
-			<TotalSum><<Alltrim(Str(qryeArved.Summa,14,2))>></TotalSum>
-			<Currency>EUR</Currency>
-		</InvoiceSumGroup>
-		<InvoiceItem>
-			<InvoiceItemGroup>
+</VAT>
+<TotalSum><<Alltrim(Str(qryeArved.Summa,14,2))>></TotalSum>
+<Currency>EUR</Currency>
+</InvoiceSumGroup>
+<InvoiceItem>
+<InvoiceItemGroup>
 
 ENDTEXT
 
@@ -300,22 +297,22 @@ ENDTEXT
 	Scan
 TEXT TO lcString ADDITIVE NOSHOW
 
-			<ItemEntry>
-				<Description><<Alltrim(convert_to_utf(qryeArvedDet.Description))>></Description>
-				<ItemDetailInfo>
-					<ItemUnit><<Alltrim(qryeArvedDet.ItemUnit)>></ItemUnit>
-					<ItemAmount><<Alltrim(Str(qryeArvedDet.ItemAmount,14,4))>></ItemAmount>
-					<ItemPrice><<Alltrim(Str(qryeArvedDet.itemPrice,14,2))>></ItemPrice>
-				</ItemDetailInfo>
-				<ItemSum><<Alltrim(Str(qryeArvedDet.itemSum,14,2))>></ItemSum>
-				<VAT>
-					<SumBeforeVAT><<Alltrim(Str(qryeArvedDet.ItemSum, 14,2))>></SumBeforeVAT>
-					<VATRate><<Alltrim(Str(qryeArvedDet.vatRate))>></VATRate>
-					<VATSum><<Alltrim(Str(qryeArvedDet.vatSum,14,2))>></VATSum>
-					<Currency>EUR</Currency>
-				</VAT>
-				<ItemTotal><<Alltrim(Str(qryeArvedDet.itemTotal,14,2))>></ItemTotal>
-			</ItemEntry>
+<ItemEntry>
+<Description><<Alltrim(convert_to_utf(ALLTRIM(qryeArvedDet.Description) + ', ' + ALLTRIM(qryeArved.lisa)))>></Description>
+<ItemDetailInfo>
+<ItemUnit><<Alltrim(qryeArvedDet.ItemUnit)>></ItemUnit>
+<ItemAmount><<Alltrim(Str(qryeArvedDet.ItemAmount,14,4))>></ItemAmount>
+<ItemPrice><<Alltrim(Str(qryeArvedDet.itemPrice,14,2))>></ItemPrice>
+</ItemDetailInfo>
+<ItemSum><<Alltrim(Str(qryeArvedDet.itemSum,14,2))>></ItemSum>
+<VAT>
+<SumBeforeVAT><<Alltrim(Str(qryeArvedDet.ItemSum, 14,2))>></SumBeforeVAT>
+<VATRate><<Alltrim(Str(qryeArvedDet.vatRate))>></VATRate>
+<VATSum><<Alltrim(Str(qryeArvedDet.vatSum,14,2))>></VATSum>
+<Currency>EUR</Currency>
+</VAT>
+<ItemTotal><<Alltrim(Str(qryeArvedDet.itemTotal,14,2))>></ItemTotal>
+</ItemEntry>
 ENDTEXT
 
 	Endscan
