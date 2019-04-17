@@ -340,3 +340,5 @@ SELECT *
 FROM tmp_andmik
 WHERE rekvid = 63
   AND tyyp = 2;
+
+--

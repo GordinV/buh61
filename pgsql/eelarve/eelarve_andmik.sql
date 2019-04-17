@@ -710,4 +710,5 @@ SELECT s.aasta, eelmine_aasta, (case f
 			and ('30' is null or s.artikkel like trim('30'::text ||  '%'))
 			 and (null is null or trim(s.rahavoog) = null)
 			 and (null is null or trim(s.tegev) = null)
+--test
 */
