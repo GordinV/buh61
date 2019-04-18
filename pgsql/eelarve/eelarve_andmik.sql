@@ -93,7 +93,7 @@ BEGIN
                         $2                                    AS rekvid,
                         ''::VARCHAR(20)                       AS tegev,
                         ''::VARCHAR(20)                       AS allikas,
-                        '35201'::VARCHAR(20)                 AS artikkel,
+                        '35201'::VARCHAR(20)                  AS artikkel,
                         'Toetusfond '                         AS nimetus,
                         coalesce(sum(eelarve), 0)             AS eelarve,
                         coalesce(sum(tegelik), 0)             AS tegelik,
@@ -271,7 +271,7 @@ BEGIN
                         ''::VARCHAR(20)                                    AS allikas,
                         '15'::VARCHAR(20)                                  AS artikkel,
                         'Põhivara soetus (-)'                              AS nimetus,
-                        coalesce(sum(-1 * eelarve), 0)                          AS eelarve,
+                        coalesce(sum(-1 * eelarve), 0)                     AS eelarve,
                         0                                                  AS tegelik,
                         0                                                  AS kassa,
                         coalesce(get_saldo('KD', '154', '01', NULL) +
@@ -281,7 +281,7 @@ BEGIN
                                  get_saldo('KD', '601002', NULL, NULL), 0) AS saldoandmik
                  FROM tmp_andmik q
                  WHERE artikkel LIKE '15%'
-                   and artikkel not in ('1501','1502')
+                   AND artikkel NOT IN ('1501', '1502')
                    AND tyyp = 1
 
 -- KD154RV01+KD155RV01+KD156RV01+KD157RV01+601002KD
@@ -517,8 +517,8 @@ BEGIN
                         ''::VARCHAR(20)                                                           AS tegev,
                         ''::VARCHAR(20)                                                           AS allikas,
                         '2580'::VARCHAR(20)                                                       AS artikkel,
-                        'Volakohustused'                                                          AS nimetus,
-                        coalesce(sum(eelarve), 0)                                                 AS eelarve,
+                        'Võlakohustused'                                                          AS nimetus,
+                        get_saldo('MKD', '208', NULL, NULL) + get_saldo('MKD', '258', NULL, NULL) AS eelarve,
                         coalesce(sum(tegelik), 0)                                                 AS tegelik,
                         coalesce(sum(kassa), 0)                                                   AS kassa,
                         get_saldo('MKD', '208', NULL, NULL) + get_saldo('MKD', '258', NULL, NULL) AS saldoandmik
@@ -542,34 +542,50 @@ BEGIN
 -- MKD910090
                  UNION ALL
                  SELECT '8.1',
-                        1                   AS is_e,
-                        $2                  AS rekvid,
-                        ''::VARCHAR(20)     AS tegev,
-                        ''::VARCHAR(20)     AS allikas,
-                        '1000'::VARCHAR(20) AS artikkel,
-                        'Likviidsed varad'  AS nimetus,
-                        0                   AS eelarve,
-                        0                   AS tegelik,
-                        0                   AS kassa,
+                        1                                    AS is_e,
+                        $2                                   AS rekvid,
+                        ''::VARCHAR(20)                      AS tegev,
+                        ''::VARCHAR(20)                      AS allikas,
+                        '1000'::VARCHAR(20)                  AS artikkel,
+                        'Likviidsed varad'                   AS nimetus,
+                        get_saldo('MDK', '100', NULL, NULL) +
+                        get_saldo('MDK', '101', NULL, NULL) -
+                        get_saldo('MDK', '1019', NULL, NULL) +
+                        get_saldo('MDK', '151', NULL, NULL) -
+                        get_saldo('MDK', '1519', NULL, NULL) AS eelarve,
+                        0                                    AS tegelik,
+                        0                                    AS kassa,
                         get_saldo('MDK', '100', NULL, NULL) +
                         get_saldo('MDK', '101', NULL, NULL) -
                         get_saldo('MDK', '1019', NULL, NULL) +
                         get_saldo('MDK', '151', NULL, NULL) -
                         get_saldo('MDK', '1519', NULL, NULL)
-                                            AS saldoandmik
+                                                             AS saldoandmik
 -- MDK100+MDK101-MDK1019+MDK151-MDK1519
                  UNION ALL
                  SELECT '8.2',
-                        1                                                                       AS is_e,
-                        $2                                                                      AS rekvid,
-                        ''::VARCHAR(20)                                                         AS tegev,
-                        ''::VARCHAR(20)                                                         AS allikas,
-                        '2581'::VARCHAR(20)                                                     AS artikkel,
-                        'Võlakohustused'                                                        AS nimetus,
-                        0                                                                       AS eelarve,
-                        0                                                                       AS tegelik,
-                        0                                                                       AS kassa,
-                        get_saldo('KD', '208', NULL, NULL) + get_saldo('KD', '258', NULL, NULL) AS saldoandmik
+                        1                                   AS is_e,
+                        $2                                  AS rekvid,
+                        ''::VARCHAR(20)                     AS tegev,
+                        ''::VARCHAR(20)                     AS allikas,
+                        '2581'::VARCHAR(20)                 AS artikkel,
+                        'Võlakohustused'
+                                                            AS nimetus,
+                        (SELECT sum(eelarve)
+                         FROM tmp_andmik q
+                         WHERE (left(artikkel, 3) = '255' OR left(artikkel, 4) = '2585')
+                           AND tyyp = 1) +
+
+                        (SELECT sum(-1 * eelarve)
+                         FROM tmp_andmik q
+                         WHERE (left(artikkel, 3) = '206' OR left(artikkel, 4) = '2586')
+                           AND tyyp = 1) +
+                        get_saldo('MKD', '208', NULL, NULL) +
+                        get_saldo('MKD', '258', NULL, NULL) AS eelarve,
+                        0                                   AS tegelik,
+                        0                                   AS kassa,
+                        get_saldo('KD', '208', NULL, NULL) +
+                        get_saldo('KD', '258', NULL, NULL)  AS saldoandmik
 -- KD208+KD258
                  UNION ALL
                  SELECT '8.2',
@@ -586,20 +602,27 @@ BEGIN
 -- KD910090
                  UNION ALL
                  SELECT '8.2',
-                        1                                   AS is_e,
-                        $2                                  AS rekvid,
-                        ''::VARCHAR(20)                     AS tegev,
-                        ''::VARCHAR(20)                     AS allikas,
-                        '1001'::VARCHAR(20)                 AS artikkel,
-                        'Likviidsed varad'                  AS nimetus,
-                        0                                   AS eelarve,
-                        0                                   AS tegelik,
-                        0                                   AS kassa,
+                        1                                                         AS is_e,
+                        $2                                                        AS rekvid,
+                        ''::VARCHAR(20)                                           AS tegev,
+                        ''::VARCHAR(20)                                           AS allikas,
+                        '1001'::VARCHAR(20)                                       AS artikkel,
+                        'Likviidsed varad'                                        AS nimetus,
+                        (get_saldo('MDK', '100', NULL, NULL) +
+                         get_saldo('MDK', '101', NULL, NULL) -
+                         get_saldo('MDK', '1019', NULL, NULL) +
+                         get_saldo('MDK', '151', NULL, NULL) -
+                         get_saldo('MDK', '1519', NULL, NULL)) + (SELECT -1 * coalesce(sum(eelarve), 0)
+                                                                  FROM tmp_andmik
+                                                                  WHERE artikkel LIKE '100%'
+                                                                    AND tyyp = 1) AS eelarve,
+                        0                                                         AS tegelik,
+                        0                                                         AS kassa,
                         get_saldo('DK', '100', NULL, NULL) +
                         get_saldo('DK', '101', NULL, NULL) -
                         get_saldo('DK', '1019', NULL, NULL) +
                         get_saldo('DK', '151', NULL, NULL) -
-                        get_saldo('DK', '1519', NULL, NULL) AS saldoandmik
+                        get_saldo('DK', '1519', NULL, NULL)                       AS saldoandmik
 -- DK100+DK101-DK1019+DK151-DK1519
 
 -- pohi osa
@@ -639,9 +662,9 @@ BEGIN
                  FROM tmp_andmik qry
                           LEFT OUTER JOIN library l ON l.kood = qry.tegev AND l.library = 'TEGEV'
                  WHERE tyyp = 1
-                   AND not empty(qry.is_kulud)
+                   AND NOT empty(qry.is_kulud)
                    AND qry.artikkel <> '2586'
-                   AND qry.tegev NOT IN ( '07230', '07240',  '07320')
+                   AND qry.tegev NOT IN ('07230', '07240', '07320')
                  GROUP BY tegev, l.nimetus
              ) qry;
 END;
@@ -661,7 +684,7 @@ GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbvaatleja;
 SELECT *
 FROM eelarve_andmik(DATE(2019,03,31), 63, 1)
 where (not empty(tegev) or not empty(artikkel))
-and artikkel = '382%'
+and artikkel in ('2581','2580','2585','2586')
 
 
 select * from tmp_andmik where artikkel ilike '382%'
