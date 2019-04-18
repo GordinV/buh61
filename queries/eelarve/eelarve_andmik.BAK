@@ -51,7 +51,7 @@ SELECT 'S' as is_esita, ;
 	'2.1' as idx, 2 as sub_idx, gRekv as rekvid, space(20) as tegev, '35' as artikkel, UPPER('Saadud toetused tegevuskuludeks') as nimetus, ;
 	sum(eelarve) as eelarve, sum(tegelik) as tegelik, sum(kassa) as kassa, sum(saldoandmik) as saldoandmik ;
 	FROM qryReport ;
-	where LEFT(artikkel,2) =  '35' ;
+	where artikkel in  ('3500','352','35200','352001') ;
 	INTO CURSOR tmp1
 
 select eelarve_report_query 
@@ -77,7 +77,7 @@ SELECT 'S' as is_esita, ;
 	'2.1' as idx, 3 as sub_idx, gRekv as rekvid, space(20) as tegev, '38' as artikkel, UPPER('Muud tegevustulud ') as nimetus, ;
 	sum(eelarve) as eelarve, sum(tegelik) as tegelik, sum(kassa) as kassa, sum(saldoandmik) as saldoandmik ;
 	FROM qryReport ;
-	where artikkel like '38%' ;
+	where artikkel  in ('382','3880','3888') ;
 	INTO CURSOR tmp1
 
 select eelarve_report_query 
@@ -115,8 +115,8 @@ USE IN tmp1
 SELECT 'S' as is_esita, ;
 	'1.0' as idx, 0 as sub_idx, gRekv as rekvid, space(20) as tegev, space(20) as artikkel, UPPER('PÕHITEGEVUSE TULUD KOKKU') as nimetus, ;
 	sum(eelarve) as eelarve, sum(tegelik) as tegelik, sum(kassa) as kassa, sum(saldoandmik) as saldoandmik ;
-	FROM qryReport ;
-	where LEFT(artikkel,2) in ('30','32','35','38') ;
+	FROM eelarve_report_query ;
+	where artikkel in ('30','35','38') ;
 	INTO CURSOR tmp_tulud_kokku
 
 select eelarve_report_query 
@@ -208,7 +208,6 @@ SELECT IIF(EMPTY(q.is_e),'E','') as is_esita,  ;
 	from qryReport q ;
 	INTO cursor tmp2
 
-SET STEP ON 
 
 select eelarve_report_query 
 

@@ -16,7 +16,7 @@ DECLARE
     l_kuu     INTEGER = month(l_kpv);
     l_aasta   INTEGER = year(l_kpv);
     la_kontod TEXT[]  = ARRAY ['100','1000','1001','15','1501','1502','1511','1512','1531','1532','2580','2581','2585','2586','3000','3030',
-        '3034','3041','3044','3045','3047','32','3500','3502','352','35200','352001','381','3818','382','38250','38251',
+        '3034','3041','3044','3045','3047','32','3500','3502','352','35200','35201','381','3818','382','38250','38251',
         '38252','38254','3880','3882','3888','40','413','4500','4502','452','50','55','60','650','655','9100','9101'];
 BEGIN
 
@@ -93,7 +93,7 @@ BEGIN
                         $2                                    AS rekvid,
                         ''::VARCHAR(20)                       AS tegev,
                         ''::VARCHAR(20)                       AS allikas,
-                        '352001'::VARCHAR(20)                 AS artikkel,
+                        '35201'::VARCHAR(20)                 AS artikkel,
                         'Toetusfond '                         AS nimetus,
                         coalesce(sum(eelarve), 0)             AS eelarve,
                         coalesce(sum(tegelik), 0)             AS tegelik,
@@ -121,7 +121,7 @@ BEGIN
 -- KD382+KD382520+KD382550+KD382560
 
                  FROM tmp_andmik q
-                 WHERE artikkel LIKE '382%'
+                 WHERE artikkel = '3823'
                    AND tyyp = 1
                  UNION ALL
                  SELECT '2.1'::VARCHAR(20),
@@ -271,7 +271,7 @@ BEGIN
                         ''::VARCHAR(20)                                    AS allikas,
                         '15'::VARCHAR(20)                                  AS artikkel,
                         'Põhivara soetus (-)'                              AS nimetus,
-                        0                                                  AS eelarve,
+                        coalesce(sum(-1 * eelarve), 0)                          AS eelarve,
                         0                                                  AS tegelik,
                         0                                                  AS kassa,
                         coalesce(get_saldo('KD', '154', '01', NULL) +
@@ -279,6 +279,11 @@ BEGIN
                                  get_saldo('KD', '156', '01', NULL) +
                                  get_saldo('KD', '157', '01', NULL) +
                                  get_saldo('KD', '601002', NULL, NULL), 0) AS saldoandmik
+                 FROM tmp_andmik q
+                 WHERE artikkel LIKE '15%'
+                   and artikkel not in ('1501','1502')
+                   AND tyyp = 1
+
 -- KD154RV01+KD155RV01+KD156RV01+KD157RV01+601002KD
                  UNION ALL
                  SELECT '2.4.1'::VARCHAR(20),
@@ -654,19 +659,19 @@ GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbvaatleja;
 /*
 
 SELECT *
-FROM eelarve_andmik(DATE(2019,03,31), 63, 0)
+FROM eelarve_andmik(DATE(2019,03,31), 63, 1)
 where (not empty(tegev) or not empty(artikkel))
-and tegev = '01112'
+and artikkel = '382%'
 
 
-select * from tmp_andmik
+select * from tmp_andmik where artikkel ilike '382%'
 select * from eelarve where rekvid = 63 and aasta = 2019 and kood1 = '01112'
 
 
 select get_saldo('MDK','50', null, null)
 
 
-select * from tmp_andmik where artikkel like '50%'
+select * from tmp_andmik where artikkel like '382%'
 
 select coalesce((SELECT sum(case 
 	when 'KD' like '%KD' then (kr - db) when 'KD' like '%DK' then (db - kr) 
