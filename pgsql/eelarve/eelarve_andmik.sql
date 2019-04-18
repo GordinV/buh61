@@ -641,7 +641,7 @@ BEGIN
                  WHERE tyyp = 1
                    AND not empty(qry.is_kulud)
                    AND qry.artikkel <> '2586'
-                   AND qry.tegev NOT IN ('03600', '07230', '07240', '07310', '07320', '07340')
+                   AND qry.tegev NOT IN ( '07230', '07240', '07310', '07320', '07340')
                  GROUP BY tegev, l.nimetus
              ) qry;
 END;
