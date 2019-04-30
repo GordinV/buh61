@@ -16,7 +16,7 @@ DECLARE
     l_kuu     INTEGER = month(l_kpv);
     l_aasta   INTEGER = year(l_kpv);
     la_kontod TEXT[]  = ARRAY ['100','1000','1001','15','1501','1502','1511','1512','1531','1532','2580','2581','2585','2586','3000','3030',
-        '3034','3041','3044','3045','3047','32','3500','3502','352','35200','35201','381','3818','382','38250','38251',
+        '3034','3041','3044','3045','3047','32','3500','3502','352','35200','35201','381','382','38250','38251',
         '38252','38254','3880','3882','3888','40','413','4500','4502','452','50','55','60','650','655','9100','9101'];
 BEGIN
 
@@ -262,7 +262,26 @@ BEGIN
 
                  FROM tmp_andmik q
                  WHERE artikkel LIKE '381%'
+                   AND artikkel <> '3818'
                    AND tyyp = 1
+                 UNION ALL
+                 SELECT idx,
+                        1                                   AS is_e,
+                        $2                                  AS rekvid,
+                        ''::VARCHAR(20)                     AS tegev,
+                        ''::VARCHAR(20)                     AS allikas,
+                        artikkel::VARCHAR(20)               AS artikkel,
+                        nimetus                             AS nimetus,
+                        coalesce(sum(eelarve), 0)           AS eelarve,
+                        coalesce(sum(tegelik), 0)           AS tegelik,
+                        coalesce(sum(kassa), 0)             AS kassa,
+                        get_saldo('KD', '3818', NULL, NULL) AS saldoandmik
+-- KD381-KD3818-KD154RV02-KD155RV02-KD156RV02-KD157RV02-KD109RV02
+
+                 FROM tmp_andmik q
+                 WHERE artikkel = '3818'
+                   AND tyyp = 1
+                 GROUP BY q.idx, artikkel, nimetus
                  UNION ALL
                  SELECT '2.4.1'::VARCHAR(20),
                         1                                                  AS is_e,
@@ -575,7 +594,6 @@ BEGIN
                          FROM tmp_andmik q
                          WHERE (left(artikkel, 3) = '255' OR left(artikkel, 4) = '2585')
                            AND tyyp = 1) +
-
                         (SELECT sum(-1 * eelarve)
                          FROM tmp_andmik q
                          WHERE (left(artikkel, 3) = '206' OR left(artikkel, 4) = '2586')
@@ -684,10 +702,10 @@ GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbvaatleja;
 SELECT *
 FROM eelarve_andmik(DATE(2019,03,31), 63, 1)
 where (not empty(tegev) or not empty(artikkel))
-and artikkel in ('2581','2580','2585','2586')
+and artikkel in ('3810','381','3818')
 
 
-select * from tmp_andmik where artikkel ilike '382%'
+select * from tmp_andmik where artikkel ilike '381%'
 select * from eelarve where rekvid = 63 and aasta = 2019 and kood1 = '01112'
 
 
