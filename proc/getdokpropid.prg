@@ -1,7 +1,5 @@
-**
-** getdokpropid.fxp
-**
-LPARAMETER tcTyyp
+
+LPARAMETER tcTyyp, tcKorrKonto
 LOCAL lnId
 lnId = 0
 IF !USED('comDokRemote') OR RECCOUNT('comDokRemote') = 0
@@ -15,19 +13,30 @@ IF  .Not. Found()
 ENDIF
 tnId = coMdokremote.Id
 odB.Use('curDokProp')
+
 IF Reccount('curDokProp')>1
-	lcForm = 'validok'
-	DO Form (lcForm) To lnId With tnId
+
+	IF !EMPTY(tcKorrKonto)
+		* otsime korrkonto
+		SELECT curDokProp
+		LOCATE FOR ALLTRIM(konto) = ALLTRIM(tcKorrKonto)
+		IF FOUND()
+			lnId = cuRdokprop.Id
+		ELSE
+			lcForm = 'validok'
+			DO Form (lcForm) To lnId With tnId		
+		ENDIF
+	ELSE
+			lcForm = 'validok'
+			DO Form (lcForm) To lnId With tnId				
+	ENDIF
+
 ELSE
 	IF Reccount('curDokProp')<1
-		IF  'RAAMA' $ curKey.VERSIA
 			CREATE Cursor cMessage (prOp1 Int)
 			INSERT Into cMessage (prOp1) Values (coMdokremote.Id)
 			lcForm = 'dokprop'
 			DO Form (lcForm) To lnId With 'ADD', 0
-		ELSE
-			lnId = 0
-		ENDIF
 	ELSE
 		lnId = cuRdokprop.Id
 	ENDIF

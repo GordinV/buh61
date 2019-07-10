@@ -1,0 +1,146 @@
+Parameters t_dokprop_id
+
+Local l_arv_id, l_onnestus
+v_arv_id = 0
+l_onnestus = .F.
+
+If !Used('v_xml_arv')
+	Messagebox('Arved ei leidnud',0+64,'Import ostuarved')
+	Return 0
+Endif
+
+l_nom_id = getNomIdByNimetus(Alltrim(Upper('OMNIVA')))
+
+IF EMPTY(l_nom_id)
+	MESSAGEBOX('Omniva kood ei leidnud',0+16,'Import ostuarved')
+ENDIF
+
+
+
+If Type('Odb') = 'U'
+	Set Classlib To classes\Classlib
+	oDb = Createobject('db')
+	gnHandle = SQLConnect('NarvaLvPg')
+	gRekv = 63
+	gUserId = 1713
+Endif
+
+* load model
+
+oDb.use('v_arv','v_arv',.t.)
+oDb.use('v_arvread','v_arvread',.t.)
+
+Select v_xml_arv
+Wait Window 'Importeerin arve nr. ' + Alltrim(v_xml_arv.Number) Timeout 1
+
+If !Empty(v_xml_arv.korr_konto) 
+	t_dokprop_id = getdokpropId('ARV', v_xml_arv.korr_konto)
+Endif
+
+* asutusId
+Select comAsutusRemote
+Locate For Alltrim(regkood) = Alltrim(v_xml_arv.regkood)
+
+If !Found()
+	Messagebox('Asutus:' + Alltrim(v_xml_arv.asutus) + ',' + Alltrim(v_xml_arv.regkood) + ' ei leidnud',0+64,'e-Arve import')
+Else
+	Select v_arv
+
+	Insert Into v_arv (rekvid, Userid, doklausId, Number, liik, kpv, asutusid, Summa, kbmta, kbm, tahtaeg, lisa, viitenr, aa) ;
+		VALUES (gRekv, gUserId, t_dokprop_id, v_xml_arv.Number, 1, v_xml_arv.kpv, comAsutusRemote.Id, v_xml_arv.Summa, ;
+		v_xml_arv.kbmta, v_xml_arv.kbm, v_xml_arv.tahtpaev, v_xml_arv.lisa, v_xml_arv.viitenr, v_xml_arv.arve)
+
+
+* details
+	Select 	v_xml_arv_detail
+	Scan For Id = v_xml_arv.Id
+* seach for noms
+		
+
+		Insert Into v_arvread (nomid, kogus, hind, Summa, kbmta, km, kbm, nimetus, konto, tp, kood1, kood2, kood5, MUUD, valuuta, kuurs) ;
+			VALUES (l_nom_id, IIF(EMPTY(v_xml_arv_detail.kogus),1,v_xml_arv_detail.kogus),; 
+			v_xml_arv_detail.Summa / IIF(EMPTY(v_xml_arv_detail.kogus),1,v_xml_arv_detail.kogus), ;
+			v_xml_arv_detail.summa_kokku, v_xml_arv_detail.Summa,v_xml_arv_detail.kbm_maar, v_xml_arv_detail.kbm,;
+			v_xml_arv_detail.nimetus,;
+			v_xml_arv_detail.konto,;
+			comAsutusRemote.tp, v_xml_arv_detail.tegev, v_xml_arv_detail.allikas, v_xml_arv_detail.artikkel, ;
+			v_xml_arv_detail.nimetus, 'EUR',1)
+	Endscan
+
+	Select v_arvread
+	If Reccount('v_arvread') > 0 And Reccount('v_arv') > 0
+		l_onnestus = .T.
+	Endif
+
+Endif
+
+* saving
+If l_onnestus
+	l_error = save_arve()
+
+	IF !EMPTY(l_error)  AND !EMPTY(v_arv.Id)
+				Wait Window 'Uus arve, konteerimine' Nowait
+				tnId = v_arv.Id
+				lError = oDb.Exec("GEN_LAUSEND_ARV",Str(v_arv.Id),'qryArvLausend')	
+	ENDIF
+	If Used('v_arv')
+		l_arv_id = v_arv.Id
+	Endif
+	
+Else
+	l_arv_id = 0
+Endif
+
+
+
+Use In v_arv
+
+Use In v_arvread
+
+Return l_arv_id
+Endfunc
+
+
+Function save_arve
+	If Empty(v_arv.rekvid)
+		Replace rekvid With gRekv,;
+			userId With gUserId In v_arv
+	Endif
+
+
+	Select ('v_arv')
+	lResult = oDb.cursorupdate('v_arv')
+
+	Select v_arvread
+	UPDATE v_arvread SET parentid = v_arv.id 
+
+
+	lResult = oDb.cursorupdate('v_arvread')
+
+	Return lError
+
+Endfunc
+
+
+
+Function getNomIdByNimetus
+	Parameters tcNimetus
+	Local l_id
+
+	Select comNomRemote
+	Locate For Alltrim(Upper(kood)) = tcNimetus And dok = 'ARV'
+	If Found()
+		l_id = comNomRemote.Id
+	Else
+		Messagebox('Nomenklatuur ei leidnud'+ tcNimetus,0+64,'Import ostuarved')
+		Return 0
+* save noms
+*	INSERT INTO comNomRemote (id, kood, nimetus) VALUES (2,'',tcNimetus)
+*	l_id = comNomRemote.id
+	Endif
+	Return l_id
+
+Endfunc
+
+
+

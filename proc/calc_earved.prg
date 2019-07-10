@@ -39,13 +39,13 @@ If File(cFail)
 	Rename (cFail) To (cFailbak)
 Endif
 
-=execute()
+l_xml=execute()
 
 If !File(cFail)
 	cFail = ''
 Endif
 
-Return cFail
+Return l_xml
 
 
 Function execute
@@ -59,6 +59,7 @@ TEXT TO lcString noshow
 			CASE when arv.liik = 0 then rekv.email else rtrim(LTRIM(a.email))  end as muuja_email,
 			CASE when arv.liik = 0 then rekv.tel else rtrim(LTRIM(a.tel))  end as muuja_tel,
 			CASE when arv.liik = 1 then rekv.regkood else rtrim(LTRIM(a.regkood))  end as ostja_regkood,
+			arv.viitenr as viitenr,
 			a.aadress, a.email,
 			(select arve from aa where parentId = rekv.id and default_ = 1 and not empty(pank) and kassa = 1 order by id desc limit 1)::varchar as arve,
 			arv.lisa
@@ -148,16 +149,28 @@ TEXT TO lcFileString ADDITIVE NOSHOW
 <ContractNumber><<ALLTRIM(convert_to_utf(ALLTRIM(qryeArved.lisa)))>></ContractNumber>
 <DocumentName>Arve</DocumentName>
 <InvoiceNumber><<Alltrim(convert_to_utf(qryeArved.Number))>></InvoiceNumber>
+ENDTEXT
+
+		If !Isnull(qryeArved.muud) And !Empty(qryeArved.muud)
+
+TEXT TO lcFileString ADDITIVE NOSHOW
+
+	<InvoiceContentText><<ALLTRIM(convert_to_utf(ALLTRIM(qryeArved.muud)))>></InvoiceContentText>
+ENDTEXT
+		Endif
+TEXT TO lcFileString ADDITIVE NOSHOW
+
 <InvoiceDate><<lcKpv>></InvoiceDate>
 </InvoiceInformation>
 <InvoiceSumGroup>
 <InvoiceSum><<Alltrim(Str(qryeArved.Summa,14,2))>></InvoiceSum>
-<VAT>
+
 ENDTEXT
+
 
 TEXT TO lcString noshow
 			select (case n.doklausid when 0 then 18 when 1 then 0 when 2 then 5 when 3 then 0 when 4 then 9 else 20 end::numeric) as vatRate,
-				sum(kbm) as vatSum, n.doklausid, arv1.parentId, sum(summa) as summa
+				sum(arv1.kbm) as vatSum, n.doklausid, arv1.parentId, sum(summa) as summa
 				from arv1
 				inner join nomenklatuur n on n.id = arv1.nomid
 				where arv1.parentId = ?qryeArved.id
@@ -168,6 +181,30 @@ ENDTEXT
 			Set Step On
 			Exit
 		Endif
+
+
+* koguneme kaibemaksu summad
+
+	Select qryeArvedVat
+	Scan
+TEXT TO lcFileString ADDITIVE NOSHOW
+
+<VAT>
+<VATRate><<Alltrim(Str(qryeArvedVat.vatRate))>></VATRate>
+<VATSum><<Alltrim(Str(qryeArvedVat.vatSum,14,2))>></VATSum>
+</VAT>
+
+ENDTEXT
+
+	Endscan
+TEXT TO lcFileString ADDITIVE NOSHOW
+
+<TotalSum><<Alltrim(Str(qryeArved.Summa,14,2))>></TotalSum>
+<Currency>EUR</Currency>
+</InvoiceSumGroup>
+
+ENDTEXT
+
 
 TEXT TO lcString noshow
 			select
@@ -188,18 +225,14 @@ ENDTEXT
 			lcFileString= lcFileString  + create_details()
 		Endif
 
-TEXT TO lcFileString ADDITIVE NOSHOW
-
-</InvoiceItemGroup>
-</InvoiceItem>
-
-ENDTEXT
-l_tahtaeg = ALLTRIM(STR(YEAR(qryeArved.tahtaeg))) + '-' + ALLTRIM(STR(MONTH(qryeArved.tahtaeg))) + '-' + ALLTRIM(STR(DAY(qryeArved.tahtaeg)))
+l_tahtaeg = ALLTRIM(STR(YEAR(qryeArved.tahtaeg))) + '-' + ; 
+	IIF(MONTH(qryeArved.tahtaeg) < 10, '0','') + ALLTRIM(STR(MONTH(qryeArved.tahtaeg))) + '-' + ;
+	IIF(DAY(qryeArved.tahtaeg) < 10, '0','') + ALLTRIM(STR(DAY(qryeArved.tahtaeg)))
 
 TEXT TO lcFileString ADDITIVE NOSHOW
 <PaymentInfo>
 <Currency>EUR</Currency>
-<PaymentRefId></PaymentRefId>
+<PaymentRefId><<ALLTRIM(IIF(ISNULL(qryeArved.viitenr),'',qryeArved.viitenr))>></PaymentRefId>
 <PaymentDescription>Arve <<convert_to_utf(qryeArved.Number)>></PaymentDescription>
 <Payable>YES</Payable>
 <PayDueDate><<l_tahtaeg>></PayDueDate> 
@@ -209,7 +242,6 @@ TEXT TO lcFileString ADDITIVE NOSHOW
 <PayToAccount><<ALLTRIM(qryeArved.arve)>></PayToAccount>
 <PayToName><<ALLTRIM(convert_to_utf(qryeArved.muuja))>></PayToName>
 </PaymentInfo>
-</Invoice>
 
 ENDTEXT
 
@@ -222,6 +254,11 @@ TEXT TO lcFileString ADDITIVE NOSHOW
 ENDTEXT
 
 ENDIF
+
+TEXT TO lcFileString ADDITIVE NOSHOW
+</Invoice>
+ENDTEXT
+
 
 
 *	lcString = ALLTRIM(lcString)
@@ -242,8 +279,10 @@ TEXT TO lcFileString ADDITIVE NOSHOW
 ENDTEXT
 
 
-	Strtofile(lcFileString, cFail, 4)
-	Return File(cFail)
+*!*		Strtofile(lcFileString, cFail, 4)
+*!*		Return File(cFail)
+RETURN lcFileString	
+	
 Endfunc
 
 
@@ -269,35 +308,17 @@ Function create_details
 	Local lcString, lnSummaKokku, lcIsoKpv, lcPankIban, lcTKpv, lcKpv
 	lcString = ''
 
-* koguneme kaibemaksu summad
-
-	Select qryeArvedVat
-	Scan
 TEXT TO lcString ADDITIVE NOSHOW
 
-<SumBeforeVAT><<Alltrim(Str(qryeArvedVat.summa - qryeArvedVat.vatSum, 14,2))>></SumBeforeVAT>
-<VATRate><<Alltrim(Str(qryeArvedVat.vatRate))>></VATRate>
-<VATSum><<Alltrim(Str(qryeArvedVat.vatSum,14,2))>></VATSum>
-<Currency>EUR</Currency>
-<SumAfterVAT><<Alltrim(Str(qryeArvedVat.summa,14,2))>></SumAfterVAT>
-ENDTEXT
-
-	Endscan
-TEXT TO lcString ADDITIVE NOSHOW
-
-</VAT>
-<TotalSum><<Alltrim(Str(qryeArved.Summa,14,2))>></TotalSum>
-<Currency>EUR</Currency>
-</InvoiceSumGroup>
 <InvoiceItem>
 <InvoiceItemGroup>
 
 ENDTEXT
 
+
 	Select qryeArvedDet
 	Scan
 TEXT TO lcString ADDITIVE NOSHOW
-
 <ItemEntry>
 <Description><<Alltrim(convert_to_utf(ALLTRIM(qryeArvedDet.Description)))>></Description>
 <ItemDetailInfo>
@@ -307,16 +328,23 @@ TEXT TO lcString ADDITIVE NOSHOW
 </ItemDetailInfo>
 <ItemSum><<Alltrim(Str(qryeArvedDet.itemSum,14,2))>></ItemSum>
 <VAT>
-<SumBeforeVAT><<Alltrim(Str(qryeArvedDet.ItemSum, 14,2))>></SumBeforeVAT>
 <VATRate><<Alltrim(Str(qryeArvedDet.vatRate))>></VATRate>
 <VATSum><<Alltrim(Str(qryeArvedDet.vatSum,14,2))>></VATSum>
-<Currency>EUR</Currency>
 </VAT>
 <ItemTotal><<Alltrim(Str(qryeArvedDet.itemTotal,14,2))>></ItemTotal>
 </ItemEntry>
+
 ENDTEXT
 
 	Endscan
+
+TEXT TO lcString ADDITIVE NOSHOW
+
+</InvoiceItemGroup>
+</InvoiceItem>
+
+ENDTEXT
+
 
 *	Copy Memo tmpMk.iso To (cFail)
 	Return lcString
