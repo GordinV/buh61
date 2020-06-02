@@ -1,19 +1,19 @@
 LPARAMETERS tcParams
-*!*	SET STEP on
-*!*	gRekv = 63
-*!*	CREATE CURSOR fltrAruanne (kpv2 d, kond i)
-*!*	APPEND BLANK
-*!*	replace kpv2 WITH DATE(2018,12,31), kond WITH 1
-*!*	 
-*!*	gnHandle = SQLCONNECT('NarvaLvPg','vlad','Vlad490710')
+	SET STEP on
+gRekv = 28
+CREATE CURSOR fltrAruanne (kpv2 d, kond i)
+APPEND BLANK
+replace kpv2 WITH DATE(2019,12,31), kond WITH 0
+ 
+gnHandle = SQLCONNECT('NarvaLvPg','vlad','Vlad490710')
  
 TEXT TO l_string TEXTMERGE noshow
 		SELECT *
 			FROM eelarve_andmik('<<DTOC(fltrAruanne.kpv2,1)>>'::date, <<gRekv>>, <<fltrAruanne.kond>>)
 			where (not empty(tegev) or not empty(artikkel))
-			and not (tegev in ('01800', '09800') and EMPTY(saldoandmik))
 			order by tegev, artikkel 
 ENDTEXT
+* 			-- and EMPTY(saldoandmik)
 
 WAIT WINDOW 'Päring...' nowait
 l_error = SQLEXEC(gnHandle,l_string,'qryReport')
@@ -32,7 +32,7 @@ ENDIF
 WAIT WINDOW 'Andmed, analüüs...' nowait
 
 CREATE CURSOR eelarve_report_query (idx c(20), sub_idx integer, is_esita c(1) null, rekvid i, tegev c(20), artikkel c(20), nimetus c(254),;
-	eelarve n(14,2), tegelik n(14,2), kassa n(14,2), saldoandmik n(14,2))
+	eelarve n(14,2) , tegelik n(14,2), kassa n(14,2), saldoandmik n(14,2))
 
 
 SELECT 'S' as is_esita, ;
@@ -51,7 +51,7 @@ SELECT 'S' as is_esita, ;
 	'2.1' as idx, 2 as sub_idx, gRekv as rekvid, space(20) as tegev, '35' as artikkel, UPPER('Saadud toetused tegevuskuludeks') as nimetus, ;
 	sum(eelarve) as eelarve, sum(tegelik) as tegelik, sum(kassa) as kassa, sum(saldoandmik) as saldoandmik ;
 	FROM qryReport ;
-	where artikkel in  ('3500','352','35200','352001') ;
+	where artikkel in  ('3500','352','35200','35201') ;
 	INTO CURSOR tmp1
 
 select eelarve_report_query 
@@ -202,6 +202,8 @@ append FROM DBF('tmp1')
 
 USE IN tmp1
 
+* 	IIF(ISNULL(q.eelarve),00000000.00,q.eelarve) as eelarve, q.tegelik, q.kassa, q.saldoandmik ;
+
 SELECT IIF(EMPTY(q.is_e),'E','') as is_esita,  ;
 	q.idx, 8 as sub_idx, q.rekvid, q.tegev, q.artikkel, q.nimetus, ;
 	q.eelarve, q.tegelik, q.kassa, q.saldoandmik ;
@@ -280,7 +282,9 @@ UPDATE eelarve_report_query  ;
 	sub_idx = 4, ;
 	is_esita = 'E' ;
 	WHERE ALLTRIM(idx) = '3.1' ;
-	AND ALLTRIM(tegev) in  ('03101','03300','03400','03500','03600') 
+	AND ALLTRIM(tegev) in  ('03101','03300','03400','03500') 
+	
+* ,'03600'
 
 SELECT 'S' as is_esita, ;
 	'3.1.2' as idx, 2 as sub_idx, gRekv as rekvid, space(20) as tegev, '' as artikkel, UPPER('Muu avalik kord ja julgeolek kokku') as nimetus, ;
@@ -404,7 +408,10 @@ UPDATE eelarve_report_query  ;
 	sub_idx = 4, ;
 	is_esita = IIF((ALLTRIM(tegev) = '07110' OR ALLTRIM(tegev) = '07400' OR ALLTRIM(tegev) = '07600'),'','E') ;
 	WHERE ALLTRIM(idx) = '3.1' ;
-	AND ALLTRIM(tegev) in ('07110','07210','07220','07230','07240','07310','07320','07330','07340','07400','07600','07120','07130','07500') 
+	AND ALLTRIM(tegev) in ('07110','07230','07240','07320','07330','07400','07600','07120','07130','07500') 
+
+* '07310','07340','07210','07220',
+
 
 SELECT 'S' as is_esita, ;
 	'3.1.7' as idx, 2 as sub_idx, gRekv as rekvid, space(20) as tegev, '' as artikkel, UPPER('Tervishoid') as nimetus, ;

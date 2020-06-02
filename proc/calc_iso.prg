@@ -80,14 +80,16 @@ ENDTEXT
 	Sum Summa To lnSummaKokku
 	Select v_mk
 	DELETE FOR EMPTY(rekvId)
-		lcIsoKpv = Str(Year(DATE()),4) + '-'+;
-			IIF(Month(DATE())<10,'0','') + Alltrim(Str(Month(DATE()),2))+'-'+;
-			IIF(Day(DATE())<10,'0','')+Alltrim(Str(Day(DATE()),2))
+	
+	l_kpv = IIF(EMPTY(v_mk.maksepaev),DATE(), v_mk.maksepaev)
+	lcIsoKpv = Str(Year(l_kpv ),4) + '-'+;
+		IIF(Month(l_kpv )<10,'0','') + Alltrim(Str(Month(l_kpv ),2))+'-'+;
+		IIF(Day(l_kpv )<10,'0','')+Alltrim(Str(DAY(l_kpv ),2))
 
 	SELECT v_mk
 	lcString = lcString + Chr(13)+ '<CstmrCdtTrfInitn>' + Chr(13)+;
 			'<GrpHdr>' + Chr(13)+;
-			'<MsgId>' + ALLTRIM(STR(v_mk.Id))+'</MsgId>' + Chr(13) + ;
+			'<MsgId>' + SYS(1) + SYS(2)+ '</MsgId>' + Chr(13) + ;
 			'<CreDtTm>' +  lcIsoKpv + 'T08:00:00'+ '</CreDtTm>'+Chr(13)+;
 			'<NbOfTxs>' + Alltrim(Str(Reccount('v_mk1')))+ '</NbOfTxs>' + Chr(13)+;
 			'<CtrlSum>'+ Alltrim(Str(lnSummaKokku,14,2)) + '</CtrlSum>' + Chr(13)+;
@@ -96,9 +98,9 @@ ENDTEXT
 
 	SCAN FOR !EMPTY(rekvId)
 	WAIT WINDOW 'Eksport: ' + ALLTRIM(v_mk.number) nowait
-		lcIsoKpv = Str(Year(v_mk.kpv),4) + '-'+;
-			IIF(Month(v_mk.kpv)<10,'0','') + Alltrim(Str(Month(v_mk.kpv),2))+'-'+;
-			IIF(Day(v_mk.kpv)<10,'0','')+Alltrim(Str(Day(v_mk.kpv),2))
+		lcIsoKpv = Str(Year(v_mk.maksepaev),4) + '-'+;
+			IIF(Month(v_mk.maksepaev)<10,'0','') + Alltrim(Str(Month(v_mk.maksepaev),2))+'-'+;
+			IIF(Day(v_mk.maksepaev)<10,'0','')+Alltrim(Str(Day(v_mk.maksepaev),2))
 
 
 
@@ -107,7 +109,7 @@ ENDTEXT
 		lcString = lcString +'<PmtInf>'+Chr(13) +;
 			'<PmtInfId>'+ALLTRIM(v_mk.number)+'</PmtInfId>'+Chr(13)+;
 			'<PmtMtd>TRF</PmtMtd>' + Chr(13)+;
-			'<BtchBookg>true</BtchBookg>'+ Chr(13)+;
+			'<BtchBookg>false</BtchBookg>'+ Chr(13)+;
 			'<NbOfTxs>' + Alltrim(Str(Reccount('v_mk1')))+ '</NbOfTxs>' + Chr(13)+;
 			'<CtrlSum>'+ Alltrim(Str(lnSummaKokku,14,2)) + '</CtrlSum>' + Chr(13)+;			
 			'<PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl></PmtTpInf>' + Chr(13)+;

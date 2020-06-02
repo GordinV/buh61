@@ -2,124 +2,142 @@
 ** login.fxp
 **
 *
-DEFINE CLASS login AS dokument
- naMe = "login"
- asUtusid = 0
- usErid = 0
- wiDth = 640
- caPtion = 'Login'
- heIght = 100
- auTocenter = .T.
- shOwwindow = 2
- wiNdowtype = 1
- keY = ''
- meSsage = ''
- ADD OBJECT coMrekv AS myCombo WITH toP = 5, leFt = 100, wiDth = 400,  ;
-     naMe = "comrekv", boUndcolumn = 1, boUndto = .T., roWsourcetype = 6,  ;
-     roWsource = "comkey.omanik, id", coLumncount = 2, coLumnwidths =  ;
-     "400,0", coLumnlines = 0, vaLue = 0, style = 2
- ADD OBJECT txTkasutaja AS myTxt WITH toP = 35, leFt = 100, wiDth = 200,  ;
-     naMe = "txtKasutaja"
- ADD OBJECT txTparool AS myTxt WITH toP = 70, leFt = 100, wiDth = 200,  ;
-     naMe = "txtParool", paSswordchar = '*'
- ADD OBJECT btNok AS myBtn WITH caPtion = '', toP = 5, leFt = 525, wiDth =  ;
-     100, naMe = "btnOk", piCture = "pictures\btok.bmp"
- ADD OBJECT btNcancel AS myBtn WITH caPtion = '', toP = 40, leFt = 525,  ;
-     wiDth = 100, naMe = "btnCancel", piCture = "pictures\btExit.bmp"
- ADD OBJECT lbLasutus AS myLbl WITH toP = 5, leFt = 5, naMe = "lblAsutus",  ;
-     caPtion = "Database:"
- ADD OBJECT lbLkasutaja AS myLbl WITH toP = 35, leFt = 5, naMe =  ;
-     "lblKasutaja", caPtion = "Kasutaja nimi:"
- ADD OBJECT lbLparool AS myLbl WITH toP = 70, leFt = 5, naMe =  ;
-     "lblParool", caPtion = "Parool:"
+Define Class login As dokument
+	Name = "login"
+	asUtusid = 0
+	Userid = 0
+	Width = 640
+	Caption = 'Login'
+	Height = 100
+	AutoCenter = .T.
+	ShowWindow = 2
+	WindowType = 1
+	Key = ''
+	Message = ''
+	Add Object coMrekv As myCombo With Top = 5, Left = 100, Width = 400,  ;
+		naMe = "comrekv", BoundColumn = 1, BoundTo = .T., RowSourceType = 6,  ;
+		roWsource = "comkey.omanik, id", ColumnCount = 2, ColumnWidths =  ;
+		"400,0", ColumnLines = 0, Value = 0, Style = 2
+	Add Object txTkasutaja As myTxt With Top = 35, Left = 100, Width = 200,  ;
+		naMe = "txtKasutaja"
+	Add Object txTparool As myTxt With Top = 70, Left = 100, Width = 200,  ;
+		naMe = "txtParool", PasswordChar = '*'
+	Add Object btNok As myBtn With Caption = '', Top = 5, Left = 525, Width =  ;
+		100, Name = "btnOk", Picture = "pictures\btok.bmp"
+	Add Object btNcancel As myBtn With Caption = '', Top = 40, Left = 525,  ;
+		wiDth = 100, Name = "btnCancel", Picture = "pictures\btExit.bmp"
+	Add Object lbLasutus As myLbl With Top = 5, Left = 5, Name = "lblAsutus",  ;
+		caPtion = "Database:"
+	Add Object lbLkasutaja As myLbl With Top = 35, Left = 5, Name =  ;
+		"lblKasutaja", Caption = "Kasutaja nimi:"
+	Add Object lbLparool As myLbl With Top = 70, Left = 5, Name =  ;
+		"lblParool", Caption = "Parool:"
 *
-     PROCEDURE btNok.click
-      SET CLASSLIB TO logo
-      olOgo = CREATEOBJECT('logo')
-      olOgo.shOw()
-      WITH thIsform
-           ocOnnect = NEWOBJECT('connect', 'connect')
-           SELECT coMkey
-           leRror = ocOnnect.odB(SYS(2007, ALLTRIM(coMkey.omAnik)), ;
-                    ALLTRIM(.txTkasutaja.vaLue), ;
-                    RTRIM(LTRIM(.txTparool.vaLue)),thIsform.keY,.T.)
-                   
-           IF leRror=.T.
-                IF UPPER(.keY)='-K'
-                     DO FORM key WITH 'EDIT', cuRkey.id
-                     CLEAR EVENTS
-                ELSE
-                     ON KEY LABEL CTRL+A DO ONKEY WITH ('CTRL+A')
-                     ON KEY LABEL CTRL+S DO ONKEY WITH ('CTRL+S')
-                     ON KEY LABEL CTRL+P DO ONKEY WITH ('CTRL+P')
-                     _SCREEN.viSible = .T.
-                ENDIF
-           ELSE
-                thIsform.viGa
-                CLEAR EVENTS
-           ENDIF
-           RELEASE olOgo
-      ENDWITH
-      RELEASE thIsform
-     ENDPROC
+	Procedure btNok.Click
+		Set Classlib To Logo
+		olOgo = Createobject('logo')
+		olOgo.Show()
+		With Thisform
+
+			ocOnnect = Newobject('connect', 'connect')
+			Select coMkey
+			leRror = ocOnnect.odB(Sys(2007, Alltrim(coMkey.omAnik)), ;
+				ALLTRIM(.txTkasutaja.Value), ;
+				RTRIM(Ltrim(.txTparool.Value)),Thisform.Key,.T.)
+
+			If leRror=.T.
+				SELECT comKey
+				l_id = RECNO()
+				
+				LOCATE FOR id = 2019
+				IF !FOUND() AND gRekv > 1
+					WAIT WINDOW 'check 2019' TIMEOUT 3
+					DO check_2019
+				ENDIF
+				
+			
+				If Upper(.Key)='-K'
+					Do Form Key With 'EDIT', cuRkey.Id
+					Clear Events
+				Else
+					On Key Label CTRL+A Do ONKEY With ('CTRL+A')
+					On Key Label CTRL+S Do ONKEY With ('CTRL+S')
+					On Key Label CTRL+P Do ONKEY With ('CTRL+P')
+					_Screen.Visible = .T.
+
+
+				Endif
+			Else
+				Thisform.viGa
+				Clear Events
+			Endif
+			Release olOgo
+		Endwith
+		Release Thisform
+	Endproc
+
 *
-     PROCEDURE btNcancel.click
-      CLEAR EVENTS
-      RELEASE thIsform
-     ENDPROC
+	Procedure btNcancel.Click
+		Clear Events
+		Release Thisform
+	Endproc
 *
-     PROCEDURE coMrekv.init
-      thIs.vaLue = coMkey.id
-     ENDPROC
+	Procedure coMrekv.Init
+		This.Value = coMkey.Id
+	Endproc
 *
-     PROCEDURE init
-      PARAMETER tkEy
-      IF EMPTY(tkEy)
-           tkEy = ''
-      ENDIF
-      thIs.keY = tkEy
-      DO CASE
-           CASE UPPER(tkEy)='-D'
-                ON ERROR
-           CASE UPPER(tkEy)='-E'
-                ON ERROR DO FERR
-           OTHERWISE
-                ON ERROR DO ERR WITH PROGRAM(), LINENO(1)				
-      ENDCASE
-     ENDPROC
+	Procedure Init
+
+		Parameter tkEy
+		If Empty(tkEy)
+			tkEy = ''
+		Endif
+		This.Key = tkEy
+		Do Case
+			Case Upper(tkEy)='-D'
+				On Error
+			Case Upper(tkEy)='-E'
+				On Error Do Ferr
+			Otherwise
+				On Error Do ERR With Program(), Lineno(1)
+		Endcase
+
+	Endproc
 *
-     PROCEDURE unload
-      WITH thIs
-           IF EMPTY(grEkv)
-                CLEAR EVENTS
-           ENDIF
-      ENDWITH
-     ENDPROC
+	Procedure Unload
+		With This
+			If Empty(grEkv)
+				Clear Events
+			Endif
+		Endwith
+	Endproc
 *
-     FUNCTION encryptpass
-      LPARAMETER tcPass
-      lcCryptpath = enCrypt(f_Key(),tcPass)
-      REPLACE v_Pass.paRool WITH lcCryptpath IN v_Pass
-      odB.cuRsorupdate('v_pass')
-      RETURN lcCryptpath
-     ENDFUNC
+	Function encryptpass
+		Lparameter tcPass
+		lcCryptpath = Encrypt(f_Key(),tcPass)
+		Replace v_Pass.paRool With lcCryptpath In v_Pass
+		odB.cuRsorupdate('v_pass')
+		Return lcCryptpath
+	Endfunc
 *
-     FUNCTION decryptpass
-      LPARAMETER tcPass
-      lcDecryptpath = deCrypt(f_Key(),tcPass)
-      RETURN lcDecryptpath
-     ENDFUNC
+	Function decryptpass
+		Lparameter tcPass
+		lcDecryptpath = deCrypt(f_Key(),tcPass)
+		Return lcDecryptpath
+	Endfunc
 *
-     PROCEDURE AvadaAruanned
-     ENDPROC
+	Procedure AvadaAruanned
+	Endproc
 *
-     PROCEDURE viGa
-      LOCAL lcString
-      thIs.meSsage = "Login ebaonestus"
-      lcString = "messagebox('"+thIs.meSsage+"','Viga')"
-      &lcString
-      RELEASE thIsform
-     ENDPROC
+	Procedure viGa
+		Local lcString
+		This.Message = "Login ebaonestus"
+		lcString = "messagebox('"+This.Message+"','Viga')"
+		&lcString
+		Release Thisform
+	Endproc
+
+
 *
-ENDDEFINE
+Enddefine
 *

@@ -15,7 +15,7 @@ tnKuu1 = 	fltrEelarve.kuu1
 tnKuu2 = 	Iif (Empty (fltrEelarve.kuu2),month(Date()),fltrEelarve.kuu2)
 *ON ERROR
 tcValuuta = Ltrim(Rtrim(fltrEelarve.valuuta))+'%'
-IF !EMPTY(fltrAruanne.kond)
+IF EMPTY(fltrAruanne.kond)
 	tnParent = 3
 ELSE
 	tnParent = 1

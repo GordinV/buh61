@@ -132,7 +132,10 @@ Else
 
 	Scan
 * 1090
-
+		IF (curTSD.isikukood = '38208052224')
+			SET STEP ON 
+		ENDIF
+		
 
 		If l_last_isikukood <> curTSD.isikukood
 			l_last_isikukood = curTSD.isikukood
@@ -164,11 +167,6 @@ Else
 			l_v1040 = 0
 		ENDIF
 		
-*!*			IF curTsd.isikukood = '47805312216'
-*!*				SET STEP ON 
-*!*			ENDIF
-*!*			
-
 
 		l_mvt = 0
 * mvt
@@ -216,7 +214,7 @@ Else
 	Select qryKoormusLisa
 	Scan
 		Insert Into tsd_report (isikukood, nimi, v1020, v1040, v1090, v1100) ;
-			VALUES (qryKoormusLisa.isikukood,  qryKoormusLisa.isik,'10',qryKoormusLisa.koormus, qryKoormusLisa.min_sots_alus,qryKoormusLisa.arv_min_sots )
+			VALUES (qryKoormusLisa.isikukood,  qryKoormusLisa.isik,'10',IIF(qryKoormusLisa.koormus > 1, 1,qryKoormusLisa.koormus), qryKoormusLisa.min_sots_alus,qryKoormusLisa.arv_min_sots )
 	Endscan
 
 Endif

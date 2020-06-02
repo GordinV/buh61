@@ -132,7 +132,7 @@ Else
 
 	Scan
 * 1090
-
+		
 
 		If l_last_isikukood <> curTSD.isikukood
 			l_last_isikukood = curTSD.isikukood

@@ -181,8 +181,10 @@ Select Id, Left(decrypt(f_key(),Mline(omanik,1)),120) As omanik From Key Into Cu
 Select comkey
 Append From Dbf ('qryComkey')
 Use In qryComkey
+
 Select comkey
 =secure('OFF')
+
 lQuit = .F.
 If !Empty (config.reserved1) And File ('updater1.exe')
 	lresult = checkuuendused(config.reserved1)

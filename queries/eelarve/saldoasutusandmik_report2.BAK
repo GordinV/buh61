@@ -1,11 +1,6 @@
 Parameter cWhere
 Local lnDeebet, lnKreedit
 
-*!*	IF EMPTY(fltrAruanne.konto)
-*!*		MESSAGEBOX(IIF(config.keel = 2,'Puudub konto','Отсутствует счет'),'Kontrol')
-*!*		SELECT 0
-*!*		RETURN .f.
-*!*	ENDIF
 
 
 dKpv1 = Iif(!Empty(fltrAruanne.kpv1), fltrAruanne.kpv1,Date(Year(Date()),1,1))
@@ -38,7 +33,7 @@ With odb
 	lcKpv = "date("+STR(YEAR(dKpv2),4)+","+STR(MONTH(dKpv2),2)+","+STR(DAY(dkpv2),2)+")"
 
 	
-
+SET STEP ON 
 * deebet
 	lcString = "select konto, asutusId, sum(db-kr) as db  from ( select journal1.deebet as konto, journal.asutusId, summa * ifnull(dokvaluuta1.kuurs,1)::numeric as db, 0::numeric as kr "+;
 		" from journal inner join journal1 on (journal.id = journal1.parentid) left outer join dokvaluuta1 ON (dokvaluuta1.dokid = journal1.id and dokvaluuta1.dokliik = 1) "+;
@@ -67,7 +62,7 @@ With odb
 * kreedit
 	lcString = "select konto, asutusId, sum(kr-db) as kr  from ( select journal1.deebet as konto, journal.asutusId,  summa * ifnull(dokvaluuta1.kuurs,1)::numeric as db, 0::numeric as kr "+;
 		" from journal inner join journal1 on (journal.id = journal1.parentid) left outer join dokvaluuta1 ON (dokvaluuta1.dokid = journal1.id and dokvaluuta1.dokliik = 1)"+;
-		" where (left(ltrim(rtrim(deebet)),3)  in ('201') or deebet = '203900' or deeber = '200060')"+;
+		" where (left(ltrim(rtrim(deebet)),3)  in ('201') or deebet = '203900' or deebet = '200060')"+;
 		" and asutusid <> 0 "+;
 		" and kpv <= " +lcKpv +lcAsutusId+;
 		" and (rekvid in (SELECT id FROM rekv where fnc_get_asutuse_staatus(rekv.id, " + STR(gRekv)+")"+;
@@ -85,7 +80,7 @@ With odb
 		" group by konto, asutusId "
 
 	lError = SQLEXEC(gnHandle,lcString,'tmpKrKaibed')
-SET STEP ON 
+
 	SELECT  asutusid, db, 000000000.00 as kr  from tmpDbKaibed ;
 	WHERE db <> 0 ;
 	AND konto like ALLTRIM(fltrAruanne.konto)+'%';
@@ -102,26 +97,6 @@ SET STEP ON
 			FROM tmpSubkontod ;
 			GROUP BY asutusId ;
 			INTO CURSOR tmpSubkontod_report
-	
-
-
-*!*			lError = odb.Exec("sp_subkontod_report "," '%',"+;
-*!*				Str(grekv)+","+;
-*!*				" DATE("+Str(Year(fltrAruanne.kpv2),4)+","+ Str(Month(fltrAruanne.kpv2),2)+","+Str(Day(fltrAruanne.kpv2),2)+"),"+;
-*!*				" DATE("+Str(Year(fltrAruanne.kpv2),4)+","+	Str(Month(fltrAruanne.kpv2),2)+","+Str(Day(fltrAruanne.kpv2),2)+"),"+;
-*!*				STR(fltrAruanne.Asutusid,9)+",'"+;
-*!*				LTRIM(Rtrim(lcTunnus))+"%',5,"+str(fltrAruanne.kond,9),"qryKbAsu")
-
-
-*!*			IF EMPTY(lError)
-*!*				SELECT 0
-*!*				RETURN .f.
-*!*			ENDIF
-*!*				tcTimestamp = Alltrim(qryKbAsu.sp_subkontod_report)
-*!*				odb.Use('tmpsubkontod_report')
-		 
-*!*				tcTimestamp = Alltrim(qryKbAsu.sp_subkontod_report1)
-*!*				odb.Use('tmpsubkontod_report')
 
 
 		Select tmpSubkontod_report
@@ -174,8 +149,7 @@ SET STEP ON
 				Select * From CURsorAlgsaldo_ Where Asutusid = qrySubKonto.Asutusid Into Cursor cursorAlgsaldo
 
 				lnAlg = analise_formula('ASD('+Ltrim(Rtrim(comKontodRemote.kood))+','+Alltrim(Str(qrySubKonto.Asutusid))+')', fltrAruanne.kpv2, 'cursorAlgsaldo')
-*!*				lnDb = analise_formula('ADK('+Ltrim(Rtrim(comKontodRemote.kood))+','+Alltrim(Str(qrySubKonto.Asutusid))+')')
-*!*				lnKr = analise_formula('AKK('+Ltrim(Rtrim(comKontodRemote.kood))+','+Alltrim(Str(qrySubKonto.Asutusid))+')')
+
 				If !Empty(lnAlg)
 					Insert Into KaibeAsutusAndmik_report1 (algsaldo, konto, nimetus, asutus, Asutusid) Values ;
 						(lnAlg,comKontodRemote.kood, comKontodRemote.nimetus, comAsutusremote.nimetus, qrySubKonto.Asutusid)

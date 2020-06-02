@@ -2,7 +2,6 @@ Parameter cWhere
 Local lnDeebet, lnKreedit
 
 * PV inventuuriaruanne 
-		SET STEP ON 
 		
 Create Cursor varadearuanne_report1(Id Int,kood c(20), nimetus c(254), konto c(20),GRUPP c(254),;
 	soetmaks n(18,6), soetkpv d, kulum n(18,6), algkulum n(18,6), kulumkokku n(18,6), jaak n(18,6), mahakantud n(18,6), parandus n(18,6),;
@@ -25,7 +24,6 @@ With odb
 	Else
 		tcVastIsik = '%%'
 	Endif
-SET STEP ON 
 
 	lError = .Exec("sp_pv_aruanne2 ",Str(grekv)+ ","+;
 		" DATE("+Str(Year(DATE(1900,01,01)),4)+","+ Str(Month(DATE(1900,01,01)),2)+","+Str(Day(DATE(1900,01,01)),2)+"),"+;

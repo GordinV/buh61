@@ -3,13 +3,14 @@
 Parameters td_since
 
 Local loXMLHTTP As "MSXML2.XMLHTTP"
-Local cUrl, l_found_xml
+Local cUrl, l_found_xml, l_found_kokku, l_iter
 Local cMessage
 
 If Empty(td_since)
-	td_since = Date(2019,07,01)
-ELSE
-	cUrl = Alltrim(v_config_.earved)	
+	td_since = Date(2020,01,01)
+	cUrl = 'https://finance.omniva.eu/finance/erp/' 
+Else
+	cUrl = Alltrim(v_config_.earved)
 
 Endif
 
@@ -17,14 +18,12 @@ Endif
 =check_cursors()
 
 
-
-
-
-
 cMessage = getBuyInvoiceExportRequest(td_since)
 
 loXMLHTTP = Createobject("MSXML2.XMLHTTP")
 l_found_xml = 0
+l_found_kokku = 0
+l_iter = 10
 
 With loXMLHTTP
 
@@ -39,27 +38,82 @@ With loXMLHTTP
 
 	Insert Into m_memo (url, Header, Request, response) Values (cUrl, 'text/xml;charset=UTF-8', cMessage, .responsetext)
 	Wait Window 'Loen vastus...' Nowait
+	l_finished = kas_lopp(.responsetext)
 	l_found_xml = parse_response(.responsetext)
 	l_found_xml = Iif(Empty(l_found_xml),0,l_found_xml)
 
 	Wait Window 'Loen vastus...' + Alltrim(Str(l_found_xml)) + ' arved' Nowait
 
-Endwith
+	If l_finished
+		l_iter = 0
+	ELSE
+		l_cince = getCince(.responsetext)
+	ENDIF
+	
+	l_found_kokku = l_found_xml
 
+	For i = 1 To l_iter 
+		If l_finished Then
+			Exit
+		Endif
+		cMessage = getBuyInvoiceExportRequest(l_cince)
+		Wait Window 'Oodan omniva..., lisa paring ' + Alltrim(Str(i)) Nowait
+		.Open("POST", cUrl ,.F.)
+		.setRequestHeader('Content-Type', 'text/xml;charset=UTF-8')
+		.setRequestHeader('user-agent', 'sampleTest')
+		.setRequestHeader('soapAction', '')
+
+		.Send(cMessage)
+		Insert Into m_memo (url, Header, Request, response) Values (cUrl, 'text/xml;charset=UTF-8', cMessage, .responsetext)		
+		l_finished = kas_lopp(.responsetext)
+
+		Wait Window 'Loen vastus...' Nowait
+		l_found_xml = parse_response(.responsetext)
+		l_found_xml = Iif(Empty(l_found_xml),0,l_found_xml)
+		
+		l_found_kokku = l_found_kokku + l_found_xml
+		l_cince = getCince(.responsetext)
+
+	Endfor
+	Wait Window 'Loen vastus...' + Alltrim(Str(l_found_xml)) + ' arved' Nowait
+
+Endwith
 
 Return l_found_xml
 Endfunc
 
+
+
+FUNCTION getCince
+	LPARAMETERS l_request
+	LOCAL l_search 
+	l_search = 'latestChange='
+	l_start = ATC(l_search, l_request) + 1
+	l_result = STUFF(SUBSTR(l_request, l_start + LEN(l_search), 19), 11, 1, "T")
+	RETURN CTOT(l_result)
+ENDFUNC
+
+Function kas_lopp
+	Lparameters l_request
+	Local l_finished
+	IF 'includesLatest="NO"' $ l_request
+* not finished yet
+		Return .F.
+	Else
+* finished
+		Return .T.
+	Endif
+Endfunc
 
 Function getBuyInvoiceExportRequest
 	Parameters l_cince
 
 	Set Date Italian
 	If Empty(l_cince)
-		l_cince = Datetime()
-		l_earved = '91449:yxjxubnzxvczcafuczzsarzcesehjinbrpsealjexfehqvhfgy'
-	else
-		l_earved = ALLTRIM(qryRekv.earved)
+		l_cince = Date(2020,01,20)
+		l_earved = '106466:wvxoodqofdjaaolvdclpzaedzqnhikrbdhwbehdxijlktjbikb'
+	Else
+		l_earved = Alltrim(qryRekv.earved)
 	Endif
 	l_cince = Ttoc(l_cince)
 
@@ -100,22 +154,21 @@ Function parse_response
 
 * count invoices in xml
 
-	l_xml_invoice_count = Occurs('</Invoice>',v_xml.XML)
+	l_xml_invoice_count = Occurs('</Invoice>',l_xml)
 	Wait Window 'Leidnud '+ Str(l_xml_invoice_count) + 'arved, loen... ' Nowait
 
 	For l_invoice_id = 1 To l_xml_invoice_count
-		l_invoice_start_line = Atc('<Invoice ',v_xml.XML, l_invoice_id)
-		l_invoice_last_line = Atc('</Invoice>',v_xml.XML, l_invoice_id)
+		l_invoice_start_line = Atc('<Invoice ',l_xml, l_invoice_id)
+		l_invoice_last_line = Atc('</Invoice>',l_xml, l_invoice_id)
 		If Empty(l_invoice_start_line)
 			Exit
 		Endif
 
-		l_parced_xml = Substrc(v_xml.XML, l_invoice_start_line, (l_invoice_last_line + Len('</Invoice>')) - l_invoice_start_line)
+		l_parced_xml = Substrc(l_xml, l_invoice_start_line, (l_invoice_last_line + Len('</Invoice>')) - l_invoice_start_line)
 
 		parce_invoice(l_parced_xml)
 		Wait Window 'Loen '+ Alltrim(Str(l_invoice_id)) + '/'+ Alltrim(Str(l_xml_invoice_count)) + ' '  + Alltrim(v_xml_arv.Number) + ' lõppetatud' Nowait
 	Endfor
-
 
 	Return l_xml_invoice_count
 Endfunc
@@ -129,8 +182,13 @@ Function parce_invoice
 			lisa c(254), viitenr c(20), korr_konto c(20), arve c(20))
 	Endif
 	If !Used('v_xml_arv_detail')
+
 		Create Cursor v_xml_arv_detail (Id Int, nimetus c(254), Summa N(14,2), kbm N(14,2), kbm_maar c(20),;
-			summa_kokku N(14,2), konto c(20), artikkel c(20), tegev c(20), allikas c(20), kogus N(12,4))
+			summa_kokku N(14,2), konto c(20), artikkel c(20), tegev c(20), allikas c(20), rahavoog c(20),;
+			tunnus c(20), Proj c(20), uuritus c(20), tp c(20),;
+			kogus N(12,4))
+
+
 	Endif
 	If !Used('v_xml_arv_confirmators')
 		Create Cursor v_xml_arv_confirmators (Id Int, isik c(254), kpv c(120), Roll c(120))
@@ -142,22 +200,41 @@ Function parce_invoice
 	l_parced_xml = Substrc(l_xml_invoice, l_invoice_start_line, (l_invoice_last_line + Len('</InvoiceInformation>')) - l_invoice_start_line)
 
 * remove <Type type="DEB"/>
-	l_parced_xml = Stuff(l_parced_xml, Atc('<Type type="DEB"/>',l_parced_xml), Len('<Type type="DEB"/>'),'')
+	l_parced_xml_copy = l_parced_xml
+
+	IF ATC('<Type type="DEB"/>',l_parced_xml) > 0 
+		l_parced_xml = Stuff(l_parced_xml, Atc('<Type type="DEB"/>',l_parced_xml), Len('<Type type="DEB"/>'),'')
+	ENDIF
+	
+*!*		IF ATC('<Type type="DEB">',l_parced_xml) > 0 
+*!*			l_parced_xml = Stuff(l_parced_xml, Atc('<Type>',l_parced_xml), ;
+*!*			(Rat('</Type>',l_parced_xml) - Atc('<Type>',l_parced_xml)) + Len('</Type>'),'')
+*!*		ENDIF
+	
 
 * remove <Extension>
 	l_parced_xml = '<vfp>' + Stuff(l_parced_xml, Atc('<Extension',l_parced_xml),;
 		(Rat('</Extension>',l_parced_xml) - Atc('<Extension',l_parced_xml)) + Len('</Extension>'),'') + '</vfp>'
 
-	CREATE CURSOR v_xml_invoice_data (invoiceNumber c(20), invoiceDate d, paymentreferencenumber c(20), DueDate d, ContractNumber c(254))
-	Xmltocursor(l_parced_xml,'v_xml_invoice_data',8192)
+	Create Cursor v_xml_invoice_data (invoiceNumber c(20), invoiceDate d, paymentreferencenumber c(20), DueDate d, ContractNumber c(254))
+	TRY
+		Xmltocursor(l_parced_xml,'v_xml_invoice_data',8192)
+
+	CATCH 	
+		SET STEP ON 
+		_cliptext = l_parced_xml
+		_cliptext = l_parced_xml_copy 
+	ENDTRY
 	
+	
+
 	Select v_xml_arv
 	Append Blank
 	Try
 		Replace v_xml_arv.Number With v_xml_invoice_data.invoiceNumber,;
 			v_xml_arv.kpv With v_xml_invoice_data.invoiceDate,;
-			v_xml_arv.viitenr with v_xml_invoice_data.paymentreferencenumber,;
-			v_xml_arv.lisa WITH v_xml_invoice_data.ContractNumber,;
+			v_xml_arv.viitenr With v_xml_invoice_data.paymentreferencenumber,;
+			v_xml_arv.lisa With v_xml_invoice_data.ContractNumber,;
 			v_xml_arv.tahtpaev With v_xml_invoice_data.DueDate In v_xml_arv
 	Catch To oErr
 		Wait Window "Catch:" + oErr.ErrorNo
@@ -168,19 +245,19 @@ Function parce_invoice
 	Endtry
 	Use In v_xml_invoice_data
 
-	* arve nr.
-	
-	l_parced_xml = '<vfp>'+substr(l_xml_invoice, Atc('<PaymentInfo',l_xml_invoice),;
-	(Rat('</PaymentInfo>',l_xml_invoice) - Atc('<PaymentInfo',l_xml_invoice) + Len('</PaymentInfo>'))) + '</vfp>' 
-		
+* arve nr.
 
-	CREATE CURSOR v_xml_invoice_bank_data (PayToAccount c(20), PayDueDate d) 
-	Xmltocursor(l_parced_xml,'v_xml_invoice_bank_data',8192) 
+	l_parced_xml = '<vfp>'+Substr(l_xml_invoice, Atc('<PaymentInfo',l_xml_invoice),;
+		(Rat('</PaymentInfo>',l_xml_invoice) - Atc('<PaymentInfo',l_xml_invoice) + Len('</PaymentInfo>'))) + '</vfp>'
 
-	replace v_xml_arv.arve WITH v_xml_invoice_bank_data.PayToAccount, tahtpaev WITH v_xml_invoice_bank_data.PayDueDate IN v_xml_arv
 
-	USE IN v_xml_invoice_bank_data
-	
+	Create Cursor v_xml_invoice_bank_data (PayToAccount c(20), PayDueDate d)
+	Xmltocursor(l_parced_xml,'v_xml_invoice_bank_data',8192)
+
+	Replace v_xml_arv.arve With v_xml_invoice_bank_data.PayToAccount, tahtpaev With v_xml_invoice_bank_data.PayDueDate In v_xml_arv
+
+	Use In v_xml_invoice_bank_data
+
 
 * InvoiceItem
 * count items
@@ -200,10 +277,10 @@ Function parce_invoice
 		l_invoice_last_line = Rat('</ItemEntry>',l_parced_row_xml)
 		l_parced_xml = '<vfp>' + Substrc(l_parced_row_xml, l_invoice_start_line, (l_invoice_last_line + Len('</ItemEntry>')) - l_invoice_start_line) + '</vfp>'
 
-		
-		CREATE CURSOR 	v_xml_invoice_detail (itemsum n(12,2),itemtotal n(12,2), itemamount n(12,4), ;
+
+		Create Cursor 	v_xml_invoice_detail (itemsum N(12,2),itemtotal N(12,2), itemamount N(12,4), ;
 			Description c(254) )
-			
+
 		Xmltocursor(l_parced_xml,'v_xml_invoice_detail',8192)
 		Select v_xml_invoice_detail
 
@@ -237,12 +314,12 @@ Function parce_invoice
 
 		If Len(l_parced_xml) > 0
 
-			CREATE CURSOR v_xml_vat (vatrate c(20), SumBeforeVAT n(12,2),vatsum n(12,2))
+			Create Cursor v_xml_vat (vatrate c(20), SumBeforeVAT N(12,2),vatsum N(12,2))
 			Xmltocursor(l_parced_xml,'v_xml_vat',8192)
 
 			Select v_xml_vat
 			Go Top
-			If Type('v_xml_vat.vatrate') <> 'U' AND Type('v_xml_vat.vatrate') <> 'L'
+			If Type('v_xml_vat.vatrate') <> 'U' And Type('v_xml_vat.vatrate') <> 'L'
 *!*					If Empty(v_xml_vat.vatrate)
 *!*						l_vatrate = '0'
 *!*						l_vatsum = 0
@@ -267,19 +344,19 @@ Function parce_invoice
 *!*	</ItemReserve>
 		l_invoice_start_line = Atc('<ItemReserve extensionId="eakOppositeAccount">',l_parced_row_xml)
 		l_invoice_last_line = Rat('</ItemReserve>',l_parced_row_xml)
-		l_parced_xml = Substrc(l_parced_row_xml, l_invoice_start_line, (l_invoice_last_line + Len('</ItemReserve>')) - l_invoice_start_line) 
-		l_invoice_last_line = atc('<ItemReserve extensionId="eakVatCode">',l_parced_xml) - 1
-		IF l_invoice_last_line > 0 
+		l_parced_xml = Substrc(l_parced_row_xml, l_invoice_start_line, (l_invoice_last_line + Len('</ItemReserve>')) - l_invoice_start_line)
+		l_invoice_last_line = Atc('<ItemReserve extensionId="eakVatCode">',l_parced_xml) - 1
+		If l_invoice_last_line > 0
 			l_parced_xml = '<vfp>' + Substrc(l_parced_xml, 1,l_invoice_last_line - 1) + '</vfp>'
-		ENDIF
-		
+		Endif
+
 		If Len(l_parced_xml) > 0
-			CREATE CURSOR v_xml_korrkonto (InformationContent c(20))
+			Create Cursor v_xml_korrkonto (InformationContent c(20))
 			Xmltocursor(l_parced_xml,'v_xml_korrkonto',8192)
-			replace v_xml_arv.korr_konto WITH v_xml_korrkonto.InformationContent IN v_xml_arv
-			USE IN v_xml_korrkonto
-		ENDIF
-		
+			Replace v_xml_arv.korr_konto With v_xml_korrkonto.InformationContent In v_xml_arv
+			Use In v_xml_korrkonto
+		Endif
+
 
 * kontod
 		l_invoice_start_line = Atc('<Accounting',l_parced_row_xml)
@@ -324,7 +401,55 @@ Function parce_invoice
 						Replace v_xml_arv_detail.allikas With Alltrim(l_kood) In v_xml_arv_detail
 						Continue
 					Endif
+
+* kas rahavoog
+					Select comRahaRemote
+					Locate For Alltrim(kood) = Alltrim(l_kood)
+					If Found()
+						Replace v_xml_arv_detail.rahavoog With Alltrim(l_kood) In v_xml_arv_detail
+						Continue
+					Endif
+
+* kas tunnus
+					Select comTunnusRemote
+					Locate For Alltrim(kood) = Alltrim(l_kood)
+					If Found()
+						Replace v_xml_arv_detail.tunnus With Alltrim(l_kood) In v_xml_arv_detail
+						Continue
+					Endif
+
+* kas proj
+					Select comProjRemote
+					Locate For Alltrim(kood) = Alltrim(l_kood)
+					If Found()
+						Replace v_xml_arv_detail.Proj With Alltrim(l_kood) In v_xml_arv_detail
+						Continue
+					Endif
+
+* kas uuritus
+					Select comUritusRemote
+					Locate For Alltrim(kood) = Alltrim(l_kood)
+					If Found()
+						Replace v_xml_arv_detail.uuritus With Alltrim(l_kood) In v_xml_arv_detail
+						Continue
+					Endif
+
+* TP
+
+					Select comTpRemote
+					Locate For Alltrim(kood) = Alltrim(l_kood)
+					If Found()
+						Replace v_xml_arv_detail.tp With Alltrim(l_kood) In v_xml_arv_detail
+						Continue
+					Endif
+
+					If Empty(v_xml_arv_detail.tp)
+						Select comAsutusRemote
+						Locate For regkood = v_xml_arv.regkood
+						Replace  v_xml_arv_detail.tp With Alltrim(comAsutusRemote.tp) In v_xml_arv_detail
+					Endif
 				Endif
+
 
 			Endscan
 
@@ -357,9 +482,9 @@ Function parce_invoice
 	l_parced_xml = Substrc(l_xml_invoice, l_invoice_start_line, (l_invoice_last_line + Len('</InvoiceParties>')) - l_invoice_start_line)
 	Xmltocursor(l_parced_xml,'v_xml_invoice_parties',0)
 	Select v_xml_invoice_parties
-	Locate For Alltrim(Str(v_xml_invoice_parties.regnumber)) <> Alltrim(qryRekv.regkood)
+	Locate For Alltrim(IIF(TYPE('v_xml_invoice_parties.regnumber') = 'C', v_xml_invoice_parties.regnumber, Str(v_xml_invoice_parties.regnumber))) <> Alltrim(qryRekv.regkood)
 
-	Replace v_xml_arv.asutus With v_xml_invoice_parties.Name, regkood With Alltrim(Str(v_xml_invoice_parties.regnumber)) In v_xml_arv
+	Replace v_xml_arv.asutus With v_xml_invoice_parties.Name, regkood With Alltrim(IIF(TYPE('v_xml_invoice_parties.regnumber') = 'C', v_xml_invoice_parties.regnumber,Str(v_xml_invoice_parties.regnumber))) In v_xml_arv
 	Use In v_xml_invoice_parties
 
 
@@ -372,7 +497,7 @@ Function parce_invoice
 			l_confirmator_xml =  '<vfp>'+Substrc(l_xml_invoice, l_invoice_start_line, (l_invoice_last_line + Len('</Extension>'))) +'</vfp>'
 
 			If !Empty(l_invoice_start_line)
-				CREATE CURSOR v_xml_invoice_confirmator (InformationContent c(254), InformationName c(254))
+				Create Cursor v_xml_invoice_confirmator (InformationContent c(254), InformationName c(254))
 				Xmltocursor(l_confirmator_xml,'v_xml_invoice_confirmator',8192)
 				If Used('v_xml_invoice_confirmator')
 					Insert Into v_xml_arv_confirmators (Id, isik, Roll, kpv) ;
@@ -394,8 +519,8 @@ Function parce_invoice
 			l_confirmator_xml =  '<vfp>'+Substrc(l_xml_invoice, l_invoice_start_line, (l_invoice_last_line + Len('</Extension>'))) +'</vfp>'
 
 			If !Empty(l_invoice_start_line)
-				CREATE CURSOR v_xml_invoice_confirmator (InformationContent c(254), InformationName c(254))
-			
+				Create Cursor v_xml_invoice_confirmator (InformationContent c(254), InformationName c(254))
+
 				Xmltocursor(l_confirmator_xml,'v_xml_invoice_confirmator',8192)
 				If Used('v_xml_invoice_confirmator')
 					Insert Into v_xml_arv_confirmators (Id, isik, Roll, kpv) ;
@@ -418,7 +543,7 @@ Function check_cursors
 
 	If !Used('qryRekv')
 		Create Cursor qryRekv (earved c(254), regkood c(20))
-		Insert Into qryRekv  (earved, regkood) Values ('91449:yxjxubnzxvczcafuczzsarzcesehjinbrpsealjexfehqvhfgy','75008485')
+		Insert Into qryRekv  (earved, regkood) Values ('91449:yxjxubnzxvczcafuczzsarzcesehjinbrpsealjexfehqvhfgy','75008485 ')
 	Endif
 
 
@@ -430,11 +555,14 @@ Function check_cursors
 	If !Used('comEelarveremote')
 		Create Cursor comEelarveremote (kood c(20))
 		Insert Into comEelarveremote  (kood) Values ('5514')
+		Insert Into comEelarveremote  (kood) Values ('5513')
+		Insert Into comEelarveremote  (kood) Values ('5500')
 	Endif
 
 	If !Used('comTegevRemote')
 		Create Cursor comTegevRemote (kood c(20))
 		Insert Into comTegevRemote  (kood) Values ('01112')
+		Insert Into comTegevRemote  (kood) Values ('10400')
 	Endif
 
 	If !Used('comAllikadRemote')
@@ -446,11 +574,40 @@ Function check_cursors
 		Create Cursor comAsutusRemote (Id Int, regkood c(20), nimetus c(254), tp c(20))
 		Insert Into comAsutusRemote  (Id, regkood, nimetus,tp) Values (1, '11047855','DATEL VIRU OÜ','800599')
 		Insert Into comAsutusRemote  (Id, regkood, nimetus,tp) Values (2, '10972649','test','800599')
+		Insert Into comAsutusRemote  (Id, regkood, nimetus,tp) Values (3, '10833824','Tartu Elamuhaldus','446404')
+		Insert Into comAsutusRemote  (Id, regkood, nimetus,tp) Values (4, '10972649','TRAVEL BALT OÜ','800699')
 	Endif
 
 	If !Used('comNomRemote')
 		Create Cursor comNomRemote (Id Int, kood c(20), nimetus c(254))
 		Insert Into comNomRemote  (Id, kood, nimetus) Values (1, 'tark','Tarkvara tootmine Põhivara moduule parandamine')
 	Endif
+
+	If !Used('comRahaRemote')
+		Create Cursor comRahaRemote (Id Int, kood c(20), nimetus c(254))
+		Insert Into comRahaRemote  (Id, kood, nimetus) Values (1, '42','Intresside ja viiviste arvestus')
+	Endif
+
+	If !Used('comTunnusRemote')
+		Create Cursor comTunnusRemote (Id Int, kood c(20), nimetus c(254))
+		Insert Into comTunnusRemote  (Id, kood, nimetus) Values (1, 'EEL','Kohalik eelarve')
+	Endif
+
+	If !Used('comProjRemote')
+		Create Cursor comProjRemote (Id Int, kood c(20), nimetus c(254))
+		Insert Into comProjRemote  (Id, kood, nimetus) Values (1, 'L16110039','Liisinguleping nr.L16110039 ')
+	Endif
+
+
+	If !Used('comUritusRemote')
+		Create Cursor comUritusRemote (Id Int, kood c(20), nimetus c(254))
+		Insert Into comUritusRemote  (Id, kood, nimetus) Values (1, 'RF','reservfond ')
+	Endif
+
+	If !Used('comTPRemote')
+		Create Cursor comTpRemote (Id Int, kood c(20), nimetus c(254))
+		Insert Into comTpRemote  (Id, kood, nimetus) Values (1, '446404','AS Tartu Elamuhalduse')
+	Endif
+
 
 Endfunc

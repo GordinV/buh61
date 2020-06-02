@@ -25,7 +25,7 @@ With odb
 	Else
 		tcVastIsik = '%%'
 	Endif
-
+SET STEP ON 
 
 	lError = .Exec("sp_pv_aruanne2 ",Str(grekv)+ ","+;
 		" DATE("+Str(Year(DATE(1900,01,01)),4)+","+ Str(Month(DATE(1900,01,01)),2)+","+Str(Day(DATE(1900,01,01)),2)+"),"+;

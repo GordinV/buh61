@@ -4,14 +4,15 @@ Local cUrl, l_tulemus
 Local cMessage
 
 IF EMPTY(tnId)
-	gRekv = 63
-	gUserId = 1713
+	gRekv = 1
+	gUserId = 1
 	cUrl = 'https://finance.omniva.eu/finance/erp/'	
-	l_secret = '106549:elbevswsackajyafdoupavfwewuiafbeeiqatgvyqcqdqxairz'
+*	l_secret = '106549:elbevswsackajyafdoupavfwewuiafbeeiqatgvyqcqdqxairz'
+	l_secret = ' 88991:xemtclclnqovlpqaijfhpwjcgzntpgtzxghgquvpvqkwblhxay'
 	cMessage = get_test_xml()
 	l_fail_id = INT(RAND() * 1000000)
 	l_dok_id = 1
-	gnHandle = SQLCONNECT('koopia','vlad','Vlad490710')
+	gnHandle = SQLCONNECT('meke','vlad','490710')
 	
 	SET STEP on	
 ELSE
@@ -111,106 +112,108 @@ FUNCTION get_last_file_id
 	RETURN l_file_id 
 ENDFUNC
 
+*<VATRegNumber>EE100143647</VATRegNumber>
 
 
 FUNCTION get_test_xml
 Local l_xml, l_xml_arve
 
-TEXT TO l_xml TEXTMERGE noshow
+TEXT TO  l_xml TEXTMERGE noshow
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:erp="http://e-arvetekeskus.eu/erp">
 <soapenv:Header/>
 <soapenv:Body>
-<erp:EInvoiceRequest authPhrase="106549:elbevswsackajyafdoupavfwewuiafbeeiqatgvyqcqdqxairz">
+<erp:EInvoiceRequest authPhrase="88991:xemtclclnqovlpqaijfhpwjcgzntpgtzxghgquvpvqkwblhxay">
 <E_Invoice>
 <Header>
-<Date>2019-06-27</Date>
-<FileId>1</FileId>
+<Date>2019-08-05</Date>
+<FileId>1000229</FileId>
 <AppId>EARVE</AppId>
 <Version>1.1</Version>
 </Header>
-<Invoice invoiceId="8123" regNumber="11488826">
+<Invoice invoiceId="07014" regNumber="80426569">
 <InvoiceParties>
 <SellerParty>
-<Name>smtp.narva.ee</Name>
-<RegNumber>75008427</RegNumber>
+<Name>AS Meke  Sillamae</Name>
+<RegNumber>10337120</RegNumber>
+<VATRegNumber>EE100143647</VATRegNumber>
 <ContactData>
-<PhoneNumber>3599190</PhoneNumber>
+<PhoneNumber>3924081</PhoneNumber>
 <LegalAddress>
-<PostalAddress1>Peetri 5</PostalAddress1>
-<City>Narva</City>
+<PostalAddress1>Ranna 3,  Sillamae</PostalAddress1>
+<City>Sillamae</City>
 </LegalAddress>
 </ContactData>
+<AccountInfo>
+<AccountNumber/>
+<IBAN>EE472200001120046901</IBAN>
+</AccountInfo>
 </SellerParty>
 <BuyerParty>
-<Name>Danske Bank AS Eesti filiaal AS</Name>
-<RegNumber>11488826</RegNumber>
+<Name>Sillamae linn, J. Gagarini tn 11 korteriuhistu KU</Name>
+<RegNumber>80426569</RegNumber>
 <ContactData>
-<E-mailAddress>risto.sylluste@danskebank.ee</E-mailAddress>
+<E-mailAddress></E-mailAddress>
 <LegalAddress>
-<PostalAddress1>Narva mnt 11  Tallinn 10502</PostalAddress1>
-<City>Narva mnt 11  Tallinn 10502</City>
+<PostalAddress1>Ida-Viru maakond,  Sillamae linn,  J. Gagarini tn 11</PostalAddress1>
+<City>J. Gagarini tn 11</City>
 </LegalAddress>
 </ContactData>
 </BuyerParty>
 </InvoiceParties>
 <InvoiceInformation>
 <Type type="DEB"/>
-<ContractNumber>test</ContractNumber>
+<ContractNumber></ContractNumber>
 <DocumentName>Arve</DocumentName>
-<InvoiceNumber>8113</InvoiceNumber>
-<InvoiceContentText>test</InvoiceContentText>
-<InvoiceDate>2019-03-01</InvoiceDate>
+<InvoiceNumber>07014</InvoiceNumber><InvoiceDate>2019-07-11</InvoiceDate>
 </InvoiceInformation>
 <InvoiceSumGroup>
-<InvoiceSum>0.01</InvoiceSum>
-<VAT><SumBeforeVAT>0.01</SumBeforeVAT>
+<InvoiceSum>10.16</InvoiceSum>
+<VAT>
 <VATRate>20</VATRate>
-<VATSum>0.00</VATSum>
-<Currency>EUR</Currency>
-<SumAfterVAT>0.01</SumAfterVAT></VAT>
-<TotalSum>0.01</TotalSum>
+<VATSum>1.69</VATSum>
+</VAT>
+<TotalSum>10.16</TotalSum>
 <Currency>EUR</Currency>
 </InvoiceSumGroup>
 <InvoiceItem>
 <InvoiceItemGroup>
 <ItemEntry>
-<Description>Pangaintressid</Description>
+<Description>Teenused .( Sanitaartehniliste  toode   eest )</Description>
 <ItemDetailInfo>
 <ItemUnit></ItemUnit>
 <ItemAmount>1.0000</ItemAmount>
-<ItemPrice>0.00</ItemPrice>
+<ItemPrice>8.47</ItemPrice>
 </ItemDetailInfo>
-<ItemSum>0.01</ItemSum>
+<ItemSum>8.47</ItemSum>
 <VAT>
-<SumBeforeVAT>0.01</SumBeforeVAT>
 <VATRate>20</VATRate>
-<VATSum>0.00</VATSum>
-<Currency>EUR</Currency>
+<VATSum>1.69</VATSum>
 </VAT>
-<ItemTotal>0.01</ItemTotal>
-</ItemEntry></InvoiceItemGroup>
+<ItemTotal>10.16</ItemTotal>
+</ItemEntry>
+</InvoiceItemGroup>
 </InvoiceItem>
 <PaymentInfo>
 <Currency>EUR</Currency>
 <PaymentRefId></PaymentRefId>
-<PaymentDescription>Arve 81                  </PaymentDescription>
+<PaymentDescription>Arve 07014               </PaymentDescription>
 <Payable>YES</Payable>
-<PayDueDate>2019-03-01</PayDueDate> 
-<PaymentTotalSum>0.01</PaymentTotalSum>
-<PayerName>Danske Bank AS Eesti filiaal AS</PayerName>
-<PaymentId>81</PaymentId>
-<PayToAccount>EE051010562011276005</PayToAccount>
-<PayToName>smtp.narva.ee</PayToName>
+<PayDueDate>2019-07-26</PayDueDate> 
+<PaymentTotalSum>10.16</PaymentTotalSum>
+<PayerName>Sillamae linn, J. Gagarini tn 11 korteriuhistu KU</PayerName>
+<PaymentId>07014</PaymentId>
+<PayToAccount>EE472200001120046901</PayToAccount>
+<PayToName>AS Meke  Sillamae</PayToName>
 </PaymentInfo>
-</Invoice>
-<Footer>
+</Invoice><Footer>
 <TotalNumberInvoices>1</TotalNumberInvoices>
-<TotalAmount>0.01</TotalAmount>
+<TotalAmount>10.16</TotalAmount>
 </Footer>
 </E_Invoice></erp:EInvoiceRequest>
 </soapenv:Body>
 </soapenv:Envelope>
 ENDTEXT
+
 RETURN l_xml
 ENDFUNC
 

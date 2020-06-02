@@ -1,4 +1,4 @@
-﻿DROP FUNCTION IF EXISTS eelarve_andmik_query(DATE, INTEGER, INTEGER);
+DROP FUNCTION IF EXISTS eelarve_andmik_query(DATE, INTEGER, INTEGER);
 /*
 DROP TYPE IF EXISTS EELARVE_ANDMIK_TYPE;
 CREATE TYPE EELARVE_ANDMIK_TYPE AS (idx VARCHAR(20), is_e INTEGER, rekvid INTEGER, tegev VARCHAR(20), allikas VARCHAR(20), artikkel VARCHAR(20), nimetus VARCHAR(254), eelarve NUMERIC(14,2), tegelik NUMERIC(14,2), kassa NUMERIC(14,2), saldoandmik NUMERIC(14,2));
@@ -174,7 +174,7 @@ BEGIN
                         AND journal.rekvid IN (SELECT rekv_id
                                                FROM get_asutuse_struktuur($2))
                         AND year(journal.kpv) = year($1)
-                        AND JOURNAL.KPV < $1
+                        AND JOURNAL.KPV <= $1
                         AND journal1.kood5 IN
                             (SELECT kood FROM library WHERE library.library = 'TULUDEALLIKAD' AND tun5 = 1)
                       GROUP BY journal.rekvid, journal1.kood5, journal1.kood1, journal1.kood2
@@ -285,7 +285,6 @@ BEGIN
     GROUP BY tegev, konto, rahavoo, nimetus;
 
     GET DIAGNOSTICS l_count= ROW_COUNT;
-    RAISE NOTICE 'inserted kokku %', l_count;
 
     -- eelmise periodi andmed
     INSERT INTO tmp_andmik (idx, tyyp, rekvid, tegev, artikkel, rahavoog, nimetus, saldoandmik, db, kr, aasta, kuu)
@@ -316,8 +315,7 @@ BEGIN
 
 
     GET DIAGNOSTICS l_count= ROW_COUNT;
-    RAISE NOTICE 'inserted kokku 2%', l_count;
-
+  
     RETURN TRUE;
 
 
@@ -334,7 +332,7 @@ GRANT EXECUTE ON FUNCTION eelarve_andmik_query(DATE, INTEGER, INTEGER ) TO eelak
 GRANT EXECUTE ON FUNCTION eelarve_andmik_query(DATE, INTEGER, INTEGER ) TO dbvaatleja;
 
 
-SELECT eelarve_andmik_query(DATE(2019, 01, 31), 63, 0);
+SELECT eelarve_andmik_query(DATE(2019, 01, 02), 64, 0);
 
 SELECT *
 FROM tmp_andmik

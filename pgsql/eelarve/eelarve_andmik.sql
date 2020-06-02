@@ -1,4 +1,4 @@
-ï»¿DROP FUNCTION IF EXISTS eelarve_andmik(DATE, INTEGER, INTEGER);
+DROP FUNCTION IF EXISTS eelarve_andmik(DATE, INTEGER, INTEGER);
 
 
 DROP TYPE IF EXISTS EELARVE_ANDMIK_TYPE;
@@ -17,11 +17,14 @@ DECLARE
     l_aasta   INTEGER = year(l_kpv);
     la_kontod TEXT[]  = ARRAY ['100','1000','1001','15','1501','1502','1511','1512','1531','1532','2580','2581','2585','2586','3000','3030',
         '3034','3041','3044','3045','3047','32','3500','3502','352','35200','35201','381','382','38250','38251',
-        '38252','38254','3880','3882','3888','40','413','4500','4502','452','50','55','60','650','655','9100','9101'];
+        '38252','38254','3880','3882','3888','40','413','4500','4502','452','50','55','60','650','655'];
 BEGIN
+-- ,'9100','9101'
 
     -- will fill temp table with row data
     PERFORM eelarve_andmik_query(l_kpv, l_rekvid, l_kond);
+
+    raise notice 'finished';
 
 -- data analise 
     RETURN QUERY
@@ -34,10 +37,10 @@ BEGIN
                allikas::VARCHAR(20),
                artikkel::VARCHAR(20),
                nimetus::VARCHAR(254),
-               eelarve::NUMERIC,
-               tegelik::NUMERIC,
-               kassa::NUMERIC,
-               saldoandmik::NUMERIC
+               (case when eelarve is null then 0 else eelarve end)::NUMERIC(14,2) as eelarve,
+               tegelik::NUMERIC(14,2),
+               kassa::NUMERIC(14,2),
+               saldoandmik::NUMERIC(14,2)
         FROM (
                  SELECT '2.1'::VARCHAR(20)                                     AS idx,
                         1                                                      AS is_e,
@@ -45,7 +48,7 @@ BEGIN
                         ''::VARCHAR(20)                                        AS tegev,
                         ''::VARCHAR(20)                                        AS allikas,
                         '32'::VARCHAR(20)                                      AS artikkel,
-                        'Tulud kaupade ja teenuste mÃ¼Ã¼gist'::VARCHAR(254)      AS nimetus,
+                        'Tulud kaupade ja teenuste müügist'::VARCHAR(254)      AS nimetus,
                         coalesce(sum(eelarve), 0)::NUMERIC(12, 2)              AS eelarve,
                         coalesce(coalesce(sum(tegelik), 0), 0)::NUMERIC(12, 2) AS tegelik,
                         coalesce(coalesce(sum(kassa), 0), 0)::NUMERIC(12, 2)   AS kassa,
@@ -130,7 +133,7 @@ BEGIN
                         ''::VARCHAR(20)                                     AS tegev,
                         ''::VARCHAR(20)                                     AS allikas,
                         '40'::VARCHAR(20)                                   AS artikkel,
-                        'Subsiidiumid ettevÃµtlusega tegelevatele isikutele' AS nimetus,
+                        'Subsiidiumid ettevõtlusega tegelevatele isikutele' AS nimetus,
                         coalesce(sum(eelarve), 0)                           AS eelarve,
                         coalesce(sum(tegelik), 0)                           AS tegelik,
                         coalesce(sum(kassa), 0)                             AS kassa,
@@ -146,7 +149,7 @@ BEGIN
                         ''::VARCHAR(20)                                               AS tegev,
                         ''::VARCHAR(20)                                               AS allikas,
                         '413'::VARCHAR(20)                                            AS artikkel,
-                        'Sotsiaalabitoetused ja muud toetused fÃ¼Ã¼silistele isikutele' AS nimetus,
+                        'Sotsiaalabitoetused ja muud toetused füüsilistele isikutele' AS nimetus,
                         -1 * coalesce(sum(eelarve), 0)                                AS eelarve,
                         -1 * coalesce(sum(tegelik), 0)                                AS tegelik,
                         -1 * coalesce(sum(kassa), 0)                                  AS kassa,
@@ -196,7 +199,7 @@ BEGIN
                         ''::VARCHAR(20)                   AS tegev,
                         ''::VARCHAR(20)                   AS allikas,
                         '50'::VARCHAR(20)                 AS artikkel,
-                        'TÃ¶Ã¶jÃµukulud'                     AS nimetus,
+                        'Tööjõukulud'                     AS nimetus,
                         -1 * coalesce(sum(eelarve), 0)    AS eelarve,
                         -1 * coalesce(sum(tegelik), 0)    AS tegelik,
                         -1 * coalesce(sum(kassa), 0)      AS kassa,
@@ -247,7 +250,7 @@ BEGIN
                         ''::VARCHAR(20)                    AS tegev,
                         ''::VARCHAR(20)                    AS allikas,
                         '381'::VARCHAR(20)                 AS artikkel,
-                        'PÃµhivara mÃ¼Ã¼k (+)'                AS nimetus,
+                        'Põhivara müük (+)'                AS nimetus,
                         coalesce(sum(eelarve), 0)          AS eelarve,
                         coalesce(sum(tegelik), 0)          AS tegelik,
                         coalesce(sum(kassa), 0)            AS kassa,
@@ -289,7 +292,7 @@ BEGIN
                         ''::VARCHAR(20)                                    AS tegev,
                         ''::VARCHAR(20)                                    AS allikas,
                         '15'::VARCHAR(20)                                  AS artikkel,
-                        'PÃµhivara soetus (-)'                              AS nimetus,
+                        'Põhivara soetus (-)'                              AS nimetus,
                         coalesce(sum(-1 * eelarve), 0)                     AS eelarve,
                         0                                                  AS tegelik,
                         0                                                  AS kassa,
@@ -300,7 +303,7 @@ BEGIN
                                  get_saldo('KD', '601002', NULL, NULL), 0) AS saldoandmik
                  FROM tmp_andmik q
                  WHERE artikkel LIKE '15%'
-                   AND artikkel NOT IN ('1501', '1502')
+                   AND artikkel NOT IN ('1501', '1502', '1532')
                    AND tyyp = 1
 
 -- KD154RV01+KD155RV01+KD156RV01+KD157RV01+601002KD
@@ -311,7 +314,7 @@ BEGIN
                         ''::VARCHAR(20)                                    AS tegev,
                         ''::VARCHAR(20)                                    AS allikas,
                         '3502'::VARCHAR(20)                                AS artikkel,
-                        'PÃµhivara soetuseks saadav sihtfinantseerimine(+)' AS nimetus,
+                        'Põhivara soetuseks saadav sihtfinantseerimine(+)' AS nimetus,
                         coalesce(sum(eelarve), 0)                          AS eelarve,
                         coalesce(sum(tegelik), 0)                          AS tegelik,
                         coalesce(sum(kassa), 0)                            AS kassa,
@@ -329,7 +332,7 @@ BEGIN
                         ''::VARCHAR(20)                                   AS tegev,
                         ''::VARCHAR(20)                                   AS allikas,
                         '4502'::VARCHAR(20)                               AS artikkel,
-                        'PÃµhivara soetuseks antav sihtfinantseerimine(-)' AS nimetus,
+                        'Põhivara soetuseks antav sihtfinantseerimine(-)' AS nimetus,
                         -1 * coalesce(sum(eelarve), 0)                    AS eelarve,
                         -1 * coalesce(sum(tegelik), 0)                    AS tegelik,
                         -1 * coalesce(sum(kassa), 0)                      AS kassa,
@@ -347,7 +350,7 @@ BEGIN
                         ''::VARCHAR(20)                    AS tegev,
                         ''::VARCHAR(20)                    AS allikas,
                         '1502'::VARCHAR(20)                AS artikkel,
-                        'Osaluste mÃ¼Ã¼k (+)'                AS nimetus,
+                        'Osaluste müük (+)'                AS nimetus,
                         coalesce(sum(eelarve), 0)          AS eelarve,
                         coalesce(sum(tegelik), 0)          AS tegelik,
                         coalesce(sum(kassa), 0)            AS kassa,
@@ -365,10 +368,10 @@ BEGIN
                         ''::VARCHAR(20)                    AS allikas,
                         '1501'::VARCHAR(20)                AS artikkel,
                         'Osaluste soetus (-)'              AS nimetus,
-                        coalesce(sum(eelarve), 0)          AS eelarve,
-                        coalesce(sum(tegelik), 0)          AS tegelik,
-                        coalesce(sum(kassa), 0)            AS kassa,
-                        get_saldo('KD', '150', '01', NULL) AS saldoandmik
+                        -1 * coalesce(sum(eelarve), 0)          AS eelarve,
+                        -1 * coalesce(sum(tegelik), 0)          AS tegelik,
+                        -1 * coalesce(sum(kassa), 0)            AS kassa,
+                        -1 * get_saldo('KD', '150', '01', NULL) AS saldoandmik
 -- KD150RV01
                  FROM tmp_andmik q
                  WHERE artikkel LIKE '1501%'
@@ -380,7 +383,7 @@ BEGIN
                         ''::VARCHAR(20)                                                               AS tegev,
                         ''::VARCHAR(20)                                                               AS allikas,
                         '1512'::VARCHAR(20)                                                           AS artikkel,
-                        'Muude aktsiate ja osade mÃ¼Ã¼k (+)'                                            AS nimetus,
+                        'Muude aktsiate ja osade müük (+)'                                            AS nimetus,
                         coalesce(sum(eelarve), 0)                                                     AS eelarve,
                         coalesce(sum(tegelik), 0)                                                     AS tegelik,
                         coalesce(sum(kassa), 0)                                                       AS kassa,
@@ -480,7 +483,7 @@ BEGIN
                         ''::VARCHAR(20)                                                         AS tegev,
                         ''::VARCHAR(20)                                                         AS allikas,
                         '2585'::VARCHAR(20)                                                     AS artikkel,
-                        'Kohustuste vÃµtmine (+)'                                                AS nimetus,
+                        'Kohustuste võtmine (+)'                                                AS nimetus,
                         coalesce(sum(eelarve), 0)                                               AS eelarve,
                         coalesce(sum(tegelik), 0)                                               AS tegelik,
                         coalesce(sum(kassa), 0)                                                 AS kassa,
@@ -513,7 +516,7 @@ BEGIN
                         ''::VARCHAR(20)                                           AS tegev,
                         ''::VARCHAR(20)                                           AS allikas,
                         '100'::VARCHAR(20)                                        AS artikkel,
-                        'LIKVIIDSETE VARADE MUUTUS (+ suurenemine, - vÃ¤henemine)' AS nimetus,
+                        'LIKVIIDSETE VARADE MUUTUS (+ suurenemine, - vähenemine)' AS nimetus,
                         -1 * coalesce(sum(eelarve), 0)                            AS eelarve,
                         -1 * coalesce(sum(tegelik), 0)                            AS tegelik,
                         -1 * coalesce(sum(kassa), 0)                              AS kassa,
@@ -536,7 +539,7 @@ BEGIN
                         ''::VARCHAR(20)                                                           AS tegev,
                         ''::VARCHAR(20)                                                           AS allikas,
                         '2580'::VARCHAR(20)                                                       AS artikkel,
-                        'VÃµlakohustused'                                                          AS nimetus,
+                        'Võlakohustused'                                                          AS nimetus,
                         get_saldo('MKD', '208', NULL, NULL) + get_saldo('MKD', '258', NULL, NULL) AS eelarve,
                         coalesce(sum(tegelik), 0)                                                 AS tegelik,
                         coalesce(sum(kassa), 0)                                                   AS kassa,
@@ -588,7 +591,7 @@ BEGIN
                         ''::VARCHAR(20)                     AS tegev,
                         ''::VARCHAR(20)                     AS allikas,
                         '2581'::VARCHAR(20)                 AS artikkel,
-                        'VÃµlakohustused'
+                        'Võlakohustused'
                                                             AS nimetus,
                         (SELECT sum(eelarve)
                          FROM tmp_andmik q
@@ -670,9 +673,9 @@ BEGIN
                         ''::VARCHAR(20)                        AS allikas,
                         ''::VARCHAR(20)                        AS artikkel,
                         l.nimetus,
-                        coalesce(sum(eelarve), 0)              AS eelarve,
-                        coalesce(sum(tegelik), 0)              AS tegelik,
-                        coalesce(sum(kassa), 0)                AS kassa,
+                        coalesce(sum(case when qry.tegev = '01112' and qry.artikkel = '1532' then 0 else  eelarve end), 0)              AS eelarve,
+                        coalesce(sum(case when qry.tegev = '01112' and qry.artikkel = '1532' then 0 else  tegelik end ), 0)              AS tegelik,
+                        coalesce(sum(case when qry.tegev = '01112' and qry.artikkel = '1532' then 0 else  kassa end), 0)                AS kassa,
                         get_saldo('DK', '4', NULL, qry.tegev) +
                         get_saldo('DK', '5', NULL, qry.tegev) +
                         get_saldo('DK', '6', NULL, qry.tegev) +
@@ -681,7 +684,7 @@ BEGIN
                           LEFT OUTER JOIN library l ON l.kood = qry.tegev AND l.library = 'TEGEV'
                  WHERE tyyp = 1
                    AND NOT empty(qry.is_kulud)
-                   AND qry.artikkel <> '2586'
+                   AND qry.artikkel not in  ('2586')
                    AND qry.tegev NOT IN ('07230', '07240', '07320')
                  GROUP BY tegev, l.nimetus
              ) qry;
@@ -692,7 +695,7 @@ $$
     COST 100;
 
 
-GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbkasutaja;
+--GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbkasutaja;
 GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbpeakasutaja;
 GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO eelaktsepterja;
 GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbvaatleja;
@@ -700,9 +703,9 @@ GRANT EXECUTE ON FUNCTION eelarve_andmik(DATE, INTEGER, INTEGER ) TO dbvaatleja;
 /*
 
 SELECT *
-FROM eelarve_andmik(DATE(2019,03,31), 63, 1)
+FROM eelarve_andmik(DATE(2019,01,03), 64, 1)
 where (not empty(tegev) or not empty(artikkel))
-and artikkel in ('3810','381','3818')
+and artikkel like '32%'
 
 
 select * from tmp_andmik where artikkel ilike '381%'

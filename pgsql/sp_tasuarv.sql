@@ -1,4 +1,4 @@
-﻿-- Function: sp_tasuarv(integer, integer, integer, date, numeric, integer, integer)
+-- Function: sp_tasuarv(integer, integer, integer, date, numeric, integer, integer)
 
 -- DROP FUNCTION sp_tasuarv(integer, integer, integer, date, numeric, integer, integer);
 
@@ -35,6 +35,9 @@ begin
 		where arv.id = tnArvId;
 
 	qryArv.Konto := ifnull(qryArv.Konto,space(20));
+
+			raise notice 'arv data: tnDokId %, qryArv.konto %, tnDokTyyp %', tnDokId, qryArv.konto, tnDokTyyp;
+
 	if tnDokTyyp = 2 then
 		-- kassa order
 		select sum(summa*ifnull(dokvaluuta1.kuurs,1)) into lnTasuSumma 
@@ -62,6 +65,7 @@ begin
 			select number into lcDok from mk where id 	= tnDokId;
 
 		else
+		
 			if qryArv.liik = 0 then
 				select sum(summa * ifnull(dokvaluuta1.kuurs,1)) into lnTasuSumma 
 				from journal1 left outer join dokvaluuta1 on (dokvaluuta1.dokid = journal1.id and dokvaluuta1.dokliik = 1)
@@ -69,7 +73,7 @@ begin
 			else
 				select sum(summa * ifnull(dokvaluuta1.kuurs,1)) into lnTasuSumma 
 				from journal1 left outer join dokvaluuta1 on (dokvaluuta1.dokid = journal1.id and dokvaluuta1.dokliik = 1) 
-				where journal1.parentid = tnDokId and deebet = qryArv.konto;
+				where journal1.parentid = tnDokId and alltrim(deebet) = alltrim(qryArv.konto);
 			end if;
 
 			select dokvaluuta1.kuurs, dokvaluuta1.valuuta into lnKuurs, lcValuuta
@@ -121,16 +125,21 @@ begin
 
 
 	lcDok = ifnull(lcDok,'');
-	
-	insert into arvtasu (rekvId, arvId, kpv, summa, sorderId, pankKassa, nomId, dok) values
-	(tnRekvId, tnArvId, tdKpv, lnTasuSumma, tnDokId, tnDokTyyp, tnNomId, lcDok);
-	lnId:= cast(CURRVAL('public.arvtasu_id_seq') as int4);
+
+
+	if tnDokId is not null and not empty(tnDokId) and tdKpv is not null and (year() - year(tdKpv) < 10) then 	
+		insert into arvtasu (rekvId, arvId, kpv, summa, sorderId, pankKassa, nomId, dok) values
+		(tnRekvId, tnArvId, tdKpv, lnTasuSumma, tnDokId, tnDokTyyp, tnNomId, lcDok);
+		
+		lnId:= cast(CURRVAL('public.arvtasu_id_seq') as int4);
 
 	--valuuta
 
 	insert into dokvaluuta1 (dokliik,dokid, valuuta, kuurs) 
 		values (21, lnId,qryArv.Valuuta, qryArv.Kuurs);
 
+	end if;
+	
 	raise notice 'arvtasu id: %',lnId;
 	return sp_updateArvJaak(tnArvId, tdKpv);
 

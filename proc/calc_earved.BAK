@@ -47,6 +47,28 @@ Endif
 
 Return l_xml
 
+FUNCTION getBankArved
+LOCAL l_aa 
+l_aa = ''
+
+IF ALLTRIM(qryRekv.regkood) = '10337120'             
+SELECT qryAaRekv
+scan
+TEXT TO l_aa TEXTMERGE NOSHOW additive
+<AccountInfo>
+<AccountNumber/>
+<IBAN><<ALLTRIM(qryAaRekv.aa)>></IBAN>
+</AccountInfo>
+ENDTEXT
+ENDSCAN
+
+ENDIF
+
+
+RETURN l_aa
+ENDFUNC
+
+
 
 Function execute
 	Local laAddress[3]
@@ -55,6 +77,7 @@ TEXT TO lcString noshow
 			CASE when arv.liik = 0 then coalesce(rekv.muud,rekv.nimetus) else rtrim(LTRIM(a.nimetus)) || ' ' || rtrim(a.omvorm) end::varchar as muuja,
 			CASE when arv.liik = 1 then coalesce(rekv.muud,rekv.nimetus) else rtrim(LTRIM(a.nimetus)) || ' ' || rtrim(a.omvorm) end::varchar as ostja,
 			CASE when arv.liik = 0 then rekv.regkood else rtrim(LTRIM(a.regkood))  end as muuja_regkood,
+			CASE when arv.liik = 0 then rekv.kbmkood else ''  end as muuja_kbmkood,
 			CASE when arv.liik = 0 then rekv.aadress else rtrim(LTRIM(a.aadress))  end as muuja_aadress,
 			CASE when arv.liik = 0 then rekv.email else rtrim(LTRIM(a.email))  end as muuja_email,
 			CASE when arv.liik = 0 then rekv.tel else rtrim(LTRIM(a.tel))  end as muuja_tel,
@@ -115,7 +138,11 @@ ENDTEXT
 		la_muuja_Address = getAddress(qryeArved.muuja_aadress)
 		lc_muuja_City = getAddress(qryeArved.muuja_aadress, 3)
 		lc_muuja_Post = getAddress(qryeArved.muuja_aadress, 1)
+		
+		lc_kmkr = IIF(!EMPTY(qryeArved.muuja_kbmkood) and LEN(ALLTRIM(qryeArved.muuja_kbmkood)) > 10,'<VATRegNumber>' + ALLTRIM(qryeArved.muuja_kbmkood) + '</VATRegNumber>','')
 
+* <<IIF(!EMPTY(qryeArved.muuja_regkood),'<VATRegNumber>' + ALLTRIM(qryeArved.muuja_regkood) + '</VATRegNumber>')>>
+		lc_arved = getBankArved()
 
 TEXT TO lcFileString ADDITIVE NOSHOW
 
@@ -124,6 +151,7 @@ TEXT TO lcFileString ADDITIVE NOSHOW
 <SellerParty>
 <Name><<Alltrim(convert_to_utf(qryeArved.muuja))>></Name>
 <RegNumber><<Alltrim(qryeArved.muuja_regkood)>></RegNumber>
+<<lc_kmkr>>
 <ContactData>
 <PhoneNumber><<qryeArved.muuja_tel>></PhoneNumber>
 <LegalAddress>
@@ -131,6 +159,7 @@ TEXT TO lcFileString ADDITIVE NOSHOW
 <City><<ALLTRIM(convert_to_utf(lc_muuja_City))>></City>
 </LegalAddress>
 </ContactData>
+<<lc_arved>>
 </SellerParty>
 <BuyerParty>
 <Name><<Alltrim(convert_to_utf(qryeArved.ostja))>></Name>
@@ -253,11 +282,12 @@ TEXT TO lcFileString ADDITIVE NOSHOW
 	
 ENDTEXT
 
+ENDIF
+
 TEXT TO lcFileString ADDITIVE NOSHOW
 </Invoice>
 ENDTEXT
 
-ENDIF
 
 
 *	lcString = ALLTRIM(lcString)
