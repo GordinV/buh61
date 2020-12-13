@@ -32,6 +32,11 @@ Function iso
 		lcRekvAadress = 'Peetri plats 1, 20308 Narva'
 	ELSE 
 		lcRekvNimetus = ALLTRIM(qryRekv.nimetus)
+		
+		IF (!EMPTY(qryRekv.muud)) 
+			lcRekvNimetus 	= ALLTRIM(qryRekv.muud)
+		ENDIF
+		
 		lcRekvAadress = ALLTRIM(qryRekv.aadress)
 	ENDIF
 	
@@ -60,7 +65,9 @@ ENDTEXT
 	If Empty(tnMKId) or  tnMKId = 0
 			odb.Use('v_mk','v_mk',.T.)
 			odb.Use('v_mk1','v_mk1',.T.)
-		Select Distinct Id From curMk WHERE NOT EMPTY(valitud) Into Cursor tmpMkDok
+		Select Distinct Id From curMk WHERE NOT EMPTY(valitud) ;
+		AND !EMPTY(kreedit);
+		Into Cursor tmpMkDok
 
 		Select tmpMkDok
 		Scan
@@ -81,7 +88,7 @@ ENDTEXT
 	Select v_mk
 	DELETE FOR EMPTY(rekvId)
 	
-	l_kpv = IIF(EMPTY(v_mk.maksepaev),DATE())
+	l_kpv = IIF(EMPTY(v_mk.maksepaev),DATE(), v_mk.maksepaev)
 	lcIsoKpv = Str(Year(l_kpv ),4) + '-'+;
 		IIF(Month(l_kpv )<10,'0','') + Alltrim(Str(Month(l_kpv ),2))+'-'+;
 		IIF(Day(l_kpv )<10,'0','')+Alltrim(Str(DAY(l_kpv ),2))
@@ -91,8 +98,8 @@ ENDTEXT
 			'<GrpHdr>' + Chr(13)+;
 			'<MsgId>' + SYS(1) + SYS(2)+ '</MsgId>' + Chr(13) + ;
 			'<CreDtTm>' +  lcIsoKpv + 'T08:00:00'+ '</CreDtTm>'+Chr(13)+;
-			'<NbOfTxs>' + Alltrim(Str(Reccount('v_mk1')))+ '</NbOfTxs>' + Chr(13)+;
-			'<CtrlSum>'+ Alltrim(Str(lnSummaKokku,14,2)) + '</CtrlSum>' + Chr(13)+;
+			'<NbOfTxs>'+ALLTRIM(STR(RECCOUNT('v_mk1')))+'</NbOfTxs>' + Chr(13)+;
+			'<CtrlSum>'+ Alltrim(Str(lnSummaKokku,14,2)) + '</CtrlSum>' + Chr(13)+;			
 			'<InitgPty><Nm>' + Alltrim(lcRekvNimetus)+'</Nm></InitgPty>' + Chr(13) +;
 			'</GrpHdr>'+Chr(13)
 
@@ -102,7 +109,8 @@ ENDTEXT
 			IIF(Month(v_mk.maksepaev)<10,'0','') + Alltrim(Str(Month(v_mk.maksepaev),2))+'-'+;
 			IIF(Day(v_mk.maksepaev)<10,'0','')+Alltrim(Str(Day(v_mk.maksepaev),2))
 
-
+		SELECT v_mk1
+		SUM v_mk1.summa TO l_mk_summa FOR parentId = v_mk.Id
 
 		Create Cursor tmpMk (iso m)
 		Append Blank
@@ -110,7 +118,7 @@ ENDTEXT
 			'<PmtInfId>'+ALLTRIM(v_mk.number)+'</PmtInfId>'+Chr(13)+;
 			'<PmtMtd>TRF</PmtMtd>' + Chr(13)+;
 			'<BtchBookg>false</BtchBookg>'+ Chr(13)+;
-			'<NbOfTxs>' + Alltrim(Str(Reccount('v_mk1')))+ '</NbOfTxs>' + Chr(13)+;
+			'<NbOfTxs>'+ALLTRIM(STR(RECCOUNT('v_mk1')))+'</NbOfTxs>' + Chr(13)+;
 			'<CtrlSum>'+ Alltrim(Str(lnSummaKokku,14,2)) + '</CtrlSum>' + Chr(13)+;			
 			'<PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl></PmtTpInf>' + Chr(13)+;
 			'<ReqdExctnDt>' + lcIsoKpv + '</ReqdExctnDt>' + Chr(13) +;

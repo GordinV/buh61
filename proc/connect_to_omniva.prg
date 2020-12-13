@@ -74,7 +74,7 @@ With loXMLHTTP
 		l_found_kokku = l_found_kokku + l_found_xml
 		l_cince = getCince(.responsetext)
 
-	Endfor
+	ENDFOR
 	Wait Window 'Loen vastus...' + Alltrim(Str(l_found_xml)) + ' arved' Nowait
 
 Endwith
@@ -239,8 +239,6 @@ Function parce_invoice
 	Catch To oErr
 		Wait Window "Catch:" + oErr.ErrorNo
 		Select v_xml_invoice_data
-		Browse
-		Set Step On
 	Finally
 	Endtry
 	Use In v_xml_invoice_data
@@ -484,7 +482,7 @@ Function parce_invoice
 	Select v_xml_invoice_parties
 	Locate For Alltrim(IIF(TYPE('v_xml_invoice_parties.regnumber') = 'C', v_xml_invoice_parties.regnumber, Str(v_xml_invoice_parties.regnumber))) <> Alltrim(qryRekv.regkood)
 
-	Replace v_xml_arv.asutus With v_xml_invoice_parties.Name, regkood With Alltrim(IIF(TYPE('v_xml_invoice_parties.regnumber') = 'C', v_xml_invoice_parties.regnumber,Str(v_xml_invoice_parties.regnumber))) In v_xml_arv
+	Replace v_xml_arv.asutus With v_xml_invoice_parties.Name, regkood With Alltrim(IIF(TYPE('v_xml_invoice_parties.regnumber') = 'C', v_xml_invoice_parties.regnumber,Str(v_xml_invoice_parties.regnumber, 12))) In v_xml_arv
 	Use In v_xml_invoice_parties
 
 

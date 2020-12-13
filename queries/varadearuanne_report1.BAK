@@ -2,8 +2,8 @@ Parameter cWhere
 Local lnDeebet, lnKreedit
 		
 Create Cursor varadearuanne_report1(Id Int,kood c(20), nimetus c(254), konto c(20),GRUPP c(254),;
-	soetmaks Y, soetkpv d, kulum Y, algkulum Y, kulumkokku Y, jaak Y, mahakantud y, parandus y,;
-	PARHIND Y, tunnus Int, vastisik c(254), muud m)
+	soetmaks n(18,6), soetkpv d, kulum n(18,6), algkulum n(18,6), kulumkokku n(18,6), jaak n(18,6), mahakantud n(18,6), parandus n(18,6),;
+	PARHIND n(18,6), tunnus Int, vastisik c(254), muud m)
 
 tcKonto = Iif (!Empty (fltrAruanne.konto), Alltrim(fltrAruanne.konto)+'%','%%')
 With odb
@@ -24,7 +24,7 @@ With odb
 	Endif
 
 
-	lError = .Exec("sp_pv_aruanne1 ",Str(grekv)+ ","+;
+	lError = .Exec("sp_pv_inventuuri_aruanne",Str(grekv)+ ","+;
 		" DATE("+Str(Year(DATE(1900,01,01)),4)+","+ Str(Month(DATE(1900,01,01)),2)+","+Str(Day(DATE(1900,01,01)),2)+"),"+;
 		" DATE("+Str(Year(fltrAruanne.kpv2),4)+","+	Str(Month(fltrAruanne.kpv2),2)+","+Str(Day(fltrAruanne.kpv2),2)+"),'"+;
 		tcKonto +"','" + tcGrupp +"','"+ tcVastIsik +"'","qryPvAruanne")

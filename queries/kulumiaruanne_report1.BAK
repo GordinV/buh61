@@ -25,7 +25,7 @@ With odb
 		tcVastIsik = '%%'
 	Endif
 
-SET STEP ON 
+*SET STEP ON 
 	lError = .Exec("sp_pv_aruanne1 ",Str(grekv)+ ","+;
 		" DATE("+Str(Year(fltrAruanne.kpv1),4)+","+ Str(Month(fltrAruanne.kpv1),2)+","+Str(Day(fltrAruanne.kpv1),2)+"),"+;
 		" DATE("+Str(Year(fltrAruanne.kpv2),4)+","+	Str(Month(fltrAruanne.kpv2),2)+","+Str(Day(fltrAruanne.kpv2),2)+"),'"+;
@@ -41,6 +41,10 @@ SET STEP ON
 	Endif
 
 Endwith
+
+
+SELECT tmppvaruanne1 
+BROWSE
 
 Insert into kulumiaruanne_report1(id, kood, nimetus, konto, soetmaks, soetkpv,  algkulum, GRUPP, jaak, ;
 	mahakantud, parandus, tunnus, kulum, kulumkokku);

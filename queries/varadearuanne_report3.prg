@@ -25,13 +25,13 @@ With odb
 		tcVastIsik = '%%'
 	Endif
 
-	lError = .Exec("sp_pv_aruanne2 ",Str(grekv)+ ","+;
+	lError = .Exec("sp_pv_inventuuri_aruanne",Str(grekv)+ ","+;
 		" DATE("+Str(Year(DATE(1900,01,01)),4)+","+ Str(Month(DATE(1900,01,01)),2)+","+Str(Day(DATE(1900,01,01)),2)+"),"+;
 		" DATE("+Str(Year(fltrAruanne.kpv2),4)+","+	Str(Month(fltrAruanne.kpv2),2)+","+Str(Day(fltrAruanne.kpv2),2)+"),'"+;
 		tcKonto +"','" + tcGrupp +"','"+ tcVastIsik +"'","qryPvAruanne")
 
 	If Used('qryPvAruanne')
-		tcTimestamp = Alltrim(qryPvAruanne.sp_pv_aruanne2)
+		tcTimestamp = Alltrim(qryPvAruanne.sp_pv_inventuuri_aruanne)
 		.Use('tmppvaruanne1')
 	Endif
 

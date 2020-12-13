@@ -42,6 +42,9 @@ With odb
 
 Endwith
 
+
+SELECT tmppvaruanne1 
+
 Insert into kulumiaruanne_report1(id, kood, nimetus, konto, soetmaks, soetkpv,  algkulum, GRUPP, jaak, ;
 	mahakantud, parandus, tunnus, kulum, kulumkokku);
 	SELECT id, kood, nimetus, konto, soetmaks, soetkpv, algkulum, GRUPP, jaak, mahakantud, parandus,;

@@ -39,17 +39,18 @@ REPLACE viGa WITH 'ERROR NR.:'+lcError+';'+' MESS:'+lcMessage+';'+ ;
 	' CODE:'+lcCode+';'+' PROC:'+tcProc+';'+' LINE:'+STR(tnLineno)+ ;
 	';'+' ALIAS:'+lcAlias+' recno: '+lcRecno+';'+' VERSIA:'+lcVersia+ ;
 	';'+' KPV:'+TTOC(DATETIME())+';'+CHR(13) IN vigad
-IF FILE('buh50viga.log')
-	lnFiles = ADIR(apRop, 'buh50viga.log')
-	IF lnFiles > 0 AND aProp(1,2)/1024 > 1024
-		ERASE buh50viga.log
-		COPY MEMO vigad.viGa TO buh50viga.log
-	else
-		COPY MEMO vigad.viGa TO buh50viga.log ADDITIVE
-	ENDIF		
-ELSE
-	COPY MEMO vigad.viGa TO buh50viga.log
-ENDIF
+	
+*!*	IF FILE('buh50viga.log')
+*!*		lnFiles = ADIR(apRop, 'buh50viga.log')
+*!*		IF lnFiles > 0 AND aProp(1,2)/1024 > 1024
+*!*			ERASE buh50viga.log
+*!*			COPY MEMO vigad.viGa TO buh50viga.log
+*!*		else
+*!*			COPY MEMO vigad.viGa TO buh50viga.log ADDITIVE
+*!*		ENDIF		
+*!*	ELSE
+*!*		COPY MEMO vigad.viGa TO buh50viga.log
+*!*	ENDIF
 IF  .NOT. EMPTY(lcAlias) .AND. USED(lcAlias)
 	SELECT (lcAlias)
 ENDIF

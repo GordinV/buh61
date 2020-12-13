@@ -25,16 +25,21 @@ Endif
 Return cFail
 
 Function iso
-	LPARAMETERS tnMKId
+	Lparameters tnMKId
 	Local lcString, lnSummaKokku, lcIsoKpv, lcPankIban, lcRekvNimetus
-	IF qryRekv.parentId = 119 OR qryRekv.id = 119
+	If qryRekv.parentId = 119 Or qryRekv.Id = 119
 		lcRekvNimetus = 'Narva Linnavalitsuse Kultuuriosakond'
 		lcRekvAadress = 'Peetri plats 1, 20308 Narva'
-	ELSE 
-		lcRekvNimetus = ALLTRIM(qryRekv.nimetus)
-		lcRekvAadress = ALLTRIM(qryRekv.aadress)
-	ENDIF
-	
+	Else
+		lcRekvNimetus = Alltrim(qryRekv.nimetus)
+
+		If (!Empty(qryRekv.muud))
+			lcRekvNimetus 	= Alltrim(qryRekv.muud)
+		Endif
+
+		lcRekvAadress = Alltrim(qryRekv.aadress)
+	Endif
+
 
 	Do Case
 		Case v_mk.pank = 767
@@ -57,10 +62,12 @@ TEXT TO lcString NOSHOW
 pain.001.001.03.xsd">
 ENDTEXT
 
-	If Empty(tnMKId) or  tnMKId = 0
-			odb.Use('v_mk','v_mk',.T.)
-			odb.Use('v_mk1','v_mk1',.T.)
-		Select Distinct Id From curMk WHERE NOT EMPTY(valitud) Into Cursor tmpMkDok
+	If Empty(tnMKId) Or  tnMKId = 0
+		odb.Use('v_mk','v_mk',.T.)
+		odb.Use('v_mk1','v_mk1',.T.)
+		Select Distinct Id From curMk Where Not Empty(valitud) ;
+			AND !Empty(kreedit);
+			Into Cursor tmpMkDok
 
 		Select tmpMkDok
 		Scan
@@ -68,93 +75,94 @@ ENDTEXT
 			odb.Use('v_mk','qry_mk')
 			Select v_mk
 			Append From Dbf('qry_Mk')
-			USE IN qry_mk
+			Use In qry_mk
 			odb.Use('v_mk1','qrymk1')
-			Select v_mk1			
+			Select v_mk1
 			Append From Dbf('qryMk1')
 			Use In qryMk1
 		Endscan
 	Endif
 
+	Create Cursor tmpMk (iso m)
+	Append Blank
+
+
 	Select v_mk1
 	Sum Summa To lnSummaKokku
 	Select v_mk
-	DELETE FOR EMPTY(rekvId)
-	
-	l_kpv = IIF(EMPTY(v_mk.maksepaev),DATE(), v_mk.maksepaev)
+	Delete For Empty(rekvId)
+	Go Top
+
+	l_kpv = Iif(Empty(v_mk.maksepaev),Date(), v_mk.maksepaev)
 	lcIsoKpv = Str(Year(l_kpv ),4) + '-'+;
 		IIF(Month(l_kpv )<10,'0','') + Alltrim(Str(Month(l_kpv ),2))+'-'+;
-		IIF(Day(l_kpv )<10,'0','')+Alltrim(Str(DAY(l_kpv ),2))
+		IIF(Day(l_kpv )<10,'0','')+Alltrim(Str(Day(l_kpv ),2))
 
-	SELECT v_mk
+
 	lcString = lcString + Chr(13)+ '<CstmrCdtTrfInitn>' + Chr(13)+;
-			'<GrpHdr>' + Chr(13)+;
-			'<MsgId>' + SYS(1) + SYS(2)+ '</MsgId>' + Chr(13) + ;
-			'<CreDtTm>' +  lcIsoKpv + 'T08:00:00'+ '</CreDtTm>'+Chr(13)+;
-			'<NbOfTxs>' + Alltrim(Str(Reccount('v_mk1')))+ '</NbOfTxs>' + Chr(13)+;
-			'<CtrlSum>'+ Alltrim(Str(lnSummaKokku,14,2)) + '</CtrlSum>' + Chr(13)+;
-			'<InitgPty><Nm>' + Alltrim(lcRekvNimetus)+'</Nm></InitgPty>' + Chr(13) +;
-			'</GrpHdr>'+Chr(13)
+		'<GrpHdr>' + Chr(13)+;
+		'<MsgId>' + Sys(1) + Sys(2)+ '</MsgId>' + Chr(13) + ;
+		'<CreDtTm>' +  lcIsoKpv + 'T08:00:00'+ '</CreDtTm>'+Chr(13)+;
+		'<NbOfTxs>'+Alltrim(Str(Reccount('v_mk1')))+'</NbOfTxs>' + Chr(13)+;
+		'<CtrlSum>'+ Alltrim(Str(lnSummaKokku,14,2)) + '</CtrlSum>' + Chr(13)+;
+		'<InitgPty><Nm>' + Alltrim(lcRekvNimetus)+'</Nm></InitgPty>' + Chr(13) +;
+		'</GrpHdr>'+Chr(13)
 
-	SCAN FOR !EMPTY(rekvId)
-	WAIT WINDOW 'Eksport: ' + ALLTRIM(v_mk.number) nowait
-		lcIsoKpv = Str(Year(v_mk.maksepaev),4) + '-'+;
-			IIF(Month(v_mk.maksepaev)<10,'0','') + Alltrim(Str(Month(v_mk.maksepaev),2))+'-'+;
-			IIF(Day(v_mk.maksepaev)<10,'0','')+Alltrim(Str(Day(v_mk.maksepaev),2))
-
-
-
-		Create Cursor tmpMk (iso m)
-		Append Blank
-		lcString = lcString +'<PmtInf>'+Chr(13) +;
-			'<PmtInfId>'+ALLTRIM(v_mk.number)+'</PmtInfId>'+Chr(13)+;
-			'<PmtMtd>TRF</PmtMtd>' + Chr(13)+;
-			'<BtchBookg>false</BtchBookg>'+ Chr(13)+;
-			'<NbOfTxs>' + Alltrim(Str(Reccount('v_mk1')))+ '</NbOfTxs>' + Chr(13)+;
-			'<CtrlSum>'+ Alltrim(Str(lnSummaKokku,14,2)) + '</CtrlSum>' + Chr(13)+;			
-			'<PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl></PmtTpInf>' + Chr(13)+;
-			'<ReqdExctnDt>' + lcIsoKpv + '</ReqdExctnDt>' + Chr(13) +;
-			'<Dbtr>'+Chr(13)+;
-			'<Nm>' + Alltrim(lcRekvNimetus)+'</Nm>'+Chr(13)+;
-			'<PstlAdr>'+Chr(13)+;
-			'<Ctry>EE</Ctry>'+Chr(13)+;
-			'<AdrLine>' + LEFT(Alltrim(lcRekvAadress),70)+'</AdrLine>' +Chr(13)+;
-			'</PstlAdr>'+Chr(13)+;
-			'</Dbtr>'+Chr(13)+;
-			'<DbtrAcct>'+Chr(13)+;
-			'<Id><IBAN>'+Alltrim(v_mk.omaArve)+'</IBAN></Id>'+Chr(13)+;
-			'<Ccy>EUR</Ccy>'+Chr(13)+;
-			'</DbtrAcct>'+Chr(13)+;
-			'<DbtrAgt>'+Chr(13)+;
-			'<FinInstnId>'+Chr(13)+;
-			'<BIC>' + lcPankIban + '</BIC>'+Chr(13)+;
-			'</FinInstnId>'+Chr(13)+;
-			'</DbtrAgt>'+Chr(13)+;
-			'<ChrgBr>SLEV</ChrgBr>'+Chr(13)
-
+	Select v_mk
+	Scan For !Empty(rekvId)
 		Select v_mk1
 		Scan For parentId = v_mk.Id
 
-			lcString = lcString +;
-				'<CdtTrfTxInf>'+Chr(13)+;				
+			Wait Window 'Eksport: ' + Alltrim(v_mk.Number) Nowait
+			lcIsoKpv = Str(Year(v_mk.maksepaev),4) + '-'+;
+				IIF(Month(v_mk.maksepaev)<10,'0','') + Alltrim(Str(Month(v_mk.maksepaev),2))+'-'+;
+				IIF(Day(v_mk.maksepaev)<10,'0','')+Alltrim(Str(Day(v_mk.maksepaev),2))
+
+			lcString = lcString +'<PmtInf>'+Chr(13) +;
+				'<PmtInfId>'+Alltrim(v_mk.Number)+'</PmtInfId>'+Chr(13)+;
+				'<PmtMtd>TRF</PmtMtd>' + Chr(13)+;
+				'<BtchBookg>false</BtchBookg>'+ Chr(13)+;
+				'<NbOfTxs>1</NbOfTxs>' + Chr(13)+;
+				'<CtrlSum>'+ Alltrim(Str(v_mk1.Summa,14,2)) + '</CtrlSum>' + Chr(13)+;
+				'<PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl></PmtTpInf>' + Chr(13)+;
+				'<ReqdExctnDt>' + lcIsoKpv + '</ReqdExctnDt>' + Chr(13) +;
+				'<Dbtr>'+Chr(13)+;
+				'<Nm>' + Alltrim(lcRekvNimetus)+'</Nm>'+Chr(13)+;
+				'<PstlAdr>'+Chr(13)+;
+				'<Ctry>EE</Ctry>'+Chr(13)+;
+				'<AdrLine>' + Left(Alltrim(lcRekvAadress),70)+'</AdrLine>' +Chr(13)+;
+				'</PstlAdr>'+Chr(13)+;
+				'</Dbtr>'+Chr(13)+;
+				'<DbtrAcct>'+Chr(13)+;
+				'<Id><IBAN>'+Alltrim(v_mk.omaArve)+'</IBAN></Id>'+Chr(13)+;
+				'<Ccy>EUR</Ccy>'+Chr(13)+;
+				'</DbtrAcct>'+Chr(13)+;
+				'<DbtrAgt>'+Chr(13)+;
+				'<FinInstnId>'+Chr(13)+;
+				'<BIC>' + lcPankIban + '</BIC>'+Chr(13)+;
+				'</FinInstnId>'+Chr(13)+;
+				'</DbtrAgt>'+Chr(13)+;
+				'<ChrgBr>SLEV</ChrgBr>'+Chr(13)+;
+				'<CdtTrfTxInf>'+Chr(13)+;
 				'<PmtId>'+Chr(13)+;
-				'<InstrId>' + ALLTRIM(v_mk.number)+ '</InstrId>' + CHR(13)+;
+				'<InstrId>' + Alltrim(v_mk.Number)+ '</InstrId>' + Chr(13)+;
 				'<EndToEndId>' + Alltrim(Str(v_mk1.Number))+'</EndToEndId>'+Chr(13)+;
 				'</PmtId>'+Chr(13)+;
 				'<Amt><InstdAmt Ccy="EUR">' + Alltrim(Str(v_mk1.Summa,14,2))+'</InstdAmt></Amt>' + Chr(13)+;
 				'<Cdtr>'+Chr(13)+;
 				'<Nm>' + convert_to_utf(Alltrim(v_mk1.asutus))+'</Nm>'+Chr(13)+;
-				'<PstlAdr><Ctry>EE</Ctry><AdrLine>' + LEFT(convert_to_utf(Alltrim(v_mk1.aadress)),70)+'</AdrLine></PstlAdr>'+Chr(13)+;
+				'<PstlAdr><Ctry>EE</Ctry><AdrLine>' + Left(convert_to_utf(Alltrim(v_mk1.aadress)),70)+'</AdrLine></PstlAdr>'+Chr(13)+;
 				'</Cdtr>'+Chr(13)+;
 				'<CdtrAcct><Id><IBAN>' + Alltrim(v_mk1.aa) + '</IBAN></Id></CdtrAcct>' + Chr(13)+;
 				'<RmtInf>' + Chr(13)+;
 				IIF(!Empty(v_mk.selg),'<Ustrd>'+convert_to_utf(Alltrim(v_mk.selg))+'</Ustrd>'+Chr(13),'')+;
 				IIF(!Empty(v_mk.viitenr),'<Strd><CdtrRefInf><Tp><CdOrPrtry><Cd>SCOR</Cd></CdOrPrtry></Tp><Ref>'+Alltrim(v_mk.viitenr)+'</Ref></CdtrRefInf></Strd>'+Chr(13),'')+;
-				'</RmtInf>'+Chr(13)+'</CdtTrfTxInf>' + Chr(13)
+				'</RmtInf>'+Chr(13)+;
+				'</CdtTrfTxInf>' + Chr(13)+;
+				'</PmtInf>'+Chr(13)
 
-		ENDSCAN
-		lcString = lcString + '</PmtInf>'+Chr(13)
-				
+		Endscan
+
 		lnId = lnId + 1
 	Endscan
 	lcString = lcString + '</CstmrCdtTrfInitn>' + Chr(13) + '</Document>'
@@ -195,7 +203,7 @@ Function TEST
 	Release aObjekt
 
 	Select v_mk
-	Insert Into v_mk (rekvid, aaid, kpv, maksepaev, Number, selg, viitenr, omaArve );
+	Insert Into v_mk (rekvId, aaid, kpv, maksepaev, Number, selg, viitenr, omaArve );
 		VALUES (1, 99999, Date(), Date()+1, 'test0001', 'test iso', '1223','EE1234')
 
 TEXT TO lcAddr noshow
