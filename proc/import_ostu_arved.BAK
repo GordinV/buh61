@@ -42,9 +42,6 @@ Select comAsutusRemote
 Locate For Alltrim(regkood) = Alltrim(v_xml_arv.regkood)
 
 If !Found()
-	SET STEP ON 
-	SELECT v_xml_arv
-	brow
 	Messagebox('Asutus:' + Alltrim(v_xml_arv.asutus) + ',' + Alltrim(v_xml_arv.regkood) + ' ei leidnud',0+64,'e-Arve import')
 Else
 	Select v_arv
@@ -87,6 +84,12 @@ If l_onnestus
 				Wait Window 'Uus arve, konteerimine' Nowait
 				tnId = v_arv.Id
 				lError = oDb.Exec("GEN_LAUSEND_ARV",Str(v_arv.Id),'qryArvLausend')	
+				IF EMPTY(lError )
+					SET STEP ON 
+				ENDIF
+	ELSE
+		SET STEP ON 
+				
 	ENDIF
 	If Used('v_arv')
 		l_arv_id = v_arv.Id
@@ -116,7 +119,10 @@ Function save_arve
 	Select ('v_arv')
 	
 	lResult = oDb.cursorupdate('v_arv')
-
+	IF EMPTY(lResult )
+		SET STEP ON 
+	ENDIF
+	
 	UPDATE v_arvread SET parentid = v_arv.id 
 
 	lResult = oDb.cursorupdate('v_arvread')

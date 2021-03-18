@@ -62,8 +62,9 @@ Scan
 		Select kuu, Sum(Summa) As Summa, 'Põhipalk' As nimetus, '+' As liik,;
 			isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
 			From qryPO ;
-			WHERE Left(Alltrim(konto),8) In ('50000001','50010001','50012001','50014001',	'50015001',	'50020001',	'50021001',;
+			WHERE (Left(Alltrim(konto),8) In ('50000001','50010001','50012001','50014001',	'50021001',;
 			'50024001',	'50025001',	'50026001',	'50027001',	'50028001',	'50029001');
+			OR LEFT(ALLTRIM(konto),6) in ('500150','500200'));
 			and lepingid = qryTooLepingud.lepingid ;
 			AND liik = '1';
 			GROUP By kuu, liik, isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -73,7 +74,7 @@ Scan
 			isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
 			From qryPO ;
 			WHERE Left(Alltrim(konto),7) In ('5000001',;
-			'5001001','5001201', '5001401','5001501','5002001','5002101','5002401','5002501','5002701','5002801', '5002601', '5002901');
+			'5001001','5001201', '5001401','5002001','5002101','5002401','5002501','5002701','5002801', '5002601', '5002901');
 			and lepingid = qryTooLepingud.lepingid ;
 			AND liik = '1';
 			GROUP By kuu, liik, isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -89,10 +90,6 @@ Scan
 		Insert Into tmpFilter (konto) Values ('50012302')
 		Insert Into tmpFilter (konto) Values ('50014301')
 		Insert Into tmpFilter (konto) Values ('50014302')
-		Insert Into tmpFilter (konto) Values ('50015301')
-		Insert Into tmpFilter (konto) Values ('50015302')
-		Insert Into tmpFilter (konto) Values ('50020301')
-		Insert Into tmpFilter (konto) Values ('50020302')
 		Insert Into tmpFilter (konto) Values ('50021301')
 		Insert Into tmpFilter (konto) Values ('50021302')
 		Insert Into tmpFilter (konto) Values ('50024301')
@@ -108,8 +105,6 @@ Scan
 		Insert Into tmpFilter (konto) Values ('50029301')
 		Insert Into tmpFilter (konto) Values ('50029302')
 
-* 500003 01-500003 02	500103 01-500103 02	500123 01-500123 02	500143 01-500143 02	500153 01-500153 02	500203 01-500203 02
-* 500213 01-500213 02	500243 01-500243 02	500253 01-500253 02	500263 01-500263 02	500273 01-500273 02	500283 01-500283 02	500293 01-500293 02
 
 
 		Select kuu, Sum(Summa) As Summa, 'Preemiad, tulemuspalk' As nimetus, '+' As liik ,;
@@ -125,7 +120,8 @@ Scan
 		Select kuu, Sum(Summa) As Summa, 'Tööandja toetused' As nimetus, '+' As liik ,;
 			isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
 			From qryPO ;
-			WHERE konto In ('50000303','50010303','50012303','50014303','50015303','50020303',	'50021303','50024303','50025303','50026303','50027303','50028303','50029303');
+			WHERE (konto In ('50000303','50010303','50012303','50014303','50021303','50024303','50025303','50026303','50027303','50028303','50029303');
+			OR LEFT(konto,6) in ('500153','500203'));
 			and lepingid = qryTooLepingud.lepingid ;
 			AND liik = '1';
 			GROUP By kuu, liik, isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -135,11 +131,9 @@ Scan
 		Select kuu, Sum(Summa) As Summa, 'Puhkusetasud,ja -hüvitised' As nimetus, '+' As liik ,;
 			isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
 			From qryPO ;
-			WHERE  (Left(Alltrim(konto),7) In ('5002902','5001002','5001202','5001402','5001502','5002002','50020102','5002102',;
+			WHERE  Left(Alltrim(konto),7) In ('5000002','5002902','5001002','5001202','5001402','5002102',;
 			'5002402','5002502','5002602','5002702','5002802');
-			OR Left(Alltrim(konto),8) In ('50000021','50000022','50028703','50021703','50025703','50027703','50024703','50029703','50028703','50026703',;
-			'50027701'));
-			AND konto Not In ('50000023','50010023','50012023','50014023','50015023','50020023','50021023','50024023','50025023',;
+			AND konto Not In ('50000023','50010023','50012023','50014023','50021023','50024023','50025023',;
 			'50026023','50027023','50028023','50029023');
 			and lepingid = qryTooLepingud.lepingid ;
 			AND liik = '1';
@@ -149,7 +143,7 @@ Scan
 		Select kuu, Sum(Summa) As Summa, 'Õppepuhkusetasu' As nimetus, '+' As liik ,;
 			isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
 			From qryPO ;
-			WHERE (Alltrim(konto)) In ('50000023','50010023','50012023','50014023','50015023','50020023','50021023','50024023','50025023',;
+			WHERE (Alltrim(konto)) In ('50000023','50010023','50012023','50014023','50021023','50024023','50025023',;
 			'50026023','50027023','50028023','50029023');
 			and lepingid = qryTooLepingud.lepingid ;
 			AND liik = '1';
@@ -168,8 +162,7 @@ Scan
 			INTO Cursor qryPOlapsePuhkus
 
 
-		l_kontod = '500007,50029701,50000701,50010701,500107,50014701,500147,50015701,500157,50021701,500217,500247,50024701,500257,' + ;
-			'50025701,500287,50028701,500267,50026701,500207,50020701,50010702,50012702,50014702,50015702,50024702,50025702,50028702'
+		l_kontod = '500007,500127,500127,500147,500217,500147,500257,500267,500277,500287,500297,500157,500207' 
 
 		nRows = Alines(laData, l_kontod, .F., ",")
 
@@ -181,7 +174,7 @@ Scan
 		Select kuu, Sum(Summa) As Summa, 'Hüvitised ja toetused' As nimetus, '+' As liik ,;
 			isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
 			From qryPO ;
-			WHERE Alltrim(konto) In (Select konto From tmp_kontod);
+			WHERE LEFT(Alltrim(konto),6) In (Select konto From tmp_kontod);
 			and lepingid = qryTooLepingud.lepingid ;
 			AND liik = '1';
 			GROUP By kuu, liik, isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
@@ -192,7 +185,8 @@ USE IN tmp_kontod
 		Select kuu, Sum(Summa) As Summa, 'Võlaõiguslikud lepingud' As nimetus, '+' As liik ,;
 			isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;
 			From qryPO ;
-			WHERE konto In ('500500','500298', '500268');
+			WHERE (konto In ('50026801','50029801') ;
+			OR LEFT(konto,6) in ('500500','500298','500268'));
 			and lepingid = qryTooLepingud.lepingid ;
 			AND liik = '1';
 			GROUP By kuu, liik, isikId, lepingid, onimi, animi, pohikoht, palk, koormus, toopaev;

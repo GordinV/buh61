@@ -84,6 +84,12 @@ If l_onnestus
 				Wait Window 'Uus arve, konteerimine' Nowait
 				tnId = v_arv.Id
 				lError = oDb.Exec("GEN_LAUSEND_ARV",Str(v_arv.Id),'qryArvLausend')	
+				IF EMPTY(lError )
+					SET STEP ON 
+				ENDIF
+	ELSE
+		SET STEP ON 
+				
 	ENDIF
 	If Used('v_arv')
 		l_arv_id = v_arv.Id
@@ -113,7 +119,13 @@ Function save_arve
 	Select ('v_arv')
 	
 	lResult = oDb.cursorupdate('v_arv')
-
+	IF EMPTY(lResult )
+		WAIT WINDOW 'error in save'
+		SELECT v_arv 
+		brow
+		SET STEP ON 
+	ENDIF
+	
 	UPDATE v_arvread SET parentid = v_arv.id 
 
 	lResult = oDb.cursorupdate('v_arvread')
