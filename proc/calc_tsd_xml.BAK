@@ -1,17 +1,18 @@
 Local lnError, lTSD, lnTMkokku
 lnError = 1
 
-*!*	Set Step On
+Set Step On
 *!*	Create Cursor fltrAruanne (kpv1 d, kpv2 d, kond Int)
 *!*	Append Blank
-*!*	Replace kpv1 with Date(2018,01,01), kpv2 With Date(2018,01,31), kond With 0 In fltrAruanne
+*!*	Replace kpv1 with Date(2023,01,01), kpv2 With Date(2023,01,31), kond With 0 In fltrAruanne
 
-*!*	gnHandle = SQLConnect('NarvaLvPg')
-*!*	tdKPv1 = Date(2018,01,01)
-*!*	tdKPv2 = Date(2018,01,31)
+*!*	gnHandle = SQLConnect('meke')
+*!*	tdKPv1 = Date(2023,01,01)
+*!*	tdKPv2 = Date(2023,01,31)
 *!*	l_parent = 999999
-*!*	gRekv = 119
+*!*	gRekv = 1
 
+*!*	SET STEP ON
 
 Do queries\palk\tsd2015_report2.fxp
 If !Used('tsd_report')
@@ -33,7 +34,7 @@ Set Null On
 
 Select Distinct isikukood As v1000, nimi As v1010, v1020 , v1030, v1040, v1050, v1060, ;
 	v1070, v1080, v1090,v1100, v1110,	v1120, v1130, v1140,v1170, ;
-	v1160_610,	v1160_620, v1160_630, v1160_640 ;
+	v1160_610,	v1160_640, v1160_650;
 	from tsd_report ;
 	ORDER By isikukood ;
 	into Cursor qryTSD
@@ -68,9 +69,10 @@ ENDTEXT
 * lisa 1
 Select qryTSD
 
-Select Distinct v1000, v1010 From qryTSD Into Cursor tmpIsikList
+Select Distinct v1000, v1010;
+	FROM qryTSD ;
+	Into Cursor tmpIsikList
 Select tmpIsikList
-
 Scan
 
 TEXT TO lcString NOSHOW ADDITIVE
@@ -140,9 +142,9 @@ Function get_tululiik_kood
 
 	Scan
 		lc1160 = ''
-*	v1160_610,	v1160_620, v1160_630, v1160_640
+*	v1160_610,	v1160_620, v1160_65, v1160_640
 
-		If qryTSDtululiik.v1160_610 + qryTSDtululiik.v1160_620 +  qryTSDtululiik.v1160_630 +  qryTSDtululiik.v1160_640 > 0
+		If qryTSDtululiik.v1160_610 + qryTSDtululiik.v1160_640  +  qryTSDtululiik.v1160_650  > 0
 TEXT TO lc1160 NOSHOW
 
 	 				<mvtList>
@@ -158,21 +160,12 @@ TEXT TO lc1160 NOSHOW ADDITIVE
 ENDTEXT
 			Endif
 
-			If qryTSDtululiik.v1160_620 > 0
+			If qryTSDtululiik.v1160_650> 0
 TEXT TO lc1160 NOSHOW ADDITIVE
 
 						 	<tsd_L1_A_Mvt>
-						 		<c1150_TuliKood>620</c1150_TuliKood>
-						 		<c1160_Summa><<IIF(ISNULL(qryTSDtululiik.v1160_620),0,qryTSDtululiik.v1160_620)>></c1160_Summa>
-						 	</tsd_L1_A_Mvt>
-ENDTEXT
-			Endif
-			If qryTSDtululiik.v1160_630 > 0
-TEXT TO lc1160 NOSHOW ADDITIVE
-
-						 	<tsd_L1_A_Mvt>
-						 		<c1150_TuliKood>630</c1150_TuliKood>
-						 		<c1160_Summa><<IIF(ISNULL(qryTSDtululiik.v1160_630),0,qryTSDtululiik.v1160_630)>></c1160_Summa>
+						 		<c1150_TuliKood>650</c1150_TuliKood>
+						 		<c1160_Summa><<IIF(ISNULL(qryTSDtululiik.v1160_650),0,qryTSDtululiik.v1160_650)>></c1160_Summa>
 						 	</tsd_L1_A_Mvt>
 ENDTEXT
 			Endif
@@ -202,7 +195,7 @@ ENDTEXT
 		If Val(tcKood) < 13
 TEXT TO lcStr NOSHOW ADDITIVE
 
-					<c1040_OtMaar><<qryTSDtululiik.v1040>></c1040_OtMaar>
+					<c1040_OtMaar><<IIF(qryTSDtululiik.v1040 > 1, 1,  qryTSDtululiik.v1040)>></c1040_OtMaar>
 ENDTEXT
 
 		Endif

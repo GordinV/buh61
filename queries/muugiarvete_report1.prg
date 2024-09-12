@@ -17,6 +17,7 @@ SET TEXT ON NOSHOW
 TEXT TO lcString
 	SELECT rekvid, asutusid, regkood, asutus, number, kpv, summa, kbm_summa, regexp_replace(kbm_maar::text,'[{}]','','g')::varchar(254) as kbm_maar, liik,
 	case 
+			when kbm_maar @> array[0,22] then '22erikord'   
 			when kbm_maar @> array[0,20] then '20erikord'   
 			when kbm_maar @> array[0,9] then '9erikord' end::varchar(254) as erikord  
 	from (
@@ -28,6 +29,8 @@ TEXT TO lcString
 				when n.doklausid = 2 then 5 
 				when n.doklausid = 4 then 9
 				when n.doklausid = 5 then 20
+				when arv.kpv < DATE(2024,01,01) and n.doklausid = 6 then 20
+				when arv.kpv >= DATE(2024,01,01) and n.doklausid = 6 then 22
 				ELSE 0
 			end::integer 
 			from arv1 			
@@ -45,6 +48,8 @@ TEXT TO lcString
 				when n.doklausid = 2 then 5 
 				when n.doklausid = 4 then 9
 				when n.doklausid = 5 then 20
+				when arv.kpv < DATE(2024,01,01) and n.doklausid = 6 then 20
+				when arv.kpv >= DATE(2024,01,01) and n.doklausid = 6 then 22
 				ELSE 0
 			end::integer 
 			from arv1 			

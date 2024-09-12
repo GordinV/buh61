@@ -5,11 +5,11 @@ l_sm = 0
 ltest = .f.
 IF (ltest)
 	SET STEP on
-	gnHandle = SQLCONNECT('NarvaLvPg')
-	tdKPv1 = DATE(2018,01,01)
-	tdKPv2 = DATE(2018,01,31)
+	gnHandle = SQLCONNECT('meke')
+	tdKPv1 = DATE(2023,01,01)
+	tdKPv2 = DATE(2023,01,31)
 	l_parent = 999999
-	gRekv = 119
+	gRekv = 1
 ELSE 
 	tdKpv1 = fltrAruanne.kpv1
 	tdKpv2 = fltrAruanne.kpv2
@@ -24,15 +24,17 @@ Set Order To kood
 Create Cursor tsd_report (isikukood c(20), nimi c(254), v1020 c(20), v1030 N(14,2) Null , v1040 N(14,2) Null,;
 	v1050 c(100), v1060 N(14,2) Null , v1070 N(14,2) Null , v1080 N(14,2) Null, v1090 N(14,2) Null , ;
 	v1100 N(14,2) Null, v1110 N(14,2) Null ,	v1120 N(14,2) Null , v1130 N(14,2) Null , v1140 N(14,2) Null , ;
-	v1150 c(20),	v1160 N(14,2) Null , v1160_610 N(14,2) Null, v1160_620 N(14,2) Null, v1160_630 N(14,2) Null, v1160_640 N(14,2) Null,;
+	v1150 c(20),	v1160 N(14,2) Null , v1160_610 N(14,2) Null, v1160_620 N(14,2) Null, v1160_630 N(14,2) Null,; 
+	v1160_640 N(14,2) Null, v1160_650 N(14,2) Null, ;
 	v1170 N(14,2) Null , v1200 N(14,2) Null , v1210 N(14,2) Null, v1220 N(14,2) Null ,;
-	v1230 N(14,2) Null , v1240 N(14,2) Null , v1250 N(14,2) Null )
+	v1230 N(14,2) Null , v1240 N(14,2) Null , v1250 N(14,2) Null, kas_pensionar int )
 
 *arvestame koormus
 
 TEXT TO lcString noshow
 SELECT a.regkood as isikukood, a.nimetus as isik, sum(koormus)::numeric / 100 as koormus ,
-	max(coalesce(qryMinSots.arv_min_sots,0)) as arv_min_sots, max(coalesce(qryMinSots.min_sots_alus,0)) as min_sots_alus
+	max(coalesce(qryMinSots.arv_min_sots,0)) as arv_min_sots, max(coalesce(qryMinSots.min_sots_alus,0)) as min_sots_alus,
+       CASE WHEN kas_soodustus_mvt(a.regkood, ?tdKpv1::date) THEN 1 ELSE 0 END::integer AS kas_pensionar 	
 	from tooleping t
 	inner join asutus a on a.id = t.parentId
 	inner join rekv on rekv.id = t.rekvId
@@ -50,6 +52,8 @@ ENDTEXT
 
  
 lnError = SQLEXEC(gnhandle, lcString,'qryKoormus')
+SELECT qryKoormus
+
 If lnError < 0 Then
 	Wait Window 'Viga' Nowait
 	Do err
@@ -63,7 +67,7 @@ TEXT TO lcString NOSHOW
 		(select sum(sp_puudumise_paevad(?tdKpv2::date, tooleping.id)) from tooleping where tooleping.parentid = qry.id and tooleping.rekvid = qry.rekvid)::numeric as puhkus,
 		(select sum(koormus) from tooleping where parentId = qry.id and rekvId = qry.rekvId and algab <= ?tdKpv2 and (empty(lopp) or lopp >= ?tdKpv1))::numeric / 100 as v1040,
 		MAX(lopp) as lopp,
-		max(arv_min_sots) as arv_min_sots, max(	 min_sots_alus) as  min_sots_alus
+		max(arv_min_sots) as arv_min_sots, max(	 min_sots_alus) as  min_sots_alus, qry.kas_pensionaar 
 		from (
 		select a.regkood as isikukood, a.nimetus as isik,
 		po.summa as summa,
@@ -81,7 +85,8 @@ TEXT TO lcString NOSHOW
 			and pk_.status = 1
 			limit 1) * pc.sm / 100)    as minsots, pc.minpalk,
 			a.id, t.rekvId, ifnull(t.lopp, date(2099,12,31)) as lopp,
-			qryMinSots.arv_min_sots, qryMinSots.min_sots_alus
+			qryMinSots.arv_min_sots, qryMinSots.min_sots_alus ,
+	       CASE WHEN kas_soodustus_mvt(a.regkood, ?tdKpv1::date) THEN 1 ELSE 0 END::integer AS kas_pensionaar 				
 		from tooleping t
 		inner join asutus a on a.id = t.parentid
 		inner join palk_oper po on po.lepingid = t.id
@@ -101,7 +106,7 @@ TEXT TO lcString NOSHOW
 		and pl.liik = 1
 		and t.resident = 1
 		and (rekv.id = ?gRekv or rekv.parentId = ?l_parent)) qry
-	group by id, rekvId, isikukood, isik, tululiik, liik, riik, period, v1040, minsots, sm_arv, tk_arv, minpalk
+	group by id, rekvId, isikukood, isik, tululiik, liik, riik, period, v1040, minsots, sm_arv, tk_arv, minpalk, kas_pensionaar 
 
 ENDTEXT
 
@@ -120,15 +125,14 @@ Else
 	Select qryKoormus.isikukood, qryKoormus.isik, Sum(Summa) As Summa, Sum(puhkused) As puhkused, Sum(haigused) As haigused, Sum(tm) As tm, Sum(sm) As sm, Sum(tki) As tki, Sum(tka) As tka,;
 		sum(pm) As pm, Sum(tulubaas) As tulubaas, tululiik, riik, sm_arv, tk_arv, ;
 		max(qryKoormus.koormus) As v1040, Sum(puhkus) As puhkus, Max(lopp) As lopp, Max(qryTsd.arv_min_sots) As arv_min_sots, ;
-		max(qryTsd.min_sots_alus) As min_sots_alus;
+		max(qryTsd.min_sots_alus) As min_sots_alus, qryKoormus.kas_pensionar ;
 		FROM qryTsd ;
 		inner Join qryKoormus On Alltrim(qryKoormus.isikukood) = Alltrim(qryTsd.isikukood);
 		WHERE (!Isnull(qryTsd.tululiik) And  qryTsd.tululiik <> '') ;
-		GROUP By qryKoormus.isikukood, qryKoormus.isik, tululiik, riik, sm_arv, tk_arv ;
+		GROUP By qryKoormus.isikukood, qryKoormus.isik, qryKoormus.kas_pensionar, tululiik, riik, sm_arv, tk_arv ;
 		ORDER By qryKoormus.isikukood, tululiik;
 		INTO Cursor curTSD
 	Select curTSD
-
 
 	Scan
 * 1090
@@ -180,21 +184,33 @@ Else
 		
 		Select (lcAlias)
 
-
 * 1200, 1210, 1220
 		Select Sum((curTSD.Summa) *  curTSD.sm_arv) As Summa, Sum(qryTsd.sm) As sm, Sum(qryTsd.tm) As tm, Sum(qryTsd.tki) As tki, ;
 			sum(qryTsd.tka) As tka, Sum(qryTsd.pm) As pm ;
 			FROM qryTsd Where qryTsd.liik = 1 And isikukood = curTSD.isikukood Into Cursor tmpMaksud
 
-		Insert Into tsd_report (isikukood, nimi, v1020, v1030, v1040, v1050, v1060, v1070, v1080, v1090, ;
-			v1100, v1110, v1120, v1130, v1140, v1150, v1160, ;
-			v1160_610, v1160_620, v1160_630,v1160_640,	;
-			v1170 ,v1200, v1210, v1220, v1230, v1240, v1250 ) ;
-			values (curTSD.isikukood, curTSD.isik, curTSD.tululiik, (curTSD.Summa) , l_v1040, curTSD.riik,;
-			(curTSD.Summa) * curTSD.sm_arv, 0,0, l_1090,;
-			l_sm, curTSD.pm,(curTSD.Summa) * curTSD.tk_arv,curTSD.tki, curTSD.tka, ;
-			'610', l_mvt, l_mvt,0,0,0, ;
-			l_tm, tmpMaksud.Summa, tmpMaksud.sm, tmpMaksud.pm, tmpMaksud.tki, tmpMaksud.tka, l_tm)
+*!*			Insert Into tsd_report (isikukood, nimi, v1020, v1030, v1040, v1050,; 
+*!*				v1060, v1070, v1080, v1090, ;
+*!*				v1100, v1110, v1120, v1130, v1140, v1150, ;
+*!*				v1160, v1160_610, v1160_640,v1160_650,	;
+*!*				v1170 ,v1200, v1210, v1220, v1230, v1240, v1250 ) ;
+*!*				values (curTSD.isikukood, curTSD.isik, curTSD.tululiik, (curTSD.Summa) , l_v1040, curTSD.riik,;
+*!*				(curTSD.Summa) * curTSD.sm_arv, 0,0, l_1090,;
+*!*				l_sm, curTSD.pm,(curTSD.Summa) * curTSD.tk_arv,curTSD.tki, curTSD.tka, ;
+*!*				IIF(!EMPTY(curTSD.kas_pensionar),'650', '610'), IIF(!EMPTY(curTSD.kas_pensionar),0, l_mvt),0,IIF(!EMPTY(curTSD.kas_pensionar) ,l_mvt, 0), ;
+*!*				l_tm, tmpMaksud.Summa, tmpMaksud.sm, tmpMaksud.pm, tmpMaksud.tki, tmpMaksud.tka, l_tm)
+*!*				
+
+	Insert Into tsd_report (isikukood, nimi, kas_pensionar, v1020, v1030, v1040, v1050, v1060, v1070, v1080, v1090, ;
+		v1100, v1110, v1120, v1130, v1140, v1150, v1160, ;
+		v1160_610, v1160_620, v1160_630,v1160_640,v1160_650,	;
+		v1170 ,v1200, v1210, v1220, v1230, v1240, v1250 ) ;
+		values (curTSD.isikukood, curTSD.isik, curTSD.kas_pensionar, curTSD.tululiik, (curTSD.Summa) , l_v1040, '',;
+		(curTSD.Summa) * curTSD.sm_arv, 0,0, l_1090,;
+		(l_sm ), curTSD.pm,(curTSD.Summa) * curTSD.tk_arv,curTSD.tki, curTSD.tka, ;
+		IIF(!EMPTY(curTSD.kas_pensionar),'650', '610'), l_mvt, IIF(EMPTY(curTSD.kas_pensionar),l_mvt,0),0,0,0,IIF(!EMPTY(curTSD.kas_pensionar),l_mvt,0), ;
+		l_tm, tmpMaksud.Summa, tmpMaksud.sm, tmpMaksud.pm, tmpMaksud.tki, tmpMaksud.tka, l_tm)
+			
 
 	Endscan
 

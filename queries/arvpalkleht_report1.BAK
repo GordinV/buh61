@@ -63,7 +63,7 @@ ENDIF
 
 tnParentRekvId = gRekv
 * GET month norm
-
+SET STEP ON 
 
 WITH oDb
 	.Use ('qryPalkArvLeht')
@@ -96,7 +96,7 @@ lnDb = 0
 lnKr = 0
 lnSots = 0
 Select  qryPalkArvLeht
-Scan 
+Scan FOR AT(UPPER('Valjamaks'), UPPER(ALLTRIM(nimetus))) = 0                                                                                                                                                                                                                                         
 *For liik = '+' Or liik = '-'
 	If (fltrAruanne.osakondid > 0 And qryPalkArvLeht.osakondid = fltrAruanne.osakondid) OR qryPalkArvLeht.osakondid = 0 OR fltrAruanne.osakondid = 0
 		Select arvleht_report1

@@ -85,7 +85,7 @@ DIMENSION aKuu(12)
 aKuu(1) = 'Jaanuar'
 aKuu(2) = 'Veebruar'
 aKuu(3) = 'Marts'
-aKuu(4) = 'April'
+aKuu(4) = 'Aprill'
 aKuu(5) = 'Mai'
 aKuu(6) = 'Juuni'
 aKuu(7) = 'Juuli'

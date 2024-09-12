@@ -35,6 +35,8 @@ gvErsia = 'MSSQL'
 gdKpv = Date()
 ckAsutaja = ''
 gnHandle = 0
+glMvt = .f.
+
 Local leRror
 Close Databases All
 Set Udfparms Off

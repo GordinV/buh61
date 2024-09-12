@@ -41,7 +41,8 @@ If fltrAruanne.tunnus > 0
 	lcTunnus = Ltrim(Rtrim(comTunnusremote.kood))
 Else
 	lcTunnus = ''
-Endif
+ENDIF
+
 
 If gVersia = 'PG'
 

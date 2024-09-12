@@ -1,6 +1,6 @@
 PARAMETERS tcParam
 
-SET STEP ON  
+ 
 CREATE CURSOR saldoaruanne_report1 (konto c(20), tp c(20), tegev c(20), allikas c(20), rahavoo c(20), db n(18,6), kr n(18,6), nimetus c(254),;
 	dbKokku n(18,6), krKokku n(18,6))
  
@@ -26,7 +26,8 @@ lnKuurs = fnc_currentvaluuta('KUURS',fltrAruanne.kpv2)
                 	" and rahavoo like '"+ALLTRIM(fltrAruanne.kood3)+"%' and konto like '"+ALLTRIM(fltrAruanne.kood4)+"%'"+;
                 	" and tp like '"+ALLTRIM(fltrAruanne.tp)+"%'" +;
                 	" group by konto, tp, tegev, allikas, rahavoo, nimetus order by konto, tp, tegev, allikas, rahavoo  "
-                	
+
+_cliptext =      lcString            	
                 leRror = odB.exEcsql(lcString,'saldoaruanne_report')
                 IF  .NOT. EMPTY(leRror) .AND. USED('saldoaruanne_report')
                 	SELECT konto, tp, tegev, allikas, rahavoo, sum(db) as db, sum(kr) as kr;

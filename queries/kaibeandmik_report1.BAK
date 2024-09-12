@@ -41,7 +41,9 @@ If fltrAruanne.tunnus > 0
 	lcTunnus = Ltrim(Rtrim(comTunnusremote.kood))
 Else
 	lcTunnus = ''
-Endif
+ENDIF
+
+SET STEP ON 
 
 If gVersia = 'PG'
 
@@ -60,6 +62,7 @@ If gVersia = 'PG'
 
 			lcString = "select konto, algdb, algkr, db, kr from tmp_kaibeandmik_report where timestamp = '"+ Alltrim(qryKbAsu.sp_kaibeandmik_report)+"'"
 
+_cliptext = lcString 
 			lError = sqlexec(gnHandle,lcString,'qryKaibeandmik')
 *brow
 			Select qryKaibeandmik
@@ -101,7 +104,6 @@ If gVersia = 'PG'
 			Endscan
 			Select kaibeandmik_report1
 			DELETE FROM kaibeandmik_report1 WHERE algdb = 0 AND algkr = 0 AND deebet = 0 AND kreedit = 0
-			brow
 			Return .T.
 		Else
 			Select 0

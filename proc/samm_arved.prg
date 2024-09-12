@@ -5,7 +5,7 @@ Else
 *	ldArvKpv = Gomonth(Date(Year(Date()),Month(Date()),1),1)-1
 	ldArvKpv = date()
 ENDIF
-SET STEP ON 
+
 Local lnResult
 With odB
 
@@ -495,7 +495,7 @@ Function fnc_addfromleping
 	If Used('qryLeping2')
 		Use In qryLeping2
 	Endif
-*SET STEP ON 
+SET STEP ON 
 	Set Classlib To Classlib
 	oFormula = Createobj('classlib.formula')
 
@@ -688,9 +688,11 @@ Function fnc_addfromleping
 					Endif
 					If v_leping2.valuuta = 'EUR'
 						lnKuurs = 1
-					Endif
+					ENDIF
+					
+					SET STEP ON
 
-					.hind = Round(.hind / lnKuurs,4)
+					.hind = Round(.hind / lnKuurs,2)
 					.kbmsumma = Round(.kbmsumma / lnKuurs,2)
 					.Summa = Round(.Summa / lnKuurs,2)
 					.soodus = Round(.soodus / lnKuurs,2)

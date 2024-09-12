@@ -26,7 +26,7 @@ lnKuurs = fnc_currentvaluuta('KUURS',fltrAruanne.kpv2)
                 	" and rahavoo like '"+ALLTRIM(fltrAruanne.kood3)+"%' and konto like '"+ALLTRIM(fltrAruanne.kood4)+"%'"+;
                 	" and tp like '"+ALLTRIM(fltrAruanne.tp)+"%'" +;
                 	" group by konto, tp, tegev, allikas, rahavoo, nimetus order by konto, tp, tegev, allikas, rahavoo  "
-                	
+
                 leRror = odB.exEcsql(lcString,'saldoaruanne_report')
                 IF  .NOT. EMPTY(leRror) .AND. USED('saldoaruanne_report')
                 	SELECT konto, tp, tegev, allikas, rahavoo, sum(db) as db, sum(kr) as kr;

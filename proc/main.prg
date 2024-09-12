@@ -86,14 +86,31 @@ Else
 	Messagebox('Key fail ei leidnud', 'Kontrol')
 	Cancel
 Endif
-Create Cursor comkey (Id Int, omAnik C (120))
-Select Id, Left(deCrypt(f_Key(),Mline(omAnik, 1)), 120) As omAnik From  ;
-	key Into Cursor qryComkey
+*!*	Create Cursor comkey (Id Int, omAnik C (120))
+*!*	Select Id, Left(deCrypt(f_Key(),Mline(omAnik, 1)), 120) As omAnik From  ;
+*!*		key Into Cursor qryComkey
+*!*	Select comkey
+*!*	Append From Dbf('qryComkey')
+*!*	Use In qryComkey
+*!*	Select comkey
+*!*	= seCure('OFF')
+
+If !Used('v_roles')
+	Create Cursor v_roles (	nimetus c(120) Default 'Raamatupidaja', asutusid Int, nomid Int, nomidkassa Int,nomidpank Int, kbmnomidkassa Int,;
+		kassaid Int, aaid Int, alus c(120),kassanr c(20),arvnr c(20), ;
+		dokpropidarvvalju Int, dokpropidsorder Int, dokpropidpank Int, tunnusid Int)
+Endif
+
+
+Create Cursor comkey (Id Int, omanik c(120))
+Select Id, Left(decrypt(f_key(),Mline(omanik,1)),120) As omanik From Key Into Cursor qryComkey
 Select comkey
-Append From Dbf('qryComkey')
+Append From Dbf ('qryComkey')
 Use In qryComkey
+
 Select comkey
-= seCure('OFF')
+=secure('OFF')
+
 lqUit = .F.
 If  .Not. Empty(config.reServed1) .And. File('updater.exe')
 	lrEsult = chEckuuendused(config.reServed1)

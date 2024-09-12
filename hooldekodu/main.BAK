@@ -6,7 +6,7 @@ _Screen.windowstate = 2
 public gnHandle,gnHandleAsync, gcWindow, gRekv,gUserId, oPrintform2, oFinder, gReturn, oAsutused, oUserid,;
 	oHooArved, oDokLausend, oNomenklatuur, oDok, oTasud, oHooMK,;
 	oAsutused, oUserid, oRekv, 	cKasutaja, oDb, oPeriod,gnKuu, gnAasta, gdKpv, gVersia, gcDatabase, glError, oRI, oConnect, ;
-	oMenu, gcKey, gcAmetnik, gcPrognimi,oHooIsikud, oHooettemaksud
+	oMenu, gcKey, gcAmetnik, gcPrognimi,oHoolepingud, oHooettemaks
 gcProgNimi = 'HOOLDEKODU.EXE'
 tcTunnus = '%'
 tcAllikas = '%'

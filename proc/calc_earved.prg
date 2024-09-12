@@ -146,7 +146,7 @@ ENDTEXT
 
 TEXT TO lcFileString ADDITIVE NOSHOW
 
-<Invoice invoiceId="<<Alltrim(convert_to_utf(qryeArved.Number))>>" regNumber="<<Alltrim(qryeArved.regkood)>>">
+<Invoice invoiceId="<<Alltrim(convert_to_utf(qryeArved.Number))>>" regNumber="<<Alltrim(qryeArved.regkood)>>" channelId="EA">
 <InvoiceParties>
 <SellerParty>
 <Name><<Alltrim(convert_to_utf(qryeArved.muuja))>></Name>
@@ -190,15 +190,23 @@ ENDTEXT
 TEXT TO lcFileString ADDITIVE NOSHOW
 
 <InvoiceDate><<lcKpv>></InvoiceDate>
+<DueDate><<lcTKpv>></DueDate>
+<Extension extensionId="eakChannel">
+<InformationContent>EMAIL</InformationContent>
+</Extension>
 </InvoiceInformation>
 <InvoiceSumGroup>
 <InvoiceSum><<Alltrim(Str(qryeArved.Summa,14,2))>></InvoiceSum>
 
 ENDTEXT
 
+*!*	<Extension extensionId="eakStatusAfterImport">
+*!*	<InformationContent>SENT</InformationContent>
+*!*	</Extension>
+
 
 TEXT TO lcString noshow
-			select (case n.doklausid when 0 then 18 when 1 then 0 when 2 then 5 when 3 then 0 when 4 then 9 else 20 end::numeric) as vatRate,
+			select (case n.doklausid when 0 then 18 when 1 then 0 when 2 then 5 when 3 then 0 when 4 then 9 when 5 then 20 when 6 then 22 else 22 end::numeric) as vatRate,
 				sum(arv1.kbm) as vatSum, n.doklausid, arv1.parentId, sum(summa) as summa
 				from arv1
 				inner join nomenklatuur n on n.id = arv1.nomid
@@ -237,7 +245,7 @@ ENDTEXT
 
 TEXT TO lcString noshow
 			select
-				case n.doklausid when 0 then 18 when 1 then 0 when 2 then 5 when 3 then 0 when 4 then 9 else 20 end as vatRate,
+				case n.doklausid when 0 then 18 when 1 then 0 when 2 then 5 when 3 then 0 when 4 then 9 when 5 then 20 when 6 then 22 else 22 end as vatRate,
 				arv1.parentId,	arv1.kbm as vat_summa,
 				n.doklausid, ltrim(rtrim(n.nimetus)) || ' ' || ltrim(rtrim(coalesce(arv1.muud,''))) as Description,n.uhik as ItemUnit,
 				arv1.kogus as ItemAmount, arv1.hind as ItemPrice, (arv1.summa - arv1.kbm) as ItemSum, arv1.kbm as VATSum, arv1.summa as ItemTotal
@@ -276,8 +284,8 @@ ENDTEXT
 
 IF !ISNULL(qryeArved.muud) AND !EMPTY(qryeArved.muud)
 TEXT TO lcFileString ADDITIVE NOSHOW
-<AdditionalInformation id  ="  Note">  
-<InformationName> Märkus </InformationName><InformationContent><<ALLTRIM(qryeArved.muud)>></InformationContent>
+<AdditionalInformation>  
+<InformationName>Markus</InformationName><InformationContent><<ALLTRIM(qryeArved.muud)>></InformationContent>
 </AdditionalInformation>
 	
 ENDTEXT
