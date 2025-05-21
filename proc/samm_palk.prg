@@ -1,5 +1,4 @@
 Parameter tnIsikid
-SET STEP ON 
 SET TEXTMERGE ON
 
 Local lnResult, leRror
@@ -173,7 +172,6 @@ Procedure edIt_oper
 
 	leRror = odB.Exec("gen_palkoper ",lcString,'qryOper')
 	IF !lerror 
-		_cliptext = lcString
 		MESSAGEBOX('Viga',0,'Error')
 	ENDIF
 	

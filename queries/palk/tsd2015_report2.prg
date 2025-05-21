@@ -3,11 +3,12 @@ Parameter tcTest
 Local lcString, tdKpv1, tdKpv2, l_parent, l_sm
 l_sm = 0
 ltest = .f.
-IF (ltest)
 	SET STEP on
-	gnHandle = SQLCONNECT('meke')
-	tdKPv1 = DATE(2023,01,01)
-	tdKPv2 = DATE(2023,01,31)
+
+IF (ltest)
+	gnHandle = SQLCONNECT('kodukomfort')
+	tdKPv1 = DATE(2025,01,01)
+	tdKPv2 = DATE(2025,01,31)
 	l_parent = 999999
 	gRekv = 1
 ELSE 

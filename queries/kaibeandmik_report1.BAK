@@ -43,7 +43,7 @@ Else
 	lcTunnus = ''
 ENDIF
 
-SET STEP ON 
+*replace fltrPrinter.kuurs WITH 1 IN fltrPrinter
 
 If gVersia = 'PG'
 
@@ -62,7 +62,6 @@ If gVersia = 'PG'
 
 			lcString = "select konto, algdb, algkr, db, kr from tmp_kaibeandmik_report where timestamp = '"+ Alltrim(qryKbAsu.sp_kaibeandmik_report)+"'"
 
-_cliptext = lcString 
 			lError = sqlexec(gnHandle,lcString,'qryKaibeandmik')
 *brow
 			Select qryKaibeandmik

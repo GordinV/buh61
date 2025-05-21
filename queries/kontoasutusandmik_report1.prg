@@ -46,7 +46,7 @@ If gVersia = 'PG'
 		Select KontoAsutusAndmik_report
 		Insert Into KontoAsutusAndmik_report (algsaldo, deebet , kreedit, loppsaldo, konto , nimetus , asutus , asutusId , regkood,;
 			korrkonto, tunnus, tegev, kulu, dok, allikas, fin, journalid, kpv, subrekvid, subrekvnim);
-			SELECT tmpsubkontod_report.algjaak	, tmpsubkontod_report.db, tmpsubkontod_report.kr, tmpsubkontod_report.loppjaak,;
+			SELECT ROUND(tmpsubkontod_report.algjaak,2)	, ROUND(tmpsubkontod_report.db,2), ROUND(tmpsubkontod_report.kr,2), ROUND(tmpsubkontod_report.loppjaak,2),;
 			tmpsubkontod_report.konto, Iif(Isnull(comKontodRemote.nimetus),Space(1),comKontodRemote.nimetus),;
 			tmpsubkontod_report.asutus, tmpsubkontod_report.asutusId, tmpsubkontod_report.regkood,;
 			tmpsubkontod_report.korkonto, tmpsubkontod_report.tunnus, tmpsubkontod_report.kood1, tmpsubkontod_report.kood5, ;

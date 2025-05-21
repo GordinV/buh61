@@ -43,6 +43,7 @@ Else
 	lcTunnus = ''
 ENDIF
 
+replace fltrPrinter.kuurs WITH 15.6466 IN fltrPrinter
 
 If gVersia = 'PG'
 

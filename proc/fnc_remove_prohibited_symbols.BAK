@@ -1,12 +1,12 @@
-text
-create cursor curImport (fail m)
+*!*	text
+*!*	create cursor curImport (fail m)
 
-cFile = getfile ('TXT')
-	select curImport
-	append blank
+*!*	cFile = getfile ('TXT')
+*!*		select curImport
+*!*		append blank
 
-	append memo curImport.fail from (cFile)
-end text
+*!*		append memo curImport.fail from (cFile)
+*!*	end text
 
 *modi memo curImport.fail
 for i = 1 to memlines(curImport.fail)

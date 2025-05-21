@@ -36,8 +36,6 @@ begin
 
 	qryArv.Konto := ifnull(qryArv.Konto,space(20));
 
-			raise notice 'arv data: tnDokId %, qryArv.konto %, tnDokTyyp %', tnDokId, qryArv.konto, tnDokTyyp;
-
 	if tnDokTyyp = 2 then
 		-- kassa order
 		select sum(summa*ifnull(dokvaluuta1.kuurs,1)) into lnTasuSumma 
@@ -87,13 +85,12 @@ begin
 		end if;
 		-- kreedit arve
 		if ifnull(lnTasuSumma,0) = 0 then
-			raise notice 'kreedit arve';
 			--kontrollime kas on kreedit arve
 			select sum(summa * ifnull(dokvaluuta1.kuurs,1)) into lnArvSumma 
 				from arv1 left outer join dokvaluuta1 on (dokvaluuta1.dokid = arv1.id and dokvaluuta1.dokliik = 2) 
 				where arv1.parentid = tnArvId;
 			if ifnull(lnArvSumma,0) < 0 then
-				raise notice 'lnArvSumma: %',lnArvSumma;
+
 				-- kreedit arve
 				if qryArv.liik = 0 then
 					select sum(summa * ifnull(dokvaluuta1.kuurs,1)) into lnTasuSumma 
@@ -121,9 +118,6 @@ begin
 	lnKuurs = ifnull(lnKuurs,1);
 
 	lnTasuSumma := ifnull(lnTasuSumma,0) / qryArv.Kuurs;
-	raise notice 'arvtasu SUMMA: %',lnTasuSumma;
-
-
 	lcDok = ifnull(lcDok,'');
 
 
@@ -140,7 +134,6 @@ begin
 
 	end if;
 	
-	raise notice 'arvtasu id: %',lnId;
 	return sp_updateArvJaak(tnArvId, tdKpv);
 
 

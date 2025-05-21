@@ -108,7 +108,7 @@ Procedure arVutus
 							 and t.algab <= ?gdKpv
 							 and (t.lopp is null or t.lopp >= ?gdKpv)
 							 and (<<lcOsakonnad>>::text = ''  or t.osakondid  in <<lcOsakonnad>>)
-							 order by t.pohikoht desc, liik, case when empty(pl.tululiik) then 99::text else tululiik end, Pk.percent_ desc, pk.summa desc
+							 order by liik, t.pohikoht desc, case when empty(pl.tululiik) then 99::text else tululiik end, Pk.percent_ desc, pk.summa desc
 			ENDTEXT
 			
 
@@ -154,6 +154,7 @@ Endproc
 *
 Procedure edIt_oper
 	Parameter tnId
+	SET STEP on 
 	Local leRror, l_arvesta_min_sots, lcString
 	tnId = recalc1.Id
 	If Empty(gdKpv)
@@ -173,7 +174,6 @@ Procedure edIt_oper
 
 	leRror = odB.Exec("gen_palkoper ",lcString,'qryOper')
 	IF !lerror 
-		_cliptext = lcString
 		MESSAGEBOX('Viga',0,'Error')
 	ENDIF
 	

@@ -9,7 +9,7 @@ lnKreedit = 0
 lcString = ''
 tcKasutaja = '%'
 tcMuud = '%'
-
+SET STEP ON 
 * lisatud 22/05
 IF USED ('curSaldo')
 	USE IN curSaldo
@@ -102,8 +102,12 @@ With odb
 	cDeebet = '%'
 	cKreedit = Alltrim(cKonto)+'%'
 	.Use('curJournal','queryKr')
+
+	replace fltrPrinter.kuurs with 1 IN fltrPrinter
+
 	
 	lnAlg = ROUND(lnAlg / fltrPrinter.kuurs,2)
+	
 	
 *	(journal_report1.summa*journal_report1.kuurs)/fltrPrinter.kuurs
 	Insert Into kontoandmik_report (pkonto, deebet, kreedit, kpv, nimetus, algs, tunnus);
@@ -111,8 +115,8 @@ With odb
 *SET STEP ON 
 	Select Number As Id, kpv,asutus,selg As nimetus,cKonto As pkonto,;
 		iif(deebet = cKonto,kreedit,deebet) As konto,;
-		iif(deebet = cKonto,ROUND(queryDb.Summa * queryDb.kuurs/fltrPrinter.kuurs,2),000000000.00) As 'deebet',;
-		iif(kreedit = cKonto,ROUND(queryDb.Summa * queryDb.kuurs/fltrPrinter.kuurs,2),000000000.00) As 'Kreedit', 0 As algs, dok,;
+		iif(deebet = cKonto,ROUND(queryDb.Summa ,2),000000000.00) As 'deebet',;
+		iif(kreedit = cKonto,ROUND(queryDb.Summa ,2),000000000.00) As 'Kreedit', 0 As algs, dok,;
 		lisa_d As tpd, lisa_k As tpk, kood1, kood2, kood3, kood4, kood5, tunnus ;
 		from queryDb;
 		where Rtrim(Ltrim(deebet)) = cKonto;
@@ -138,8 +142,8 @@ With odb
 
 	Select Number As Id, kpv,asutus,selg As nimetus,cKonto As pkonto,;
 		iif(deebet = cKonto,kreedit,deebet) As konto,;
-		iif(deebet = cKonto,ROUND(Summa * queryKr.kuurs/fltrPrinter.kuurs,2) ,000000000.00) As 'deebet',;
-		iif(kreedit = cKonto,ROUND(Summa * queryKr.kuurs/fltrPrinter.kuurs,2) ,000000000.00) As 'Kreedit', 0 As algs, dok,;
+		iif(deebet = cKonto,ROUND(Summa ,2) ,000000000.00) As 'deebet',;
+		iif(kreedit = cKonto,ROUND(Summa ,2) ,000000000.00) As 'Kreedit', 0 As algs, dok,;
 		lisa_d As tpd, lisa_k As tpk, kood1, kood2, kood3, kood4, kood5, tunnus ;
 		from queryKr;
 		where Rtrim(Ltrim(kreedit)) = cKonto;

@@ -196,7 +196,7 @@ TEXT TO lcFileString ADDITIVE NOSHOW
 </Extension>
 </InvoiceInformation>
 <InvoiceSumGroup>
-<InvoiceSum><<Alltrim(Str(qryeArved.Summa,14,2))>></InvoiceSum>
+<InvoiceSum><<Alltrim(Str(qryeArved.Summa - qryeArved.kbm,14,2))>></InvoiceSum>
 
 ENDTEXT
 
@@ -206,7 +206,16 @@ ENDTEXT
 
 
 TEXT TO lcString noshow
-			select (case n.doklausid when 0 then 18 when 1 then 0 when 2 then 5 when 3 then 0 when 4 then 9 when 5 then 20 when 6 then 22 else 22 end::numeric) as vatRate,
+			select (case n.doklausid when 0 then 18 
+					when 1 then 0 
+					when 2 then 5 
+					when 3 then 0 
+					when 4 then 9 
+					when 5 then 20 
+					when 6 then 22 
+					when 7 then 24
+					when 8 then 13
+					else 22 end::numeric) as vatRate,
 				sum(arv1.kbm) as vatSum, n.doklausid, arv1.parentId, sum(summa) as summa
 				from arv1
 				inner join nomenklatuur n on n.id = arv1.nomid

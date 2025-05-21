@@ -73,6 +73,10 @@ Scan
 			lcKbm =  '20%'
 		Case comNomRemote.doklausid = 6
 			lcKbm =  '22%'
+		Case comNomRemote.doklausid = 7
+			lcKbm =  '24%'
+		Case comNomRemote.doklausid = 8
+			lcKbm =  '13%'
 		otherwise
 			lcKbm =  'Vaba'
 	Endcase

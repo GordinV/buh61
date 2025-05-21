@@ -41,4 +41,4 @@ with oDb
 	Endif
 endwith
 select sorder_report1
-BROW
+*BROW

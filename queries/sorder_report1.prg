@@ -6,7 +6,7 @@ tnId = cWhere
 cQuery = 'print_sorder1'
 tcKood = '%'
 tcNimetus = '%'
-
+SET STEP ON 
 with oDb
 	.use(cQuery,'sorder_report1')
 	

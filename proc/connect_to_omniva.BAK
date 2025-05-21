@@ -7,12 +7,12 @@ Local cUrl, l_found_xml, l_found_kokku, l_iter
 Local cMessage
 
 If Empty(td_since)
-	td_since = Date(2020,01,01)
+	td_since = Date(2024,11,15)
 	cUrl = 'https://finance.omniva.eu/finance/erp/' 
 Else
 	cUrl = Alltrim(v_config_.earved)
 
-Endif
+ENDIF
 
 * will open cursors
 =check_cursors()
@@ -35,10 +35,19 @@ With loXMLHTTP
 	Wait Window 'Oodan omniva... ' Nowait
 	.Send(cMessage)
 	Wait Window 'Oodan omniva... ok' Nowait
+	
 
 	Insert Into m_memo (url, Header, Request, response) Values (cUrl, 'text/xml;charset=UTF-8', cMessage, .responsetext)
+
+	l_vastus = .responsetext
+	IF ATC(l_vastus, 'SOAP-ENV:Fault><faultcode xmlns:ns0=') > 0 
+		MODIFY MEMO m_memo.response		
+	ENDIF
+
 	Wait Window 'Loen vastus...' Nowait
+
 	l_finished = kas_lopp(.responsetext)
+	
 	l_found_xml = parse_response(.responsetext)
 	l_found_xml = Iif(Empty(l_found_xml),0,l_found_xml)
 
@@ -57,6 +66,7 @@ With loXMLHTTP
 			Exit
 		Endif
 		cMessage = getBuyInvoiceExportRequest(l_cince)
+		
 		Wait Window 'Oodan omniva..., lisa paring ' + Alltrim(Str(i)) Nowait
 		.Open("POST", cUrl ,.F.)
 		.setRequestHeader('Content-Type', 'text/xml;charset=UTF-8')
@@ -66,7 +76,14 @@ With loXMLHTTP
 		.Send(cMessage)
 		Insert Into m_memo (url, Header, Request, response) Values (cUrl, 'text/xml;charset=UTF-8', cMessage, .responsetext)		
 		l_finished = kas_lopp(.responsetext)
-
+		
+		l_vastus = .responsetext
+		IF ATC(l_vastus, 'SOAP-ENV:Fault><faultcode xmlns:ns0=') > 0
+			MODIFY MEMO m_memo.response		
+		ENDIF
+		SELECT m_memo
+		brow
+		
 		Wait Window 'Loen vastus...' Nowait
 		l_found_xml = parse_response(.responsetext)
 		l_found_xml = Iif(Empty(l_found_xml),0,l_found_xml)
@@ -75,25 +92,22 @@ With loXMLHTTP
 		l_cince = getCince(.responsetext)
 
 	ENDFOR
-	SELECT m_memo 
-	brow
 	Wait Window 'Loen vastus...' + Alltrim(Str(l_found_xml)) + ' arved' Nowait
 
 Endwith
-
-Return l_found_xml
+l_found_xml = reccount('v_xml_arv') 
+Return l_found_xml 
 Endfunc
 
 
-
-FUNCTION getCince
-	LPARAMETERS l_request
-	LOCAL l_search 
+Function getCince
+	Lparameters l_request
+	Local l_search
 	l_search = 'latestChange='
-	l_start = ATC(l_search, l_request) + 1
-	l_result = STUFF(SUBSTR(l_request, l_start + LEN(l_search), 19), 11, 1, "T")
-	RETURN CTOT(l_result)
-ENDFUNC
+	l_start = Atc(l_search, l_request) + 1
+	l_result = Stuff(Substr(l_request, l_start + Len(l_search), 19), 11, 1, "T")
+	Return Ctot(l_result)
+Endfunc
 
 Function kas_lopp
 	Lparameters l_request
@@ -111,15 +125,12 @@ Function getBuyInvoiceExportRequest
 	Parameters l_cince
 
 	Set Date Italian
-	If Empty(l_cince)
-		l_cince = Date(2020,01,20)
-		l_earved = '106466:wvxoodqofdjaaolvdclpzaedzqnhikrbdhwbehdxijlktjbikb'
-	Else
-		l_earved = Alltrim(qryRekv.earved)
-	Endif
+	l_earved = Alltrim(qryRekv.earved)
 	l_cince = Ttoc(l_cince)
+	WAIT WINDOW ' Päring kuupäevast ' + l_cince nowait
 
 	Set Date German
+	WAIT WINDOW 'paring alates:' + l_cince  TIMEOUT 3
 
 TEXT TO c_xml TEXTMERGE noshow
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -241,8 +252,6 @@ Function parce_invoice
 	Catch To oErr
 		Wait Window "Catch:" + oErr.ErrorNo
 		Select v_xml_invoice_data
-		Browse
-		Set Step On
 	Finally
 	Endtry
 	Use In v_xml_invoice_data
@@ -344,20 +353,62 @@ Function parce_invoice
 *!*	          <ItemReserve extensionId="eakOppositeAccount">
 *!*	            <InformationContent>201000</InformationContent>
 *!*	</ItemReserve>
+
+*!*			l_invoice_start_line = Atc('<ItemReserve extensionId="eakOppositeAccount">',l_parced_row_xml)
+*!*			l_invoice_last_line = Rat('</ItemReserve>',l_parced_row_xml)
+*!*			l_parced_xml = '<vfp>' +  Substrc(l_parced_row_xml, l_invoice_start_line, (l_invoice_last_line + Len('</ItemReserve>')) - l_invoice_start_line) + '</vfp>'
+*!*			IF l_invoice_start_line  > 0 THEN 
+*!*				Insert Into v_xml (XML) Values (l_parced_xml)
+*!*				SELECT v_xml
+*!*				IF USED('v_xml_korrkonto')
+*!*					USE IN v_xml_korrkonto
+*!*				ENDIF
+*!*				If Len(l_parced_xml) > 0 
+*!*					Xmltocursor(l_parced_xml,'v_xml_korrkonto',0)
+*!*					IF !USED('v_xml_korrkonto')
+*!*						SET STEP ON 
+*!*					ENDIF
+*!*					
+*!*					SELECT v_xml_korrkonto
+*!*					
+*!*					IF !EMPTY(v_xml_korrkonto.InformationContent) AND EMPTY(v_xml_arv.korr_konto)
+*!*						Replace v_xml_arv.korr_konto With IIF(TYPE('v_xml_korrkonto.InformationContent') = 'C' ,ALLTRIM(v_xml_korrkonto.InformationContent),ALLTRIM(STR(v_xml_korrkonto.InformationContent))) In v_xml_arv
+*!*					ENDIF
+*!*					
+*!*					Use In v_xml_korrkonto
+*!*				ENDIF
+*!*			ENDIF
+		
+		
 		l_invoice_start_line = Atc('<ItemReserve extensionId="eakOppositeAccount">',l_parced_row_xml)
 		l_invoice_last_line = Rat('</ItemReserve>',l_parced_row_xml)
-		l_parced_xml = Substrc(l_parced_row_xml, l_invoice_start_line, (l_invoice_last_line + Len('</ItemReserve>')) - l_invoice_start_line)
-		l_invoice_last_line = Atc('<ItemReserve extensionId="eakVatCode">',l_parced_xml) - 1
-		If l_invoice_last_line > 0
-			l_parced_xml = '<vfp>' + Substrc(l_parced_xml, 1,l_invoice_last_line - 1) + '</vfp>'
+		l_parced_xml  = Substrc(l_parced_row_xml, l_invoice_start_line, (l_invoice_last_line + Len('</ItemReserve>')) - l_invoice_start_line)
+
+*		IF OCCURS( '</ItemReserve>', l_parced_xml) > 1 AND LEN(l_parced_xml) > 10
+			l_parced_xml = '<vfp>' +  l_parced_xml   + '</vfp>'
+*		ENDIF
+		
+		Insert Into v_xml (XML) Values (l_parced_xml)
+		SELECT v_xml
+		IF USED('v_xml_korrkonto')
+			USE IN v_xml_korrkonto
+		ENDIF
+		
+		If Len(l_parced_xml) > 0 AND LEN(l_parced_xml) > LEN('<vfp> </vfp>') 
+			Xmltocursor(l_parced_xml,'v_xml_korrkonto',0)
+			
+			IF USED('v_xml_korrkonto')
+				SELECT v_xml_korrkonto
+				
+				IF !EMPTY(v_xml_korrkonto.InformationContent) AND EMPTY(v_xml_arv.korr_konto)
+					Replace v_xml_arv.korr_konto With IIF(TYPE('v_xml_korrkonto.InformationContent') = 'C' ,ALLTRIM(v_xml_korrkonto.InformationContent),ALLTRIM(STR(v_xml_korrkonto.InformationContent))) In v_xml_arv
+				ENDIF
+				
+				Use In v_xml_korrkonto
+			ENDIF
+			
 		Endif
 
-		If Len(l_parced_xml) > 0
-			Create Cursor v_xml_korrkonto (InformationContent c(20))
-			Xmltocursor(l_parced_xml,'v_xml_korrkonto',8192)
-			Replace v_xml_arv.korr_konto With v_xml_korrkonto.InformationContent In v_xml_arv
-			Use In v_xml_korrkonto
-		Endif
 
 
 * kontod
@@ -545,7 +596,7 @@ Function check_cursors
 
 	If !Used('qryRekv')
 		Create Cursor qryRekv (earved c(254), regkood c(20))
-		Insert Into qryRekv  (earved, regkood) Values ('91449:yxjxubnzxvczcafuczzsarzcesehjinbrpsealjexfehqvhfgy','75008485 ')
+		Insert Into qryRekv  (earved, regkood) Values ('370924:wdlgvznhlpcnxgocnzmgurseziiwzfnvmshehphojpceozhogn','90003812')
 	Endif
 
 

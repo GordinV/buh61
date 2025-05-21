@@ -190,12 +190,13 @@ ENDTEXT
 TEXT TO lcFileString ADDITIVE NOSHOW
 
 <InvoiceDate><<lcKpv>></InvoiceDate>
+<DueDate><<lcTKpv>></DueDate>
 <Extension extensionId="eakChannel">
 <InformationContent>EMAIL</InformationContent>
 </Extension>
 </InvoiceInformation>
 <InvoiceSumGroup>
-<InvoiceSum><<Alltrim(Str(qryeArved.Summa,14,2))>></InvoiceSum>
+<InvoiceSum><<Alltrim(Str(qryeArved.Summa - qryeArved.kbm,14,2))>></InvoiceSum>
 
 ENDTEXT
 
